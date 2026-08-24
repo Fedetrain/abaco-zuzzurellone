@@ -1018,6 +1018,7 @@
   function shareText() {
     var r = game.result;
     var url = 'https://fedetrain.github.io/abaco-zuzzurellone/';
+    if (!r) return 'Abaco Zuzzurellone 🧮\n' + url;
     var lines = ['Abaco Zuzzurellone 🧮'];
 
     if (r.mode === 'indovina') {
@@ -1049,14 +1050,13 @@
 
   /** Barretta che mostra quanto si è ristretto il campo. */
   function narrowingBar() {
-    var N = game.dict.size;
     var last = game.history[game.history.length - 1];
     if (!last) return '';
-    var width = Math.max(1, (last.hi != null ? last.hi - last.lo : 1));
-    var frac = width / N;
-    var filled = Math.max(0, Math.min(10, Math.round(frac * 10)));
+    var total = poolSize();
+    var left = Math.max(1, last.left != null ? last.left : 1);
+    var filled = Math.max(0, Math.min(10, Math.round(left / total * 10)));
     return '▓'.repeat(10) + ' → ' + (filled ? '▓'.repeat(filled) : '▏') +
-           '░'.repeat(10 - filled) + '  (' + num(N) + ' → ' + num(width) + ')';
+           '░'.repeat(10 - filled) + '  (' + num(total) + ' → ' + num(left) + ')';
   }
 
   $('#end-share').addEventListener('click', function () {
