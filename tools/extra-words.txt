@@ -1,0 +1,6 @@
+# Legitimate Italian words missing from the Hunspell it_IT stem list.
+# Hand-checked against the Treccani / De Mauro dictionaries.
+# Format: word<TAB>tier  (0 = easy, 1 = medium, 2 = hard)
+# This file is original work, MIT-licensed like the rest of the source code.
+zuzzurellone	2
+zuzzurellona	2

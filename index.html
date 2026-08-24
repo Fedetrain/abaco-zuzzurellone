@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Abaco Zuzzurellone — il gioco della ricerca binaria sul vocabolario</title>
+<meta name="description" content="Un gioco di parole italiano: tutto il vocabolario teso fra abaco e zuzzurellone. Indovina la parola segreta a colpi di prima/dopo, o guarda il computer farlo in 17 mosse.">
+<meta name="theme-color" content="#f2ede3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#100e0c" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e0432b'/%3E%3Cg stroke='%23f2ede3' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M7 10h18M7 16h18M7 22h18'/%3E%3C/g%3E%3Cg fill='%23f2ede3'%3E%3Ccircle cx='11' cy='10' r='2.6'/%3E%3Ccircle cx='20' cy='16' r='2.6'/%3E%3Ccircle cx='14' cy='22' r='2.6'/%3E%3C/g%3E%3C/svg%3E">
+
+<!-- Type: loaded from Google Fonts when online, with a real fallback stack in
+     the CSS so the game keeps its shape offline or opened from file://. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Inter:wght@300..800&family=JetBrains+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-loading>
+
+<!-- ══════════════════════════════ SFONDO ══════════════════════════════ -->
+<div class="backdrop" aria-hidden="true">
+  <div class="backdrop-glow backdrop-glow--a"></div>
+  <div class="backdrop-glow backdrop-glow--z"></div>
+  <div class="backdrop-grain"></div>
+</div>
+
+<!-- ══════════════════════════════ HEADER ══════════════════════════════ -->
+<header class="topbar">
+  <button class="brand" id="btn-home" type="button" aria-label="Torna alla schermata iniziale">
+    <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="1" y="1" width="30" height="30" rx="8" class="mark-bg"/>
+      <g class="mark-rods"><path d="M6 10h20M6 16h20M6 22h20"/></g>
+      <g class="mark-beads"><circle cx="10.5" cy="10" r="2.7"/><circle cx="20.5" cy="16" r="2.7"/><circle cx="14" cy="22" r="2.7"/></g>
+    </svg>
+    <span class="brand-name">Abaco<span>Zuzzurellone</span></span>
+  </button>
+
+  <nav class="topbar-actions">
+    <button class="iconbtn" id="btn-rules" type="button" title="Regole" aria-label="Regole">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.5v.01M12 14c0-2 2.2-2.3 2.2-4.2A2.4 2.4 0 0 0 12 7.4a2.5 2.5 0 0 0-2.4 2"/><circle cx="12" cy="12" r="9.2"/></svg>
+    </button>
+    <button class="iconbtn" id="btn-stats" type="button" title="Statistiche" aria-label="Statistiche">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg>
+    </button>
+    <button class="iconbtn" id="btn-sound" type="button" title="Suoni" aria-label="Suoni: disattivati" aria-pressed="false">
+      <svg class="ico-sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5L11 19zM17 9.5l4 5M21 9.5l-4 5"/></svg>
+      <svg class="ico-sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5L11 19zM15.5 9a4 4 0 0 1 0 6M18.5 6.5a7.6 7.6 0 0 1 0 11"/></svg>
+    </button>
+    <button class="iconbtn" id="btn-theme" type="button" title="Tema chiaro / scuro" aria-label="Cambia tema">
+      <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg>
+      <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+    </button>
+  </nav>
+</header>
+
+<main id="main">
+
+<!-- ══════════════════════════════ HOME ══════════════════════════════ -->
+<section class="screen" id="screen-home" aria-labelledby="home-title">
+
+  <div class="hero">
+    <p class="hero-kicker" style="--i:0">un gioco di parole italiano · ricerca binaria travestita</p>
+
+    <h1 class="hero-title" id="home-title">
+      <span class="pole pole--a" style="--i:1"><span class="pole-word">Abaco</span></span>
+      <span class="hero-thread" style="--i:2" aria-hidden="true">
+        <svg viewBox="0 0 400 40" preserveAspectRatio="none"><path class="thread-line" d="M0 20h400"/></svg>
+        <span class="hero-thread-badge"><b id="hero-count">…</b><i>parole in mezzo</i></span>
+      </span>
+      <span class="pole pole--z" style="--i:3"><span class="pole-word">Zuzzurellone</span></span>
+    </h1>
+
+    <p class="hero-lede" style="--i:4">
+      <em>Abaco</em> è la prima voce del vocabolario italiano, <em>zuzzurellone</em> l'ultima.
+      Fra le due c'è tutto il resto. Uno pensa una parola, gli altri ne propongono
+      e ricevono una sola risposta: <b class="tag tag--a">prima</b> o <b class="tag tag--z">dopo</b>.
+      Ogni risposta dimezza il campo.
+    </p>
+  </div>
+
+  <div class="modes" role="list">
+    <button class="mode" role="listitem" type="button" data-mode="indovina" style="--i:5">
+      <span class="mode-ico" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><circle cx="21" cy="21" r="12.5"/><path d="M30 30l9.5 9.5"/><path d="M21 15.5v6.5l4.5 3" class="thin"/></svg>
+      </span>
+      <span class="mode-body">
+        <span class="mode-name">Indovina tu</span>
+        <span class="mode-desc">Il gioco pensa una parola. Tu proponi, lui risponde solo <i>prima</i> o <i>dopo</i>. Quanto ti avvicini alla ricerca perfetta?</span>
+      </span>
+      <span class="mode-go" aria-hidden="true">→</span>
+    </button>
+
+    <button class="mode" role="listitem" type="button" data-mode="computer" style="--i:6">
+      <span class="mode-ico" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><rect x="9" y="11" width="30" height="22" rx="4"/><path d="M18 39h12M24 33v6" class="thin"/><path d="M17 22h5M26 22h5M20 27h8" class="thin"/></svg>
+      </span>
+      <span class="mode-body">
+        <span class="mode-name">Indovina il computer</span>
+        <span class="mode-desc">Pensa tu una parola e rispondi <i>prima</i> o <i>dopo</i>. Guarda l'intervallo dimezzarsi: bastano 17 mosse per 130.000 parole.</span>
+      </span>
+      <span class="mode-go" aria-hidden="true">→</span>
+    </button>
+
+    <button class="mode" role="listitem" type="button" data-mode="tempo" style="--i:7">
+      <span class="mode-ico" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><circle cx="24" cy="26" r="14"/><path d="M24 18v8l5.5 3.5" class="thin"/><path d="M19 7h10M24 7v5"/></svg>
+      </span>
+      <span class="mode-body">
+        <span class="mode-name">Sfida a tempo</span>
+        <span class="mode-desc">Due estremi, tre minuti: quante parole sai infilare in mezzo? Come il gioco da tavolo del 1995.</span>
+      </span>
+      <span class="mode-go" aria-hidden="true">→</span>
+    </button>
+  </div>
+
+  <div class="level-picker" style="--i:8">
+    <span class="level-label" id="level-label">Livello</span>
+    <div class="segmented" role="radiogroup" aria-labelledby="level-label">
+      <button type="button" role="radio" data-level="facile"    aria-checked="false"><b>Facile</b><i data-count="facile">…</i></button>
+      <button type="button" role="radio" data-level="medio"     aria-checked="true"><b>Medio</b><i data-count="medio">…</i></button>
+      <button type="button" role="radio" data-level="difficile" aria-checked="false"><b>Difficile</b><i data-count="difficile">…</i></button>
+      <span class="segmented-pill" aria-hidden="true"></span>
+    </div>
+    <p class="level-hint" id="level-hint"></p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ GIOCO ══════════════════════════════ -->
+<section class="screen" id="screen-play" aria-labelledby="play-title" hidden>
+
+  <div class="play-head">
+    <button class="backbtn" type="button" data-back aria-label="Torna al menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <h2 class="play-title" id="play-title">Indovina tu</h2>
+    <span class="play-chip" id="play-level">medio</span>
+  </div>
+
+  <!-- ─────────── il campo: la barra dell'intervallo ─────────── -->
+  <div class="field" id="field">
+    <div class="field-heads">
+      <div class="bound bound--lo">
+        <span class="bound-tag">da</span>
+        <span class="morph" id="bound-lo"><span class="morph-cur">abaco</span></span>
+      </div>
+      <div class="field-count" id="field-count">
+        <b id="count-num">0</b>
+        <i id="count-label">parole nel campo</i>
+      </div>
+      <div class="bound bound--hi">
+        <span class="bound-tag">a</span>
+        <span class="morph" id="bound-hi"><span class="morph-cur">zuzzurellone</span></span>
+      </div>
+    </div>
+
+    <div class="field-track" id="field-track">
+      <div class="field-rails" aria-hidden="true"></div>
+      <div class="field-span" id="field-span">
+        <span class="field-span-edge field-span-edge--l"></span>
+        <span class="field-span-edge field-span-edge--r"></span>
+      </div>
+      <div class="field-marks" id="field-marks" aria-hidden="true"></div>
+    </div>
+
+    <div class="field-scale" id="field-scale" aria-hidden="true"></div>
+    <div class="field-zoom" id="field-zoom" aria-hidden="true"></div>
+  </div>
+
+  <!-- ─────────── pannello: indovina tu ─────────── -->
+  <div class="panel" id="panel-indovina" hidden>
+    <form class="guessbar" id="form-indovina" autocomplete="off">
+      <div class="inputwrap">
+        <label class="visually-hidden" for="input-indovina">Proponi una parola italiana</label>
+        <input id="input-indovina" type="text" inputmode="text" spellcheck="false"
+               autocapitalize="off" autocorrect="off" placeholder="proponi una parola…">
+      </div>
+      <button class="btn btn--go" type="submit">
+        <span>Prova</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7"/></svg>
+      </button>
+    </form>
+
+    <div class="counters">
+      <div class="counter"><b class="odo" id="try-count">0</b><i>tentativi</i></div>
+      <div class="counter counter--ghost"><b id="try-optimal">0</b><i>ottimale</i></div>
+    </div>
+
+    <ol class="history" id="history-indovina" aria-live="polite"></ol>
+  </div>
+
+  <!-- ─────────── pannello: indovina il computer ─────────── -->
+  <div class="panel" id="panel-computer" hidden>
+    <div class="cpu">
+      <div class="cpu-think" id="cpu-think">
+        <p class="cpu-line" id="cpu-reason">Pensa una parola italiana e tienila a mente.</p>
+        <div class="cpu-word" id="cpu-word"><span class="morph"><span class="morph-cur">—</span></span></div>
+      </div>
+
+      <div class="cpu-actions" id="cpu-start-wrap">
+        <button class="btn btn--big" type="button" id="cpu-start">Ci sono, comincia</button>
+      </div>
+
+      <div class="cpu-actions" id="cpu-answers" hidden>
+        <button class="btn btn--a" type="button" data-answer="prima">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          <span>Prima</span>
+        </button>
+        <button class="btn btn--yes" type="button" data-answer="trovata">È questa!</button>
+        <button class="btn btn--z" type="button" data-answer="dopo">
+          <span>Dopo</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="counters">
+      <div class="counter"><b class="odo" id="cpu-count">0</b><i>mosse</i></div>
+      <div class="counter counter--ghost"><b id="cpu-optimal">0</b><i>al massimo</i></div>
+    </div>
+
+    <ol class="history" id="history-computer" aria-live="polite"></ol>
+  </div>
+
+  <!-- ─────────── pannello: sfida a tempo ─────────── -->
+  <div class="panel" id="panel-tempo" hidden>
+    <div class="timerow">
+      <div class="timer" id="timer"><span id="timer-text">3:00</span>
+        <svg class="timer-ring" viewBox="0 0 72 72" aria-hidden="true">
+          <circle class="ring-bg" cx="36" cy="36" r="32"/>
+          <circle class="ring-fg" cx="36" cy="36" r="32" id="timer-ring"/>
+        </svg>
+      </div>
+      <div class="counters counters--wide">
+        <div class="counter"><b class="odo" id="tempo-score">0</b><i>punti</i></div>
+        <div class="counter"><b id="tempo-ok">0</b><i>valide</i></div>
+        <div class="counter"><b id="tempo-ko">0</b><i>errori</i></div>
+      </div>
+    </div>
+
+    <form class="guessbar" id="form-tempo" autocomplete="off">
+      <div class="inputwrap">
+        <label class="visually-hidden" for="input-tempo">Scrivi una parola compresa fra i due estremi</label>
+        <input id="input-tempo" type="text" spellcheck="false" autocapitalize="off"
+               autocorrect="off" placeholder="una parola in mezzo…" disabled>
+      </div>
+      <button class="btn btn--go" type="submit" id="tempo-submit" disabled><span>Aggiungi</span></button>
+    </form>
+
+    <div class="chips" id="tempo-chips"></div>
+
+    <div class="cpu-actions" id="tempo-start-wrap">
+      <button class="btn btn--big" type="button" id="tempo-start">Via, tre minuti</button>
+    </div>
+  </div>
+
+  <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+</section>
+
+<!-- ══════════════════════════════ RISULTATO ══════════════════════════════ -->
+<section class="screen" id="screen-end" aria-labelledby="end-title" hidden>
+  <div class="result">
+    <p class="result-kicker" id="end-kicker"></p>
+    <h2 class="result-title" id="end-title">Trovata!</h2>
+    <p class="result-word" id="end-word"></p>
+    <p class="result-sub" id="end-sub"></p>
+
+    <div class="result-stats" id="end-stats"></div>
+
+    <div class="path" id="end-path" aria-hidden="true"></div>
+    <p class="path-caption" id="end-path-caption"></p>
+
+    <div class="result-actions">
+      <button class="btn btn--big" type="button" id="end-again">Ancora</button>
+      <button class="btn btn--ghost" type="button" id="end-share">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12h8M12 8v8"/><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/></svg>
+        <span>Condividi</span>
+      </button>
+      <button class="btn btn--ghost" type="button" data-back>Menu</button>
+    </div>
+    <pre class="sharebox" id="sharebox" hidden></pre>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ REGOLE ══════════════════════════════ -->
+<section class="screen screen--doc" id="screen-rules" aria-labelledby="rules-title" hidden>
+  <div class="play-head">
+    <button class="backbtn" type="button" data-back aria-label="Indietro">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <h2 class="play-title" id="rules-title">Come si gioca</h2>
+  </div>
+
+  <div class="doc">
+    <section class="doc-block" style="--i:0">
+      <h3>Il gioco</h3>
+      <p>Uno pensa una parola italiana e la tiene segreta. Gli altri propongono parole.
+      L'unica risposta ammessa è se la parola segreta viene <b class="tag tag--a">prima</b>
+      o <b class="tag tag--z">dopo</b> in ordine alfabetico. Ogni risposta restringe
+      l'intervallo di ricerca. Vince chi indovina.</p>
+      <p>Il nome viene dagli estremi di partenza: <em>abaco</em> è tradizionalmente la
+      prima voce del vocabolario italiano e <em>zuzzurellone</em> l'ultima. Si parte
+      da lì e si stringe.</p>
+    </section>
+
+    <section class="doc-block" style="--i:1">
+      <h3>Le tre modalità</h3>
+      <dl class="doc-list">
+        <dt>Indovina tu</dt>
+        <dd>Il gioco sceglie la parola. Tu proponi, lui risponde <i>prima</i> o <i>dopo</i>.
+        Alla fine confronti i tuoi tentativi con quelli che avrebbe impiegato una
+        ricerca binaria perfetta.</dd>
+        <dt>Indovina il computer</dt>
+        <dd>Pensi tu la parola. Il computer prova sempre la parola a metà dell'intervallo
+        rimasto e ti mostra quante ne restano. Se le tue risposte si contraddicono
+        l'intervallo si svuota e te lo dice.</dd>
+        <dt>Sfida a tempo</dt>
+        <dd>Due estremi casuali, tre minuti, quante più parole comprese fra i due.
+        <b>+1</b> per ogni parola valida, <b>−1</b> se la parola è fuori intervallo o
+        non esiste, i doppioni non contano. È la versione da tavolo del 1995.</dd>
+      </dl>
+    </section>
+
+    <section class="doc-block doc-block--math" style="--i:2">
+      <h3>Perché bastano 17 tentativi</h3>
+      <p>Ogni risposta <i>prima</i>/<i>dopo</i> vale esattamente un bit: butta via metà
+      delle parole rimaste. Se proponi sempre la parola che sta a metà dell'intervallo,
+      il numero di candidate va</p>
+      <p class="halving" id="halving-demo"></p>
+      <p>Dopo <var>k</var> mosse restano al più <code>n / 2ᵏ</code> parole, quindi
+      ne bastano <b>⌈log₂(n+1)⌉</b>: <b>17</b> per 130.000 parole, <b>20</b> per un milione.
+      Aggiungere parole al vocabolario quasi non costa nulla — è il motivo per cui la
+      ricerca binaria è ovunque, dagli indici dei database al debug con <code>git bisect</code>.</p>
+      <p class="doc-note">Attenzione: la parola “a metà” non è quella a metà dell'alfabeto,
+      è quella che ha metà delle parole prima e metà dopo. La lettera <b>s</b> da sola
+      copre più vocabolario di <b>j&nbsp;k&nbsp;q&nbsp;w&nbsp;x&nbsp;y</b> messe insieme.</p>
+    </section>
+
+    <section class="doc-block" style="--i:3">
+      <h3>Ordine alfabetico italiano</h3>
+      <p>Le parole accentate stanno al loro posto, non in fondo: <code>pera</code> →
+      <code>pero</code> → <code>però</code> → <code>persona</code>. Il gioco usa
+      <code>Intl.Collator('it')</code>, non il confronto fra codici di carattere.</p>
+    </section>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ STATISTICHE ══════════════════════════════ -->
+<section class="screen screen--doc" id="screen-stats" aria-labelledby="stats-title" hidden>
+  <div class="play-head">
+    <button class="backbtn" type="button" data-back aria-label="Indietro">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <h2 class="play-title" id="stats-title">Statistiche</h2>
+    <button class="play-chip play-chip--btn" type="button" id="stats-reset">azzera</button>
+  </div>
+  <div class="doc" id="stats-body"></div>
+</section>
+
+</main>
+
+<!-- ══════════════════════════════ CARICAMENTO ══════════════════════════════ -->
+<div class="loader" id="loader" role="status" aria-live="polite">
+  <div class="loader-inner">
+    <div class="loader-bar"><span id="loader-fill"></span></div>
+    <p class="loader-text" id="loader-text">apro il vocabolario…</p>
+  </div>
+</div>
+
+<footer class="sitefoot">
+  <span>Parole dal dizionario Hunspell <b>it_IT</b> di LibreItalia (GPL-3.0).</span>
+  <a href="https://github.com/Fedetrain/abaco-zuzzurellone" rel="noopener">codice su GitHub</a>
+</footer>
+
+<script src="assets/core.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

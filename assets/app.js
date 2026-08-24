@@ -1,0 +1,1265 @@
+/* =========================================================================
+   Abaco Zuzzurellone -- interfaccia e regia di gioco
+   Dipende solo da assets/core.js (globale AZ) e da data/dizionario.js.
+   ========================================================================= */
+(function () {
+  'use strict';
+
+  var $ = function (sel, root) { return (root || document).querySelector(sel); };
+  var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+  var num = AZ.formatNumber;
+
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var reduced = function () { return REDUCED.matches; };
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Archivio locale — ogni accesso è protetto: ci sono browser (e finestre
+     private) in cui localStorage lancia al solo tocco.
+  ───────────────────────────────────────────────────────────────────── */
+  var STORE_KEY = 'abaco-zuzzurellone/v1';
+  var store = {
+    read: function () {
+      try {
+        var raw = localStorage.getItem(STORE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) { return {}; }
+    },
+    write: function (data) {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch (e) { /* ignora */ }
+    },
+  };
+  var prefs = store.read();
+  if (!prefs.stats) prefs.stats = {};
+  var savePrefs = function () { store.write(prefs); };
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Tema
+  ───────────────────────────────────────────────────────────────────── */
+  function applyTheme(theme) {
+    if (theme === 'light' || theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', theme);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }
+  applyTheme(prefs.theme);
+  $('#btn-theme').addEventListener('click', function () {
+    var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var current = prefs.theme || (systemDark ? 'dark' : 'light');
+    prefs.theme = current === 'dark' ? 'light' : 'dark';
+    applyTheme(prefs.theme);
+    savePrefs();
+    sfx.click();
+  });
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Suoni — Web Audio, nessun file esterno, spenti di default.
+  ───────────────────────────────────────────────────────────────────── */
+  var sfx = (function () {
+    var ctx = null;
+    var on = prefs.sound === true;
+
+    function tone(freq, start, dur, type, peak) {
+      if (!on) return;
+      try {
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
+        var t = ctx.currentTime + start;
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(peak || 0.13, t + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + dur + 0.02);
+      } catch (e) { /* audio non disponibile: pazienza */ }
+    }
+
+    return {
+      get enabled() { return on; },
+      set enabled(v) { on = v; },
+      click: function () { tone(520, 0, 0.05, 'sine', 0.05); },
+      narrow: function () { tone(360, 0, 0.09, 'triangle', 0.09); tone(540, 0.05, 0.12, 'sine', 0.07); },
+      bad: function () { tone(150, 0, 0.16, 'sawtooth', 0.07); },
+      win: function () {
+        [523, 659, 784, 1046].forEach(function (f, i) { tone(f, i * 0.09, 0.34, 'sine', 0.11); });
+      },
+      urgent: function () { tone(880, 0, 0.06, 'square', 0.04); },
+    };
+  })();
+
+  var soundBtn = $('#btn-sound');
+  function renderSound() {
+    soundBtn.setAttribute('aria-pressed', String(sfx.enabled));
+    soundBtn.setAttribute('aria-label', 'Suoni: ' + (sfx.enabled ? 'attivi' : 'disattivati'));
+  }
+  renderSound();
+  soundBtn.addEventListener('click', function () {
+    sfx.enabled = !sfx.enabled;
+    prefs.sound = sfx.enabled;
+    savePrefs();
+    renderSound();
+    if (sfx.enabled) sfx.narrow();
+  });
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Schermate
+  ───────────────────────────────────────────────────────────────────── */
+  var SCREENS = ['home', 'play', 'end', 'rules', 'stats'];
+  var current = 'home';
+  var previous = 'home';
+
+  function show(name) {
+    if (name === current) return;
+    previous = current;
+    current = name;
+    SCREENS.forEach(function (s) {
+      var el = document.getElementById('screen-' + s);
+      if (s === name) {
+        el.hidden = false;
+        el.classList.remove('is-entering');
+        void el.offsetWidth;              // forza il restart dell'animazione
+        el.classList.add('is-entering');
+      } else {
+        el.hidden = true;
+      }
+    });
+    window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' });
+  }
+
+  function goBack() {
+    if (game.timer) stopTimer();
+    show('home');
+  }
+
+  $$('[data-back]').forEach(function (b) { b.addEventListener('click', goBack); });
+  $('#btn-home').addEventListener('click', goBack);
+  $('#btn-rules').addEventListener('click', function () { show('rules'); });
+  $('#btn-stats').addEventListener('click', function () { renderStats(); show('stats'); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && current !== 'home') goBack();
+  });
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Il campo: la barra dell'intervallo.
+     Un'unica animazione a requestAnimationFrame governa sia l'intervallo
+     (con easing elastico) sia il "viewport", cioè la porzione di alfabeto
+     inquadrata, che si stringe quando l'intervallo diventa minuscolo.
+  ───────────────────────────────────────────────────────────────────── */
+  var Field = (function () {
+    var elSpan = $('#field-span');
+    var elMarks = $('#field-marks');
+    var elScale = $('#field-scale');
+    var elZoom = $('#field-zoom');
+    var elCount = $('#field-count');
+    var elCountNum = $('#count-num');
+    var elCountLab = $('#count-label');
+    var elField = $('#field');
+    var elTrack = $('#field-track');
+    var elLo = $('#bound-lo');
+    var elHi = $('#bound-hi');
+
+    var N = 1;
+    var lo = 0, hi = 1;                    // intervallo obiettivo
+    var aLo = 0, aHi = 1, fLo = 0, fHi = 1; // animato / punto di partenza
+    var vLo = 0, vHi = 1, avLo = 0, avHi = 1, fvLo = 0, fvHi = 1;
+    var t0 = 0, dur = 0, raf = null;
+    var marks = [];
+    var ticks = [];
+    var letterTicks = null;
+    var countFrom = 0, countTo = 0, countT0 = 0;
+    var trackW = 600;   // stima iniziale, sostituita alla prima misura
+
+    function measure() {
+      var w = elTrack.getBoundingClientRect().width;
+      // Se il campo non è ancora visibile la larghezza è 0: tengo l ultima
+      // misura buona invece di azzerare la scala dell alfabeto.
+      if (w > 1) trackW = w;
+    }
+
+    function easeOutBack(t) {
+      var c1 = 1.35, c3 = c1 + 1;
+      return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    }
+    function easeInOut(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+    function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+
+    function init(dict) {
+      N = dict.size;
+      letterTicks = [];
+      var seen = {};
+      for (var i = 0; i < N; i++) {
+        // "élite" appartiene alla e: le iniziali accentate si accorpano alla
+        // lettera base, altrimenti la scala mostrerebbe una "é" fra e ed f.
+        var c = dict.words[i][0].normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (!seen[c]) { seen[c] = true; letterTicks.push({ i: i, label: c }); }
+      }
+    }
+
+    /* Sceglie le etichette della scala per la porzione inquadrata: le lettere
+       quando si vede tutto il vocabolario, prefissi via via più lunghi mano a
+       mano che si entra dentro una parola. */
+    function computeTicks(a, b) {
+      var n = b - a;
+      if (n >= N * 0.85) return thinOut(letterTicks, a, b);
+      if (n > 40000) return thinOut(letterTicks, a, b);
+      for (var L = 1; L <= 7; L++) {
+        var items = [];
+        var last = null;
+        for (var i = a; i < b; i++) {
+          var p = game.dict.words[i].slice(0, L);
+          if (p !== last) { items.push({ i: i, label: p }); last = p; }
+        }
+        if (items.length >= 7 || L === 7) return thinOut(subsample(items, 11), a, b);
+      }
+      return [];
+    }
+    function subsample(items, max) {
+      if (items.length <= max) return items;
+      var out = [];
+      for (var k = 0; k < max; k++) out.push(items[Math.round(k * (items.length - 1) / (max - 1))]);
+      return out;
+    }
+    /* Toglie le etichette che finirebbero una addosso all'altra. La distanza
+       minima dipende da quanto sono lunghe le due etichette vicine, non da un
+       numero fisso: così le lettere singole possono stare fitte — ed è proprio
+       il punto, la "s" si prende più spazio di j-k-q-w-x-y messe insieme —
+       mentre i prefissi lunghi si diradano da soli. */
+    var CHAR_PX = 5.8;   // larghezza di un carattere del monospaziato a .6rem
+    function thinOut(items, a, b) {
+      var span = b - a;
+      // Quanta parte di campo si prende ogni etichetta: è il criterio con cui
+      // decidiamo chi sopravvive. Scartare da sinistra a destra terrebbe le
+      // lettere microscopiche (h, j, k) buttando via quelle grosse che le
+      // seguono (i, l): qui vince chi occupa più vocabolario.
+      var cand = [];
+      for (var k = 0; k < items.length; k++) {
+        var pct = (items[k].i - a) / span * 100;
+        if (pct < -1 || pct > 101) continue;
+        var next = k + 1 < items.length ? items[k + 1].i : b;
+        cand.push({ item: items[k], pct: pct, peso: next - items[k].i });
+      }
+      var byWeight = cand.slice().sort(function (x, y) { return y.peso - x.peso; });
+      var kept = [];
+      byWeight.forEach(function (c) {
+        var len = c.item.label.length;
+        for (var j = 0; j < kept.length; j++) {
+          var needed = ((kept[j].item.label.length + len) / 2 * CHAR_PX + 7) / trackW * 100;
+          if (Math.abs(c.pct - kept[j].pct) < needed) return;
+        }
+        kept.push(c);
+      });
+      return kept
+        .sort(function (x, y) { return x.pct - y.pct; })
+        .map(function (c) { return c.item; });
+    }
+
+    function renderTicks() {
+      elScale.innerHTML = '';
+      ticks.forEach(function (t, k) {
+        var el = document.createElement('span');
+        el.className = 'tick';
+        el.style.setProperty('--t', k);
+        el.textContent = t.label;
+        t.el = el;
+        elScale.appendChild(el);
+      });
+    }
+
+    function chooseViewport() {
+      var w = hi - lo;
+      if (w / N > 0.05 || w <= 0) return [0, N];
+      var want = Math.max(w * 3.2, 30);
+      var c = (lo + hi) / 2;
+      var a = Math.round(c - want / 2);
+      if (a < 0) a = 0;
+      var b = a + want;
+      if (b > N) { b = N; a = Math.max(0, b - want); }
+      return [Math.round(a), Math.round(b)];
+    }
+
+    function frame(now) {
+      var t = dur <= 0 ? 1 : Math.min(1, (now - t0) / dur);
+      var e = reduced() ? 1 : easeOutBack(t);
+      var ev = reduced() ? 1 : easeInOut(t);
+
+      aLo = fLo + (lo - fLo) * e;
+      aHi = fHi + (hi - fHi) * e;
+      avLo = fvLo + (vLo - fvLo) * ev;
+      avHi = fvHi + (vHi - fvHi) * ev;
+
+      draw();
+
+      // conteggio: scende con la sua curva, un filo più lenta
+      var ct = Math.min(1, (now - countT0) / 700);
+      var cv = Math.round(countFrom + (countTo - countFrom) * (reduced() ? 1 : easeOutExpo(ct)));
+      elCountNum.textContent = num(cv);
+
+      if (t < 1 || ct < 1) raf = requestAnimationFrame(frame);
+      else raf = null;
+    }
+
+    function pct(i) { return (i - avLo) / Math.max(1, avHi - avLo) * 100; }
+
+    function draw() {
+      var l = pct(aLo), r = pct(aHi);
+      var left = Math.max(-4, Math.min(104, l));
+      elSpan.style.left = left + '%';
+      elSpan.style.width = Math.max(0.35, Math.min(108, r) - left) + '%';
+
+      for (var k = 0; k < marks.length; k++) {
+        var p = pct(marks[k].i + 0.5);
+        marks[k].el.style.left = p + '%';
+        marks[k].el.classList.toggle('is-out', p < -0.5 || p > 100.5);
+      }
+      for (var j = 0; j < ticks.length; j++) {
+        if (!ticks[j].el) continue;
+        var tp = pct(ticks[j].i);
+        ticks[j].el.style.left = tp + '%';
+        ticks[j].el.style.opacity = tp < -2 || tp > 102 ? '0' : '1';
+      }
+    }
+
+    function animate() {
+      measure();
+      var vp = chooseViewport();
+      var vpChanged = vp[0] !== vLo || vp[1] !== vHi;
+      fLo = aLo; fHi = aHi; fvLo = avLo; fvHi = avHi;
+      vLo = vp[0]; vHi = vp[1];
+      if (vpChanged) { ticks = computeTicks(vLo, vHi); renderTicks(); }
+
+      var zoom = N / Math.max(1, vHi - vLo);
+      elZoom.textContent = 'zoom ×' + (zoom >= 10 ? Math.round(zoom) : zoom.toFixed(1));
+      elZoom.classList.toggle('is-on', zoom > 1.4);
+
+      measure();
+      t0 = performance.now();
+      dur = reduced() ? 0 : 850;
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(frame);
+    }
+
+    function setBound(el, word, klass) {
+      var cur = el.querySelector('.morph-cur');
+      if (cur && cur.textContent === word) return;
+      var old = el.querySelector('.morph-old');
+      if (old) old.remove();
+      if (cur) {
+        cur.className = 'morph-old';
+        setTimeout(function () { if (cur.parentNode) cur.remove(); }, 460);
+      }
+      var next = document.createElement('span');
+      next.className = 'morph-cur';
+      next.textContent = word;
+      el.appendChild(next);
+      if (klass) el.parentNode.classList.add(klass);
+    }
+
+    window.addEventListener('resize', function () {
+      measure();
+      ticks = computeTicks(Math.round(vLo), Math.round(vHi));
+      renderTicks();
+      draw();
+    });
+
+    return {
+      init: init,
+
+      /** Riporta il campo a tutto il vocabolario. */
+      reset: function (loWord, hiWord, label) {
+        marks.forEach(function (m) { m.el.remove(); });
+        marks = [];
+        elCountLab.textContent = label || 'parole nel campo';
+        lo = 0; hi = N; aLo = 0; aHi = N; fLo = 0; fHi = N;
+        vLo = 0; vHi = N; avLo = 0; avHi = N; fvLo = 0; fvHi = N;
+        measure();
+        ticks = computeTicks(0, N); renderTicks();
+        elZoom.classList.remove('is-on');
+        elField.classList.remove('is-tight');
+        setBound(elLo, loWord);
+        setBound(elHi, hiWord);
+        draw();
+      },
+
+      /** Nuovo intervallo + nuovo conteggio, con animazione. */
+      set: function (nextLo, nextHi, count, loWord, hiWord) {
+        lo = nextLo; hi = nextHi;
+        countFrom = countTo; countTo = count; countT0 = performance.now();
+        setBound(elLo, loWord);
+        setBound(elHi, hiWord);
+        elCount.classList.remove('is-pop'); void elCount.offsetWidth;
+        elCount.classList.add('is-pop');
+        elSpan.classList.remove('is-sweep'); void elSpan.offsetWidth;
+        elSpan.classList.add('is-sweep');
+        elField.classList.toggle('is-tight', count <= 40);
+        animate();
+      },
+
+      setCount: function (count) {
+        countFrom = countTo; countTo = count; countT0 = performance.now();
+        if (!raf) raf = requestAnimationFrame(frame);
+      },
+
+      /** Un segnalino sulla traccia, colorato in base all'esito. */
+      mark: function (i, kind) {
+        var el = document.createElement('span');
+        el.className = 'mark mark--' + kind;
+        el.style.left = pct(i + 0.5) + '%';
+        elMarks.appendChild(el);
+        marks.push({ i: i, el: el });
+      },
+
+      setLabel: function (text) { elCountLab.textContent = text; },
+    };
+  })();
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Stato di gioco
+  ───────────────────────────────────────────────────────────────────── */
+  var game = {
+    dict: null,
+    level: prefs.level || 'medio',
+    mode: null,
+    lo: 0, hi: 0,
+    secret: -1,
+    history: [],
+    tried: null,
+    timer: null,
+    result: null,
+  };
+
+  function poolSize() { return game.dict.countRange(0, game.dict.size, game.level); }
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Selettore di livello
+  ───────────────────────────────────────────────────────────────────── */
+  var segButtons = $$('.segmented button');
+  var segPill = $('.segmented-pill');
+
+  function movePill() {
+    var active = segButtons.filter(function (b) { return b.getAttribute('aria-checked') === 'true'; })[0];
+    if (!active) return;
+    segPill.style.left = active.offsetLeft + 'px';
+    segPill.style.width = active.offsetWidth + 'px';
+  }
+  function setLevel(level) {
+    game.level = level;
+    prefs.level = level;
+    savePrefs();
+    segButtons.forEach(function (b) {
+      b.setAttribute('aria-checked', String(b.dataset.level === level));
+    });
+    movePill();
+    if (game.dict) {
+      var n = poolSize();
+      $('#level-hint').textContent =
+        num(n) + ' parole in gioco — a una ricerca perfetta bastano ' +
+        AZ.optimalGuesses(n) + ' tentativi.';
+    }
+  }
+  segButtons.forEach(function (b) {
+    b.addEventListener('click', function () { setLevel(b.dataset.level); sfx.click(); });
+  });
+  window.addEventListener('resize', movePill);
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Feedback
+  ───────────────────────────────────────────────────────────────────── */
+  var elFeedback = $('#feedback');
+  function say(text, kind) {
+    elFeedback.textContent = text || '';
+    elFeedback.className = 'feedback' + (kind ? ' is-' + kind : '');
+    if (text) {
+      void elFeedback.offsetWidth;
+      elFeedback.classList.add('is-flash');
+    }
+  }
+  function flashBar(form, kind) {
+    form.classList.remove('is-bad', 'is-good');
+    void form.offsetWidth;
+    form.classList.add('is-' + kind);
+    setTimeout(function () { form.classList.remove('is-' + kind); }, 700);
+  }
+  function tick(el) {
+    el.classList.remove('is-tick'); void el.offsetWidth; el.classList.add('is-tick');
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Avvio di una partita
+  ───────────────────────────────────────────────────────────────────── */
+  function startMode(mode) {
+    game.mode = mode;
+    game.history = [];
+    game.tried = new Set();
+    game.lo = 0;
+    game.hi = game.dict.size;
+    game.result = null;
+    stopTimer();
+
+    $('#play-title').textContent =
+      mode === 'indovina' ? 'Indovina tu' :
+      mode === 'computer' ? 'Indovina il computer' : 'Sfida a tempo';
+    // Nella sfida a tempo conta tutto il vocabolario: il livello non si applica.
+    $('#play-level').hidden = mode === 'tempo';
+    $('#play-level').textContent = AZ.LIVELLI[game.level].label;
+
+    $$('.panel').forEach(function (p) { p.hidden = true; });
+    $('#panel-' + mode).hidden = false;
+    say('');
+
+    // La schermata va mostrata *prima* di preparare il campo: da nascosto
+    // il track misura zero e la scala dell'alfabeto non saprebbe dove andare.
+    show('play');
+
+    if (mode === 'indovina') startIndovina();
+    if (mode === 'computer') startComputer();
+    if (mode === 'tempo') startTempo();
+  }
+
+  $$('.mode').forEach(function (card) {
+    card.addEventListener('click', function () { sfx.click(); startMode(card.dataset.mode); });
+  });
+
+  /* ══════════════════ MODALITÀ 1 — indovina tu ══════════════════════ */
+  var formIndovina = $('#form-indovina');
+  var inputIndovina = $('#input-indovina');
+  var histIndovina = $('#history-indovina');
+
+  function startIndovina() {
+    var d = game.dict;
+    game.secret = d.randomIndex(0, d.size, game.level);
+    histIndovina.innerHTML = '';
+    inputIndovina.value = '';
+    inputIndovina.disabled = false;
+    $('#try-count').textContent = '0';
+    $('#try-optimal').textContent = AZ.optimalGuesses(poolSize());
+    Field.reset(d.words[0], d.words[d.size - 1], 'parole nel campo');
+    Field.setCount(poolSize());
+    setTimeout(function () { if (!('ontouchstart' in window)) inputIndovina.focus(); }, 350);
+    say('Ho pensato una parola fra ' + num(poolSize()) + '. Tocca a te.');
+  }
+
+  formIndovina.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var d = game.dict;
+    var w = AZ.normalize(inputIndovina.value);
+    if (!w) return;
+
+    if (!d.has(w)) {
+      flashBar(formIndovina, 'bad');
+      say('«' + w + '» non è nel vocabolario del gioco.', 'bad');
+      sfx.bad();
+      return;
+    }
+    if (game.tried.has(w)) {
+      flashBar(formIndovina, 'bad');
+      say('L\'hai già provata.', 'bad');
+      sfx.bad();
+      return;
+    }
+
+    var idx = d.index.get(w);
+    if (idx < game.lo || idx >= game.hi) {
+      flashBar(formIndovina, 'bad');
+      say('«' + w + '» è già fuori dal campo: lo sai di sicuro.', 'bad');
+      sfx.bad();
+      return;
+    }
+
+    game.tried.add(w);
+    inputIndovina.value = '';
+    var res = AZ.applyGuess({ lo: game.lo, hi: game.hi }, idx, game.secret);
+    game.lo = res.lo; game.hi = res.hi;
+
+    var left = d.countRange(game.lo, game.hi, game.level);
+    game.history.push({ word: w, idx: idx, esito: res.esito, lo: game.lo, hi: game.hi, left: left });
+
+    var n = game.history.length;
+    $('#try-count').textContent = n;
+    tick($('#try-count'));
+    addHistoryRow(histIndovina, n, w, res.esito, left);
+    Field.mark(idx, res.esito === 'trovata' ? 'hit' : res.esito === 'prima' ? 'a' : 'z');
+
+    if (res.esito === 'trovata') {
+      Field.set(idx, idx + 1, 1, w, w);
+      flashBar(formIndovina, 'good');
+      inputIndovina.disabled = true;
+      sfx.win();
+      finishIndovina(true);
+      return;
+    }
+
+    Field.set(game.lo, game.hi, left, d.words[game.lo], d.words[game.hi - 1]);
+    flashBar(formIndovina, 'good');
+    sfx.narrow();
+    say(
+      res.esito === 'prima'
+        ? 'Prima di «' + w + '». Restano ' + num(left) + ' parole.'
+        : 'Dopo «' + w + '». Restano ' + num(left) + ' parole.',
+      'good'
+    );
+  });
+
+  function addHistoryRow(list, n, word, esito, left) {
+    var li = document.createElement('li');
+    var dirClass = esito === 'trovata' ? 'hit' : esito === 'prima' ? 'a' : 'z';
+    var dirText = esito === 'trovata' ? '● trovata' : esito === 'prima' ? '← prima' : 'dopo →';
+    li.innerHTML =
+      '<span class="h-num">' + n + '</span>' +
+      '<span class="h-word"></span>' +
+      '<span class="h-dir h-dir--' + dirClass + '">' + dirText + '</span>' +
+      '<span class="h-left">' + num(left) + '</span>';
+    li.querySelector('.h-word').textContent = word;
+    list.insertBefore(li, list.firstChild);
+  }
+
+  function finishIndovina() {
+    var pool = poolSize();
+    var opt = AZ.optimalGuesses(pool);
+    var n = game.history.length;
+    var delta = n - opt;
+
+    recordStats('indovina', function (s) {
+      s.partite = (s.partite || 0) + 1;
+      s.tentativi = (s.tentativi || 0) + n;
+      s.deltaTot = (s.deltaTot || 0) + delta;
+      s.best = s.best == null ? n : Math.min(s.best, n);
+      s.streak = delta <= 0 ? (s.streak || 0) + 1 : 0;
+      s.maxStreak = Math.max(s.maxStreak || 0, s.streak);
+      var key = delta <= -2 ? '-2' : delta >= 3 ? '3' : String(delta);
+      s.dist = s.dist || {};
+      s.dist[key] = (s.dist[key] || 0) + 1;
+    });
+
+    game.result = { mode: 'indovina', word: game.dict.words[game.secret], n: n, opt: opt, delta: delta, pool: pool };
+    setTimeout(function () { renderResult(); show('end'); }, 1100);
+  }
+
+  /* ══════════════════ MODALITÀ 2 — indovina il computer ═════════════ */
+  var cpuReason = $('#cpu-reason');
+  var cpuWord = $('#cpu-word');
+  var histComputer = $('#history-computer');
+  var cpuCurrent = -1;
+
+  function startComputer() {
+    var d = game.dict;
+    histComputer.innerHTML = '';
+    $('#cpu-count').textContent = '0';
+    $('#cpu-optimal').textContent = AZ.optimalGuesses(poolSize());
+    $('#cpu-start-wrap').hidden = false;
+    $('#cpu-answers').hidden = true;
+    setCpuWord('—');
+    cpuReason.innerHTML =
+      'Pensa una parola italiana fra le <b>' + num(poolSize()) +
+      '</b> del livello ' + AZ.LIVELLI[game.level].label.toLowerCase() + ' e tienila a mente.';
+    Field.reset(d.words[0], d.words[d.size - 1], 'parole possibili');
+    Field.setCount(poolSize());
+    say('');
+  }
+
+  function setCpuWord(text) {
+    var holder = cpuWord.querySelector('.morph');
+    var cur = holder.querySelector('.morph-cur');
+    if (cur) {
+      cur.className = 'morph-old';
+      var stale = cur;
+      setTimeout(function () { if (stale.parentNode) stale.remove(); }, 460);
+    }
+    var next = document.createElement('span');
+    next.className = 'morph-cur';
+    next.textContent = text;
+    holder.appendChild(next);
+  }
+
+  $('#cpu-start').addEventListener('click', function () {
+    sfx.click();
+    $('#cpu-start-wrap').hidden = true;
+    $('#cpu-answers').hidden = false;
+    cpuThink();
+  });
+
+  function cpuThink() {
+    var d = game.dict;
+    var left = d.countRange(game.lo, game.hi, game.level);
+    var idx = d.medianIndex(game.lo, game.hi, game.level);
+
+    if (idx < 0) { finishComputer('contraddizione'); return; }
+
+    // Mentre "pensa" i tre pulsanti restano spenti: cliccarli non farebbe
+    // nulla e sembrerebbe che il gioco si sia perso il colpo.
+    $('.cpu').classList.add('is-thinking');
+    $$('#cpu-answers [data-answer]').forEach(function (b) { b.disabled = true; });
+    setTimeout(function () {
+      cpuCurrent = idx;
+      $$('#cpu-answers [data-answer]').forEach(function (b) { b.disabled = false; });
+      $('.cpu').classList.remove('is-thinking');
+      setCpuWord(d.words[idx]);
+      cpuReason.innerHTML =
+        'Restano <b>' + num(left) + '</b> parole. Provo quella esattamente a metà.';
+      sfx.narrow();
+    }, reduced() ? 0 : 480);
+  }
+
+  $$('#cpu-answers [data-answer]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var d = game.dict;
+      if (cpuCurrent < 0) return;
+      var answer = btn.dataset.answer;
+      var word = d.words[cpuCurrent];
+      var n = game.history.length + 1;
+
+      if (answer === 'trovata') {
+        game.history.push({ word: word, idx: cpuCurrent, esito: 'trovata', left: 1 });
+        addHistoryRow(histComputer, n, word, 'trovata', 1);
+        Field.mark(cpuCurrent, 'hit');
+        Field.set(cpuCurrent, cpuCurrent + 1, 1, word, word);
+        $('#cpu-count').textContent = n; tick($('#cpu-count'));
+        sfx.win();
+        finishComputer('trovata');
+        return;
+      }
+
+      var next = AZ.applyAnswer({ lo: game.lo, hi: game.hi }, cpuCurrent, answer);
+      Field.mark(cpuCurrent, answer === 'prima' ? 'a' : 'z');
+
+      if (next.contraddizione) {
+        game.history.push({ word: word, idx: cpuCurrent, esito: answer, left: 0 });
+        addHistoryRow(histComputer, n, word, answer, 0);
+        $('#cpu-count').textContent = n; tick($('#cpu-count'));
+        sfx.bad();
+        finishComputer('contraddizione');
+        return;
+      }
+
+      game.lo = next.lo; game.hi = next.hi;
+      var left = d.countRange(game.lo, game.hi, game.level);
+      game.history.push({ word: word, idx: cpuCurrent, esito: answer, lo: game.lo, hi: game.hi, left: left });
+      addHistoryRow(histComputer, n, word, answer, left);
+      $('#cpu-count').textContent = n; tick($('#cpu-count'));
+      Field.set(game.lo, game.hi, left, d.words[game.lo], d.words[game.hi - 1]);
+      cpuCurrent = -1;
+      cpuThink();
+    });
+  });
+
+  function finishComputer(esito) {
+    $('#cpu-answers').hidden = true;
+    var n = game.history.length;
+    var opt = AZ.optimalGuesses(poolSize());
+    recordStats('computer', function (s) {
+      s.partite = (s.partite || 0) + 1;
+      if (esito === 'trovata') {
+        s.vinte = (s.vinte || 0) + 1;
+        s.passi = (s.passi || 0) + n;
+        s.best = s.best == null ? n : Math.min(s.best, n);
+      } else {
+        s.contraddizioni = (s.contraddizioni || 0) + 1;
+      }
+    });
+    game.result = { mode: 'computer', esito: esito, n: n, opt: opt,
+                    word: cpuCurrent >= 0 ? game.dict.words[cpuCurrent] : null };
+    setTimeout(function () { renderResult(); show('end'); }, 1000);
+  }
+
+  /* ══════════════════ MODALITÀ 3 — sfida a tempo ════════════════════ */
+  var DURATA = 180;
+  var formTempo = $('#form-tempo');
+  var inputTempo = $('#input-tempo');
+  var chips = $('#tempo-chips');
+  var ring = $('#timer-ring');
+  var RING_LEN = 2 * Math.PI * 32;
+  var tempo = { score: 0, ok: 0, ko: 0, left: DURATA, bounds: null, words: null };
+
+  function startTempo() {
+    var d = game.dict;
+    // Due estremi riconoscibili (livello facile/medio) con qualche centinaio
+    // di parole in mezzo: abbastanza da riempire tre minuti, non tanto da
+    // rendere la sfida banale.
+    var a, b, guard = 0;
+    do {
+      a = d.randomIndex(0, d.size - 900, 'medio');
+      var span = 500 + Math.floor(Math.random() * 2500);
+      b = Math.min(d.size - 1, a + span);
+      // porta l'estremo destro su una parola riconoscibile
+      while (b > a + 60 && d.tiers[b] > 1) b--;
+      guard++;
+    } while ((a < 0 || b - a < 120) && guard < 40);
+    if (a < 0) { a = 0; b = Math.min(d.size - 1, 1200); }
+
+    tempo = { score: 0, ok: 0, ko: 0, left: DURATA, bounds: { da: d.words[a], a: d.words[b] },
+              words: new Set(), lo: a, hi: b + 1 };
+
+    chips.innerHTML = '';
+    $('#tempo-score').textContent = '0';
+    $('#tempo-ok').textContent = '0';
+    $('#tempo-ko').textContent = '0';
+    $('#timer-text').textContent = AZ.formatTime(DURATA);
+    $('#timer').classList.remove('is-urgent');
+    ring.style.strokeDasharray = RING_LEN;
+    ring.style.strokeDashoffset = 0;
+    inputTempo.disabled = true;
+    $('#tempo-submit').disabled = true;
+    $('#tempo-start-wrap').hidden = false;
+
+    Field.reset(d.words[0], d.words[d.size - 1], 'parole in mezzo');
+    setTimeout(function () {
+      Field.set(a, b + 1, d.countRange(a + 1, b, 'difficile'), d.words[a], d.words[b]);
+    }, 60);
+    say('Quante parole sai infilare fra «' + d.words[a] + '» e «' + d.words[b] + '»?');
+  }
+
+  $('#tempo-start').addEventListener('click', function () {
+    sfx.click();
+    $('#tempo-start-wrap').hidden = true;
+    inputTempo.disabled = false;
+    $('#tempo-submit').disabled = false;
+    inputTempo.focus();
+    Field.setLabel('parole trovate');
+    Field.setCount(0);
+    runTimer();
+  });
+
+  function runTimer() {
+    stopTimer();
+    game.timer = setInterval(function () {
+      tempo.left -= 1;
+      $('#timer-text').textContent = AZ.formatTime(tempo.left);
+      ring.style.strokeDashoffset = RING_LEN * (1 - tempo.left / DURATA);
+      if (tempo.left === 30) $('#timer').classList.add('is-urgent');
+      if (tempo.left <= 10 && tempo.left > 0) sfx.urgent();
+      if (tempo.left <= 0) { stopTimer(); finishTempo(); }
+    }, 1000);
+  }
+  function stopTimer() {
+    if (game.timer) { clearInterval(game.timer); game.timer = null; }
+  }
+
+  formTempo.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!game.timer) return;
+    var res = AZ.judgeTimed(game.dict, inputTempo.value, tempo.bounds, tempo.words);
+    if (!res.parola) return;
+    inputTempo.value = '';
+
+    if (res.esito === AZ.ESITO.DUPLICATA) {
+      flashBar(formTempo, 'bad'); say('Già scritta.', 'bad'); sfx.bad(); return;
+    }
+    if (res.esito === AZ.ESITO.ESTREMO) {
+      flashBar(formTempo, 'bad'); say('Gli estremi non contano.', 'bad'); sfx.bad(); return;
+    }
+
+    tempo.words.add(res.parola);
+    tempo.score += res.punti;
+
+    var chip = document.createElement('span');
+    chip.textContent = res.parola;
+    if (res.esito === AZ.ESITO.OK) {
+      tempo.ok += 1;
+      chip.className = 'chip chip--ok';
+      flashBar(formTempo, 'good');
+      say('+1 · ' + num(tempo.ok) + (tempo.ok === 1 ? ' parola' : ' parole'), 'good');
+      sfx.narrow();
+      Field.mark(game.dict.index.get(res.parola), 'hit');
+      Field.setCount(tempo.ok);
+    } else {
+      tempo.ko += 1;
+      chip.className = 'chip chip--ko';
+      flashBar(formTempo, 'bad');
+      say(res.esito === AZ.ESITO.FUORI ? '−1 · fuori intervallo' : '−1 · non è nel vocabolario', 'bad');
+      sfx.bad();
+    }
+    chips.insertBefore(chip, chips.firstChild);
+
+    $('#tempo-score').textContent = tempo.score;
+    $('#tempo-ok').textContent = tempo.ok;
+    $('#tempo-ko').textContent = tempo.ko;
+    tick($('#tempo-score'));
+  });
+
+  function finishTempo() {
+    inputTempo.disabled = true;
+    $('#tempo-submit').disabled = true;
+    sfx.win();
+    recordStats('tempo', function (s) {
+      s.partite = (s.partite || 0) + 1;
+      s.punti = (s.punti || 0) + tempo.score;
+      s.parole = (s.parole || 0) + tempo.ok;
+      s.best = s.best == null ? tempo.score : Math.max(s.best, tempo.score);
+    });
+    game.result = { mode: 'tempo', score: tempo.score, ok: tempo.ok, ko: tempo.ko, bounds: tempo.bounds };
+    setTimeout(function () { renderResult(); show('end'); }, 600);
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Schermata risultato
+  ───────────────────────────────────────────────────────────────────── */
+  function rstat(value, label, kind, i) {
+    return '<div class="rstat' + (kind ? ' rstat--' + kind : '') + '" style="--i:' + i + '">' +
+           '<b>' + value + '</b><i>' + label + '</i></div>';
+  }
+
+  function renderResult() {
+    var r = game.result;
+    if (!r) return;
+    var kicker = $('#end-kicker'), title = $('#end-title'), word = $('#end-word');
+    var sub = $('#end-sub'), stats = $('#end-stats'), path = $('#end-path');
+    var caption = $('#end-path-caption');
+    $('#sharebox').hidden = true;
+    path.innerHTML = '';
+    caption.textContent = '';
+
+    if (r.mode === 'indovina') {
+      kicker.textContent = AZ.LIVELLI[game.level].label + ' · ' + num(r.pool) + ' parole';
+      title.textContent = r.delta <= 0 ? 'Perfetto.' : r.delta <= 2 ? 'Trovata!' : 'Trovata.';
+      word.textContent = r.word;
+      sub.innerHTML = r.delta < 0
+        ? 'Hai fatto <b>' + Math.abs(r.delta) + '</b> ' + (Math.abs(r.delta) === 1 ? 'tentativo' : 'tentativi') +
+          ' meno della ricerca binaria perfetta. Fortuna o fiuto?'
+        : r.delta === 0
+          ? 'Esattamente quanti ne servivano nel caso peggiore. Chirurgico.'
+          : '<b>' + r.delta + '</b> ' + (r.delta === 1 ? 'tentativo' : 'tentativi') +
+            ' oltre l\'ottimale. Prova a puntare sempre a metà del campo rimasto.';
+      stats.innerHTML =
+        rstat(r.n, 'tentativi', r.delta <= 0 ? 'win' : '', 0) +
+        rstat(r.opt, 'ottimale', '', 1) +
+        rstat((r.delta > 0 ? '+' : '') + r.delta, 'scarto', r.delta <= 0 ? 'win' : 'lose', 2);
+      renderPath(path);
+      caption.textContent = 'Il campo dopo ogni tentativo — dall\'intero vocabolario a una parola sola.';
+      if (r.delta <= 0) burst();
+    }
+
+    if (r.mode === 'computer') {
+      kicker.textContent = AZ.LIVELLI[game.level].label + ' · ' + num(poolSize()) + ' parole';
+      if (r.esito === 'trovata') {
+        title.textContent = 'Presa.';
+        word.textContent = r.word || '';
+        sub.innerHTML = 'Mi sono bastate <b>' + r.n + '</b> mosse su un massimo di <b>' + r.opt +
+                        '</b>. Ogni tua risposta ha buttato via metà del vocabolario.';
+        stats.innerHTML = rstat(r.n, 'mosse', 'win', 0) + rstat(r.opt, 'al massimo', '', 1) +
+                          rstat(Math.round(100 - 100 / Math.pow(2, r.n)) + '%', 'campo escluso', '', 2);
+        burst();
+      } else {
+        title.textContent = 'Qui non torna.';
+        word.textContent = '';
+        sub.innerHTML = 'Le risposte si contraddicono: non resta nessuna parola che le soddisfi tutte. ' +
+                        'Capita — l\'ordine alfabetico è più scivoloso di quanto sembri.';
+        stats.innerHTML = rstat(r.n, 'mosse', '', 0) + rstat(0, 'candidate', 'lose', 1);
+      }
+      renderPath(path);
+      caption.textContent = 'Il dimezzamento, mossa per mossa.';
+    }
+
+    if (r.mode === 'tempo') {
+      kicker.textContent = 'Sfida a tempo · 3 minuti';
+      title.textContent = r.score > 0 ? 'Tempo!' : 'Tempo scaduto.';
+      word.textContent = r.bounds.da + ' → ' + r.bounds.a;
+      sub.innerHTML = '<b>' + r.ok + '</b> ' + (r.ok === 1 ? 'parola valida' : 'parole valide') +
+                      (r.ko ? ', ' + r.ko + ' ' + (r.ko === 1 ? 'errore' : 'errori') : ', nessun errore') + '.';
+      stats.innerHTML = rstat(r.score, 'punti', r.score > 0 ? 'win' : 'lose', 0) +
+                        rstat(r.ok, 'valide', '', 1) + rstat(r.ko, 'errori', r.ko ? 'lose' : '', 2);
+      if (r.ok >= 10) burst();
+    }
+  }
+
+  /** Il percorso: un mattoncino per tentativo, largo quanto l'intervallo. */
+  function renderPath(container) {
+    var N = game.dict.size;
+    var rows = [{ lo: 0, hi: N }].concat(
+      game.history.filter(function (h) { return h.lo != null; })
+                  .map(function (h) { return { lo: h.lo, hi: h.hi }; })
+    );
+    rows.forEach(function (row, i) {
+      var el = document.createElement('div');
+      el.className = 'path-row';
+      el.style.setProperty('--i', i);
+      var seg = document.createElement('div');
+      seg.className = 'path-seg';
+      seg.style.setProperty('--i', i);
+      seg.style.left = (row.lo / N * 100) + '%';
+      seg.style.width = Math.max(0.5, (row.hi - row.lo) / N * 100) + '%';
+      el.appendChild(seg);
+      container.appendChild(el);
+    });
+  }
+
+  /** Piccola esplosione: 16 quadratini, meno di un secondo. */
+  function burst() {
+    if (reduced()) return;
+    var host = $('.result');
+    var old = host.querySelector('.burst');
+    if (old) old.remove();
+    var b = document.createElement('div');
+    b.className = 'burst';
+    var colors = ['var(--abaco)', 'var(--zuzz)', 'var(--gold)', 'var(--green)'];
+    for (var i = 0; i < 16; i++) {
+      var s = document.createElement('span');
+      var ang = (i / 16) * Math.PI * 2 + Math.random() * 0.3;
+      var dist = 90 + Math.random() * 110;
+      s.style.setProperty('--x', Math.cos(ang) * dist + 'px');
+      s.style.setProperty('--y', Math.sin(ang) * dist * 0.75 + 'px');
+      s.style.setProperty('--r', Math.round(Math.random() * 300 - 150) + 'deg');
+      s.style.setProperty('--d', (i * 12) + 'ms');
+      s.style.setProperty('--c', colors[i % colors.length]);
+      b.appendChild(s);
+    }
+    host.appendChild(b);
+    setTimeout(function () { if (b.parentNode) b.remove(); }, 1600);
+  }
+
+  $('#end-again').addEventListener('click', function () { sfx.click(); startMode(game.mode); });
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Condivisione stile Wordle
+  ───────────────────────────────────────────────────────────────────── */
+  function shareText() {
+    var r = game.result;
+    var url = 'https://fedetrain.github.io/abaco-zuzzurellone/';
+    var lines = ['Abaco Zuzzurellone 🧮'];
+
+    if (r.mode === 'indovina') {
+      lines.push('Indovina tu · ' + AZ.LIVELLI[game.level].label.toLowerCase() +
+                 ' (' + num(r.pool) + ' parole)');
+      lines.push('🎯 ' + r.n + ' tentativi — ottimale ' + r.opt +
+                 (r.delta < 0 ? ' · ' + Math.abs(r.delta) + ' sotto!' :
+                  r.delta === 0 ? ' · in pari' : ' · +' + r.delta));
+      lines.push(game.history.map(function (h) {
+        return h.esito === 'trovata' ? '🎯' : h.esito === 'prima' ? '⬅️' : '➡️';
+      }).join(''));
+      lines.push(narrowingBar());
+    } else if (r.mode === 'computer') {
+      lines.push('Indovina il computer · ' + AZ.LIVELLI[game.level].label.toLowerCase());
+      lines.push(r.esito === 'trovata'
+        ? '🤖 mi ha beccato in ' + r.n + ' mosse (max ' + r.opt + ')'
+        : '🤖 ' + r.n + ' mosse e poi il vuoto: risposte incoerenti');
+      lines.push(narrowingBar());
+    } else {
+      lines.push('Sfida a tempo · 3:00');
+      lines.push('« ' + r.bounds.da + ' … ' + r.bounds.a + ' »');
+      lines.push('🏆 ' + r.score + ' punti — ' + r.ok + ' valide, ' + r.ko + ' errori');
+      lines.push(new Array(Math.min(20, r.ok) + 1).join('🟩') +
+                 new Array(Math.min(10, r.ko) + 1).join('🟥'));
+    }
+    lines.push(url);
+    return lines.filter(Boolean).join('\n');
+  }
+
+  /** Barretta che mostra quanto si è ristretto il campo. */
+  function narrowingBar() {
+    var N = game.dict.size;
+    var last = game.history[game.history.length - 1];
+    if (!last) return '';
+    var width = Math.max(1, (last.hi != null ? last.hi - last.lo : 1));
+    var frac = width / N;
+    var filled = Math.max(0, Math.min(10, Math.round(frac * 10)));
+    return '▓'.repeat(10) + ' → ' + (filled ? '▓'.repeat(filled) : '▏') +
+           '░'.repeat(10 - filled) + '  (' + num(N) + ' → ' + num(width) + ')';
+  }
+
+  $('#end-share').addEventListener('click', function () {
+    var text = shareText();
+    var box = $('#sharebox');
+    box.textContent = text;
+    box.hidden = false;
+    sfx.click();
+
+    var done = function (msg) {
+      var label = $('#end-share span');
+      var old = label.textContent;
+      label.textContent = msg;
+      setTimeout(function () { label.textContent = old; }, 1800);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () { done('Copiato!'); },
+        function () { done('Copia a mano ↓'); }
+      );
+    } else {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        done('Copiato!');
+      } catch (e) { done('Copia a mano ↓'); }
+    }
+  });
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Statistiche
+  ───────────────────────────────────────────────────────────────────── */
+  function recordStats(mode, mutate) {
+    if (!prefs.stats[mode]) prefs.stats[mode] = {};
+    mutate(prefs.stats[mode]);
+    savePrefs();
+  }
+
+  function cell(value, label) {
+    return '<div class="stat-cell"><b>' + value + '</b><i>' + label + '</i></div>';
+  }
+
+  function renderStats() {
+    var s = prefs.stats || {};
+    var out = [];
+    var g = s.indovina || {};
+    var c = s.computer || {};
+    var t = s.tempo || {};
+
+    if (!g.partite && !c.partite && !t.partite) {
+      $('#stats-body').innerHTML =
+        '<div class="doc-block"><h3>Ancora niente</h3>' +
+        '<p class="stat-empty">Gioca una partita e qui comparirà il tuo storico. ' +
+        'Resta su questo dispositivo, non va da nessuna parte.</p></div>';
+      return;
+    }
+
+    if (g.partite) {
+      var media = (g.tentativi / g.partite);
+      var mediaDelta = (g.deltaTot / g.partite);
+      out.push(
+        '<section class="doc-block"><h3>Indovina tu</h3>' +
+        '<div class="stat-grid">' +
+        cell(g.partite, 'partite') +
+        cell(media.toFixed(1), 'media tentativi') +
+        cell(g.best, 'miglior partita') +
+        cell((mediaDelta > 0 ? '+' : '') + mediaDelta.toFixed(1), 'scarto medio') +
+        cell(g.streak || 0, 'streak') +
+        cell(g.maxStreak || 0, 'streak record') +
+        '</div>' + distBars(g.dist) + '</section>'
+      );
+    }
+    if (c.partite) {
+      out.push(
+        '<section class="doc-block"><h3>Indovina il computer</h3>' +
+        '<div class="stat-grid">' +
+        cell(c.partite, 'partite') +
+        cell(c.vinte || 0, 'indovinate') +
+        cell(c.vinte ? (c.passi / c.vinte).toFixed(1) : '—', 'media mosse') +
+        cell(c.best == null ? '—' : c.best, 'record') +
+        cell(c.contraddizioni || 0, 'incoerenze') +
+        '</div></section>'
+      );
+    }
+    if (t.partite) {
+      out.push(
+        '<section class="doc-block"><h3>Sfida a tempo</h3>' +
+        '<div class="stat-grid">' +
+        cell(t.partite, 'partite') +
+        cell(t.best == null ? '—' : t.best, 'miglior punteggio') +
+        cell((t.punti / t.partite).toFixed(1), 'punti medi') +
+        cell(t.parole || 0, 'parole trovate') +
+        '</div></section>'
+      );
+    }
+    $('#stats-body').innerHTML = out.join('');
+  }
+
+  /** Istogramma dello scarto rispetto alla ricerca perfetta. */
+  function distBars(dist) {
+    if (!dist) return '';
+    var keys = ['-2', '-1', '0', '1', '2', '3'];
+    var labels = { '-2': '≤ −2', '-1': '−1', '0': 'in pari', '1': '+1', '2': '+2', '3': '≥ +3' };
+    var max = 1;
+    keys.forEach(function (k) { max = Math.max(max, dist[k] || 0); });
+    var rows = keys.map(function (k, i) {
+      var v = dist[k] || 0;
+      return '<div class="bar-row"><span>' + labels[k] + '</span>' +
+             '<div class="bar-track"><div class="bar-fill' + (Number(k) <= 0 ? ' is-best' : '') +
+             '" style="--i:' + i + ';width:' + (v / max * 100) + '%' + (v ? '' : ';min-width:0') + '"></div></div>' +
+             '<span>' + v + '</span></div>';
+    }).join('');
+    return '<p class="doc-note" style="margin-top:1rem">Scarto dalla ricerca binaria perfetta</p>' +
+           '<div class="bars">' + rows + '</div>';
+  }
+
+  $('#stats-reset').addEventListener('click', function () {
+    prefs.stats = {};
+    savePrefs();
+    renderStats();
+  });
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Dimostrazione del dimezzamento nella pagina delle regole
+  ───────────────────────────────────────────────────────────────────── */
+  function renderHalving(n) {
+    var parts = [];
+    var v = n;
+    for (var k = 0; k < 8 && v > 1; k++) {
+      parts.push(k === 0 ? num(v) : '<b>' + num(v) + '</b>');
+      v = Math.ceil(v / 2);
+    }
+    parts.push('<b>1</b>');
+    $('#halving-demo').innerHTML = parts.join('<span>→</span>');
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Caricamento del vocabolario
+     Il file è un <script> e non una fetch: così la pagina funziona anche
+     aperta da disco (file://), dove fetch verrebbe bloccata dal CORS.
+  ───────────────────────────────────────────────────────────────────── */
+  var loader = $('#loader');
+  var loaderFill = $('#loader-fill');
+  var loaderText = $('#loader-text');
+
+  function progress(p, text) {
+    loaderFill.style.width = p + '%';
+    if (text) loaderText.textContent = text;
+  }
+
+  function boot(data) {
+    progress(70, 'metto le parole in fila…');
+    setTimeout(function () {
+      var out = AZ.unpack(data.packed, data.count);
+      game.dict = new AZ.Dizionario(out.words, out.tiers);
+      Field.init(game.dict);
+
+      $('#hero-count').textContent = num(game.dict.size - 2);
+      $$('[data-count]').forEach(function (el) {
+        var lv = el.dataset.count;
+        el.textContent = num(game.dict.countRange(0, game.dict.size, lv));
+      });
+      setLevel(game.level);
+      renderHalving(game.dict.size);
+
+      progress(100, 'pronto');
+      setTimeout(function () {
+        document.body.removeAttribute('data-loading');
+        $('#screen-home').classList.add('is-entering');
+        movePill();
+        // Onboarding leggero: la prima volta il pulsante delle regole ammicca.
+        if (!prefs.visto) {
+          prefs.visto = true; savePrefs();
+          var rb = $('#btn-rules');
+          rb.animate(
+            [{ transform: 'scale(1)' }, { transform: 'scale(1.25)' }, { transform: 'scale(1)' }],
+            { duration: 700, iterations: 3, easing: 'cubic-bezier(.22,1.28,.38,1)' }
+          );
+        }
+      }, 260);
+    }, 40);
+  }
+
+  function fail(msg) {
+    loader.classList.add('is-error');
+    loaderText.textContent = msg;
+    loaderFill.style.width = '100%';
+  }
+
+  progress(25, 'apro il vocabolario…');
+  var script = document.createElement('script');
+  script.src = 'data/dizionario.js';
+  script.onload = function () {
+    if (!window.ABACO_DATA) { fail('Vocabolario illeggibile.'); return; }
+    boot(window.ABACO_DATA);
+  };
+  script.onerror = function () {
+    fail('Non riesco a caricare data/dizionario.js — controlla che il file sia accanto a index.html.');
+  };
+  document.head.appendChild(script);
+})();

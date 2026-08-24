@@ -1,0 +1,11 @@
+# Upstream word lists, re-downloadable with `node tools/fetch-sources.mjs`
+tools/sources/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+node_modules/
