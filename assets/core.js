@@ -185,6 +185,155 @@
   };
 
   /* ---------------------------------------------------------------------
+     3-bis. Scomposizione alfabetica dell'intervallo
+     ---------------------------------------------------------------------
+     Il pannello "apri l'alfabeto" chiede, per ogni lettera, quante parole
+     sono ancora in gioco e quante ne ha in tutto. Sono 26 domande che si
+     risolvono con 26 lowerBound (~17 confronti l'una) piu' due sottrazioni
+     sui cumulativi: nessuna scansione delle 83.362 parole.
+
+     Quando l'intervallo entra dentro una sola lettera la scomposizione
+     scende di un livello da sola: il prefisso comune ai due estremi diventa
+     piu' lungo e le "lettere" mostrate sono i caratteri successivi
+     (dentro la r: ra re ri ro ru...). E' il gioco stesso, reso visibile.
+  --------------------------------------------------------------------- */
+  var ALFABETO = 'abcdefghijklmnopqrstuvwxyz'.split('');
+  var LETTERE_ITALIANE = 'abcdefghilmnopqrstuvz';
+
+  /** Toglie gli accenti: "élite" e "però" vivono sotto e e sotto o. */
+  function fold(word) {
+    return String(word).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  }
+
+  /**
+   * Il prefisso immediatamente successivo, in ordine alfabetico, a tutto il
+   * blocco che comincia per `p`: "per" -> "pes", "pez" -> "pf", "zzz" -> null
+   * (fine del vocabolario).
+   */
+  function nextPrefix(p) {
+    for (var i = p.length - 1; i >= 0; i--) {
+      var c = p.charCodeAt(i);
+      if (c >= 97 && c < 122) return p.slice(0, i) + String.fromCharCode(c + 1);
+    }
+    return null;
+  }
+
+  /** Intervallo di indici di tutte le parole che cominciano per `prefisso`. */
+  Dizionario.prototype.prefixRange = function (prefisso) {
+    if (!prefisso) return { lo: 0, hi: this.size };
+    var lo = this.lowerBound(prefisso);
+    var next = nextPrefix(prefisso);
+    var hi = next == null ? this.size : this.lowerBound(next);
+    return { lo: lo, hi: Math.max(lo, hi) };
+  };
+
+  /**
+   * Il prefisso comune ai due estremi dell'intervallo, senza accenti. E'
+   * esattamente la profondita' a cui il gioco e' arrivato: finche' i due
+   * estremi cominciano per lettere diverse vale '', poi 'r', poi 're'...
+   */
+  Dizionario.prototype.commonPrefix = function (lo, hi) {
+    if (hi - lo <= 0 || this.size === 0) return '';
+    var a = fold(this.words[Math.max(0, Math.min(lo, this.size - 1))]);
+    var b = fold(this.words[Math.max(0, Math.min(hi, this.size) - 1)]);
+    var k = 0;
+    while (k < a.length && k < b.length && a[k] === b[k]) k += 1;
+    return a.slice(0, k);
+  };
+
+  function statoDi(s, e, lo, hi) {
+    if (e <= lo) return 'prima';
+    if (s >= hi) return 'dopo';
+    if (s >= lo && e <= hi) return 'dentro';
+    return 'parziale';
+  }
+
+  /**
+   * Scompone l'intervallo [lo, hi) lettera per lettera al livello giusto.
+   * Restituisce:
+   *   prefisso     il prefisso comune ai due estremi ('' all'inizio)
+   *   profondita   quanti caratteri sono ormai fissati (= prefisso.length)
+   *   ambito       l'intervallo di tutte le parole con quel prefisso
+   *   voci         una per lettera: { lettera, prefisso, lo, hi, totale,
+   *                vive, stato, straniera }
+   *   esatta       la voce che e' esattamente il prefisso ("re" dentro "re"),
+   *                oppure null
+   *   vive/totale  parole in gioco e parole dell'ambito, al livello scelto
+   *   max          il totale piu' alto fra le voci, per scalare le barre
+   */
+  Dizionario.prototype.breakdown = function (lo, hi, livello) {
+    lo = Math.max(0, Math.min(lo, this.size));
+    hi = Math.max(lo, Math.min(hi, this.size));
+
+    var prefisso = this.commonPrefix(lo, hi);
+    // Intervallo di una parola sola: mostro comunque l'ultima scelta fatta,
+    // altrimenti il pannello sarebbe una griglia vuota.
+    if (hi - lo <= 1 && prefisso.length) prefisso = prefisso.slice(0, -1);
+
+    var ambito = this.prefixRange(prefisso);
+    var i;
+
+    // Confini delle 26 lettere dentro l'ambito: monotoni per costruzione,
+    // perche' lowerBound e' monotona e prefisso+'a' < prefisso+'b' < ...
+    var bordi = new Array(ALFABETO.length + 1);
+    for (i = 0; i < ALFABETO.length; i++) {
+      var b = this.lowerBound(prefisso + ALFABETO[i]);
+      bordi[i] = b < ambito.lo ? ambito.lo : (b > ambito.hi ? ambito.hi : b);
+    }
+    bordi[ALFABETO.length] = ambito.hi;
+
+    var voci = [];
+    var max = 0;
+    for (i = 0; i < ALFABETO.length; i++) {
+      var s = bordi[i];
+      var e = bordi[i + 1];
+      // In cima si mostrano tutte e 26 le lettere, anche quelle che il
+      // livello facile non usa: il vuoto e' un'informazione. Piu' in basso
+      // si tengono solo le combinazioni che esistono davvero.
+      if (prefisso.length && this.countRange(s, e, 'difficile') === 0) continue;
+      var totale = this.countRange(s, e, livello);
+      if (totale > max) max = totale;
+      voci.push({
+        lettera: ALFABETO[i],
+        prefisso: prefisso + ALFABETO[i],
+        lo: s,
+        hi: e,
+        totale: totale,
+        vive: this.countRange(Math.max(s, lo), Math.min(e, hi), livello),
+        stato: statoDi(s, e, lo, hi),
+        straniera: LETTERE_ITALIANE.indexOf(ALFABETO[i]) < 0,
+      });
+    }
+
+    var esatta = null;
+    if (prefisso.length && bordi[0] > ambito.lo) {
+      esatta = {
+        lettera: '·',
+        prefisso: prefisso,
+        parola: this.words[ambito.lo],
+        lo: ambito.lo,
+        hi: bordi[0],
+        totale: this.countRange(ambito.lo, bordi[0], livello),
+        vive: this.countRange(Math.max(ambito.lo, lo), Math.min(bordi[0], hi), livello),
+        stato: statoDi(ambito.lo, bordi[0], lo, hi),
+        straniera: false,
+      };
+      if (esatta.totale > max) max = esatta.totale;
+    }
+
+    return {
+      prefisso: prefisso,
+      profondita: prefisso.length,
+      ambito: ambito,
+      voci: voci,
+      esatta: esatta,
+      vive: this.countRange(lo, hi, livello),
+      totale: this.countRange(ambito.lo, ambito.hi, livello),
+      max: max,
+    };
+  };
+
+  /* ---------------------------------------------------------------------
      4. Interval maths
      --------------------------------------------------------------------- */
 

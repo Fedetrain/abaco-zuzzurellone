@@ -429,9 +429,11 @@ main { display: block; }
   padding: clamp(1rem, 3vw, 1.5rem) clamp(1rem, 3vw, 1.6rem) clamp(.8rem, 2vw, 1.1rem);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  /* il fondo è chiuso dal pulsante «apri l'alfabeto»: i due pezzi sono
+     un'unica scheda, il campo sopra e la sua chiave di lettura sotto. */
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
   box-shadow: var(--shadow-md);
-  margin-bottom: clamp(1.1rem, 3vw, 1.8rem);
+  margin-bottom: 0;
   overflow: hidden;
 }
 .field.is-tight { border-color: color-mix(in srgb, var(--gold) 45%, var(--line)); }
@@ -606,6 +608,302 @@ main { display: block; }
   transition: opacity .4s var(--ease-out), transform .4s var(--ease-spring);
 }
 .field-zoom.is-on { opacity: 1; transform: none; }
+
+/* ═══════════════════════ L'ALFABETO APERTO ══════════════════════════════
+   La scala sotto la barra è per forza diradata: sotto zoom mostra prefissi
+   e qualche lettera sparisce. Questo pannello è la stessa informazione
+   scritta per esteso — una casella per lettera, con quante parole restano
+   in gioco, quante ne ha in tutto e quanto pesa sul vocabolario.
+   Quando il campo entra dentro una sola lettera scende di un livello e
+   passa ai secondi caratteri, poi ai terzi: il gioco reso visibile.
+  ─────────────────────────────────────────────────────────────────────── */
+.alfa { margin: 0 0 clamp(1.1rem, 3vw, 1.8rem); }
+/* Niente entrata a sé: la striscia è il bordo inferiore della scheda del
+   campo, entra con lei. Serve anche a non lasciarle un filter addosso —
+   basta quello a rendere l'elemento il blocco contenitore dei figli
+   position:fixed, e sul telefono il pannello non arriverebbe più a fondo
+   schermo. */
+.screen.is-entering > .alfa { animation: none; }
+
+.alfa-toggle {
+  display: flex; align-items: center; gap: .5rem;
+  width: 100%;
+  padding: .62rem clamp(1rem, 3vw, 1.6rem);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-top: 1px solid var(--line-soft);
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  color: var(--ink-soft);
+  font-size: .78rem; font-weight: 650; letter-spacing: .01em;
+  box-shadow: var(--shadow-sm);
+  transition: color .25s var(--ease-out), background .25s var(--ease-out);
+}
+.alfa-toggle:hover { color: var(--ink); background: var(--surface-2); }
+.alfa-chev {
+  width: 17px; height: 17px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 2.1;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: transform .42s var(--ease-spring);
+}
+.alfa.is-open .alfa-chev { transform: rotate(180deg); }
+.alfa-toggle-hint {
+  margin-left: auto;
+  font-family: var(--font-mono); font-size: .66rem; font-weight: 500;
+  color: var(--ink-faint); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Apertura: da 0fr a 1fr, così l'altezza la decide il contenuto e non un
+   max-height inventato che taglierebbe le griglie lunghe. */
+.alfa-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows .48s var(--ease-soft), opacity .3s var(--ease-out);
+}
+.alfa.is-open .alfa-panel { grid-template-rows: 1fr; opacity: 1; }
+.alfa-sheet {
+  min-height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  transition: visibility 0s .48s;
+}
+.alfa.is-open .alfa-sheet { visibility: visible; transition-delay: 0s; }
+.alfa-grab, .alfa-close { display: none; }
+.alfa-scrim { display: none; }
+
+.alfa-inner {
+  padding: .9rem clamp(1rem, 3vw, 1.6rem) 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 0;
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.alfa.is-open .alfa-toggle { border-radius: 0; }
+.alfa-top {
+  display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap;
+  padding: 0 .15rem;
+}
+.alfa-cap { margin: 0; font-size: .82rem; color: var(--ink-soft); flex: 1; min-width: 12rem; text-wrap: pretty; }
+.alfa-cap b { color: var(--ink); font-family: var(--font-mono); font-weight: 700; }
+.alfa-cap em {
+  font-family: var(--font-display); font-style: italic; font-weight: 600;
+  color: var(--zuzz); font-size: 1.02em;
+}
+.alfa-tools { display: flex; align-items: center; gap: .5rem; margin-left: auto; }
+.alfa-opt {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .66rem; letter-spacing: .1em; text-transform: uppercase;
+  font-weight: 700; color: var(--ink-faint);
+  padding: .25rem .55rem; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--line-soft);
+  cursor: pointer; white-space: nowrap;
+  transition: color .25s, border-color .25s;
+}
+.alfa-opt:hover { color: var(--ink-soft); }
+.alfa-opt input { accent-color: var(--zuzz); width: 13px; height: 13px; margin: 0; cursor: pointer; }
+.alfa-opt:has(input:checked) { color: var(--ink-soft); border-color: var(--line); }
+
+/* le lettere già fissate: tutto → r → re → rec */
+.alfa-crumbs {
+  list-style: none; margin: .55rem 0 0; padding: 0;
+  display: flex; flex-wrap: wrap; align-items: center; gap: .3rem;
+  font-family: var(--font-mono); font-size: .68rem;
+}
+.alfa-crumbs li {
+  display: flex; align-items: center; gap: .3rem;
+  color: var(--ink-faint);
+}
+.alfa-crumbs li::after { content: '›'; color: var(--line); }
+.alfa-crumbs li:last-child::after { content: ''; }
+.alfa-crumbs b {
+  font-weight: 700;
+  padding: .12rem .45rem; border-radius: 6px;
+  background: var(--surface-2); color: var(--ink-soft);
+}
+.alfa-crumbs li:last-child b { background: var(--gold-soft); color: var(--gold-ink); }
+
+/* la griglia delle lettere */
+.alfa-grid {
+  list-style: none; margin: .7rem 0 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.2rem, 1fr));
+  gap: .38rem;
+}
+.alfa-cell {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.55rem 1fr;
+  grid-template-areas: 'key num' 'key meter' 'key tag';
+  align-items: center;
+  gap: .05rem .55rem;
+  padding: .48rem .6rem;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  animation: alfaIn .38s var(--ease-spring) backwards;
+  animation-delay: calc(var(--i, 0) * 9ms);
+}
+@keyframes alfaIn { from { opacity: 0; transform: translate3d(0, 7px, 0) scale(.97); } }
+
+.alfa-key {
+  grid-area: key;
+  align-self: center; justify-self: center;
+  font-family: var(--font-display);
+  font-size: 1.42rem; font-weight: 800; line-height: 1;
+  letter-spacing: -.03em;
+  font-variation-settings: 'SOFT' 40, 'WONK' 1, 'opsz' 60;
+  color: var(--ink);
+}
+.alfa-key sup {
+  font-family: var(--font-mono); font-size: .38em; font-weight: 700;
+  vertical-align: super; color: var(--ink-faint); letter-spacing: 0;
+}
+.alfa-num {
+  grid-area: num;
+  font-family: var(--font-mono); font-size: .74rem; font-weight: 700;
+  font-variant-numeric: tabular-nums; line-height: 1.25;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.alfa-num em { font-style: normal; font-weight: 500; font-size: .84em; color: var(--ink-faint); }
+.alfa-meter {
+  grid-area: meter;
+  position: relative; height: 6px; margin: .2rem 0;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  overflow: hidden;
+}
+.alfa-meter i {                    /* quanto pesa la lettera sul vocabolario */
+  position: absolute; inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 16%, transparent);
+  transform-origin: left;
+  animation: segGrow .55s var(--ease-spring) backwards;
+  animation-delay: calc(var(--i, 0) * 9ms + 60ms);
+}
+.alfa-meter i b {                  /* la parte ancora in gioco */
+  position: absolute; inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--abaco), var(--zuzz));
+}
+.alfa-tag {
+  grid-area: tag;
+  font-size: .55rem; letter-spacing: .11em; text-transform: uppercase;
+  font-weight: 700; color: var(--ink-faint);
+  display: flex; align-items: center; gap: .25rem;
+  white-space: nowrap;
+}
+
+/* — stati — mai solo colore: c'è sempre l'etichetta e, per le escluse,
+   la lettera barrata e il pallino spento. */
+.alfa-cell--dentro {
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--green) 30%, var(--line-soft));
+}
+.alfa-cell--dentro .alfa-tag { color: var(--green); }
+.alfa-cell--parziale {
+  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
+  border-style: dashed;
+  background: linear-gradient(180deg, var(--gold-soft), transparent 120%), var(--surface);
+}
+.alfa-cell--parziale .alfa-tag { color: var(--gold-ink); }
+/* Escluse: spente, ma leggibili. L'opacità sull'intera casella le
+   cancellava; meglio togliere il fondo e scurire i singoli pezzi. */
+.alfa-cell--prima, .alfa-cell--dopo {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--line-soft);
+}
+.alfa-cell--prima .alfa-key, .alfa-cell--dopo .alfa-key {
+  color: color-mix(in srgb, var(--ink) 46%, transparent);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+.alfa-cell--prima .alfa-num, .alfa-cell--dopo .alfa-num { color: var(--ink-faint); font-weight: 500; }
+.alfa-cell--prima .alfa-meter, .alfa-cell--dopo .alfa-meter { opacity: .7; }
+.alfa-cell--prima .alfa-meter i b, .alfa-cell--dopo .alfa-meter i b { display: none; }
+.alfa-cell--prima .alfa-tag { color: var(--abaco); }
+.alfa-cell--dopo .alfa-tag { color: var(--zuzz); }
+.alfa-cell--vuota .alfa-key { color: var(--ink-faint); }
+/* la voce «nessuna lettera dopo»: la parola che è esattamente il prefisso */
+.alfa-cell--esatta { grid-column: 1 / -1; }
+.alfa-cell--esatta .alfa-key { color: var(--ink-faint); }
+.alfa-cell--esatta .alfa-tag { text-transform: none; letter-spacing: .02em; font-size: .6rem; }
+
+.alfa.is-nocount .alfa-num { visibility: hidden; }
+
+.alfa-legend {
+  margin: .8rem 0 0; padding-left: .8rem;
+  border-left: 2px solid var(--gold);
+  font-size: .74rem; color: var(--ink-faint); text-wrap: pretty;
+}
+.alfa-legend b { color: var(--ink-soft); }
+
+/* la traccia diventa cliccabile: apre lo stesso pannello del pulsante */
+.field-track { cursor: zoom-in; }
+.field.is-alfa-open .field-track { cursor: zoom-out; }
+
+/* — telefono: pannello a scomparsa dal basso, a tutta larghezza — */
+@media (max-width: 46rem) {
+  .alfa-scrim {
+    display: block;
+    position: fixed; inset: 0; z-index: 55;
+    background: color-mix(in srgb, var(--paper-deep) 62%, transparent);
+    backdrop-filter: blur(2px);
+    opacity: 0; visibility: hidden;
+    transition: opacity .35s var(--ease-out), visibility 0s .35s;
+  }
+  .alfa.is-open .alfa-scrim { opacity: 1; visibility: visible; transition-delay: 0s; }
+
+  .alfa-panel {
+    position: fixed; z-index: 56;
+    inset: auto 0 0 0;
+    display: block; opacity: 1;
+    transform: translateY(101%);
+    visibility: hidden;
+    transition: transform .44s var(--ease-out), visibility 0s .44s;
+  }
+  .alfa.is-open .alfa-panel { transform: none; visibility: visible; transition-delay: 0s; }
+  .alfa-sheet {
+    visibility: visible;
+    max-height: min(80svh, 40rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    box-shadow: var(--shadow-lg);
+    transition: none;
+  }
+  .alfa-inner {
+    padding: .5rem clamp(.9rem, 4vw, 1.4rem) calc(1.2rem + env(safe-area-inset-bottom));
+    border: 0; border-top: 1px solid var(--line);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    box-shadow: none;
+    min-height: 100%;
+  }
+  .alfa.is-open .alfa-toggle { border-radius: 0 0 var(--r-lg) var(--r-lg); }
+  .alfa-grab {
+    display: block;
+    width: 38px; height: 4px; margin: .1rem auto 0;
+    border-radius: 999px; background: var(--line);
+  }
+  .alfa-top { position: sticky; top: 0; z-index: 1;
+              background: var(--surface); padding-top: .5rem; padding-bottom: .4rem; }
+  .alfa-close {
+    display: grid; place-items: center;
+    width: 30px; height: 30px; border-radius: 9px;
+    background: var(--surface-2); color: var(--ink-soft);
+  }
+  .alfa-close svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+  .alfa-grid { grid-template-columns: repeat(auto-fill, minmax(7.4rem, 1fr)); }
+}
+@media (max-width: 24rem) {
+  .alfa-grid { grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr)); }
+  .alfa-cell { grid-template-columns: 1.3rem 1fr; padding: .4rem .45rem; }
+  .alfa-key { font-size: 1.2rem; }
+}
 
 /* ── pannelli ──────────────────────────────────────────────────────────── */
 .panel[hidden] { display: none; }
@@ -1004,7 +1302,12 @@ body:not([data-loading]) .loader { opacity: 0; visibility: hidden; }
   *, *::before, *::after {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
+    /* anche i ritardi vanno azzerati: con animation-fill-mode backwards una
+       scaletta di 26 caselle resterebbe invisibile per un quarto di secondo,
+       cioè proprio il lampeggio che chi chiede meno movimento vuole evitare. */
+    animation-delay: 0ms !important;
     transition-duration: .01ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
   .field-span { transition: left .01ms, width .01ms; }

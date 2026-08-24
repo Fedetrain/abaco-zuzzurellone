@@ -61,6 +61,43 @@ letters to two-, three- and four-letter prefixes. At the end you are reading
 
 <p align="center"><img src="docs/campo-stretto.png" alt="The interval bar zoomed 1300x into a few words" width="100%"></p>
 
+### Open the alphabet
+
+That zoomed scale is necessarily thinned out — labels that would collide are
+dropped, and past a certain magnification it shows prefixes instead of letters.
+So the bar opens. **Apri l'alfabeto** expands a panel that spells the same state
+out in full: one cell per letter, the Italian ones plus the foreign `j k w x y`
+(marked `str`), each with
+
+* its **status against the current interval** — in play, half in (the letter
+  that contains one of the bounds), or struck out because it falls before the
+  left bound or after the right one;
+* **how many of its words are still alive** and how many it has in total at the
+  chosen difficulty — the `s` holds ten thousand, the `q` three hundred, and
+  that gap is half the fun;
+* a **proportional bar**: its length is the letter's weight in the vocabulary,
+  the lit part is what is still in play.
+
+The good bit is what happens when the field slips inside a single letter. The
+panel **drops a level on its own** and starts showing the second characters —
+inside `r`: `ra re ri ro ru`, with their own counts — then the third, then the
+fourth. The breadcrumb above the grid (`tutto › r › ra`) says how deep you are.
+It is the game itself made visible: first you pin down the first letter, then
+the second, then the third.
+
+<p align="center"><img src="docs/alfabeto-aperto.png" alt="The alphabet panel open, showing the descent to the third letter inside «ra»" width="100%"></p>
+
+The panel opens on a click or tap anywhere on the interval bar, from the button
+under it, or from the keyboard — the button carries `aria-expanded`, and every
+cell has a full sentence as its accessible name, so the state never rests on
+colour alone. On a phone it comes up as a bottom sheet rather than a cramped
+strip. It starts **open in the two teaching modes and closed in *Indovina tu***,
+where holding the field in your head is the challenge, and it remembers what you
+chose, mode by mode. A **conteggi** switch hides the exact numbers if you want
+the shape without the arithmetic.
+
+<p align="center"><img src="docs/alfabeto-mobile.png" alt="The alphabet panel as a bottom sheet on a phone" width="32%"></p>
+
 ### 2 · Indovina il computer — *the computer guesses*
 
 You think of the word and answer *prima* / *dopo* / *è questa*. The computer
@@ -167,6 +204,29 @@ bar around a third of the track, and the scale labels are recomputed from the
 words actually inside the frame. Labels that would collide are dropped by
 weight, not left-to-right, so the letters that own the most vocabulary survive.
 
+### Counting a letter without counting the words
+
+The alphabet panel wants, on every guess, twenty-six pairs of numbers: how many
+words each letter still has in play and how many it has in total. Walking the
+83 362 entries to find out would be the obvious way and the wrong one.
+
+Instead `AZ.breakdown(lo, hi, livello)` asks `lowerBound` for the twenty-six
+boundaries `prefix+a`, `prefix+b`, … — twenty-six binary searches, seventeen
+comparisons each — and then reads every count off the difficulty prefix-sums
+already in `Dizionario`, which turns "how many words of this level sit in
+`[a, b)`" into one subtraction. A full rebuild of the panel costs about
+0.07 ms; a hundred of them do not register.
+
+The descent falls out of the same call. The prefix it works at is simply the
+**longest common prefix of the two current bounds**, accent-folded, so it is
+`''` while the bounds start with different letters, `r` once both are inside
+the `r`, then `ra`, then `rac`. The boundaries are then `raca`, `racb`, …, and
+the "letters" of the panel are the third characters. Accented forms fold into
+their base letter, so `élite` is counted under `e` and `però` under the `o` of
+`per`, exactly where the Italian collator puts them; a word that *is* the whole
+prefix (`re` inside `re…`) has no next character at all and gets a cell of its
+own instead of being quietly lost.
+
 ### No build step, no dependencies, no CDN
 
 Plain HTML, one stylesheet, two scripts. No framework, no bundler, nothing to
@@ -197,11 +257,11 @@ Or simply **double-click `index.html`** — it works from the file system too.
 
 ### Tests
 
-Nineteen tests cover Italian collation, the front-coding codec, `lowerBound`,
-the per-difficulty interval counts, the median choice, `⌈log₂(n+1)⌉`, the full
-binary search (exhaustively on a small dictionary, on 200 random words of the
-real one), the detection of contradictory answers, and the timed-challenge
-scoring.
+Thirty tests cover Italian collation, the front-coding codec, `lowerBound`, the
+per-difficulty interval counts, the alphabet breakdown and its descent through
+prefixes, the median choice, `⌈log₂(n+1)⌉`, the full binary search
+(exhaustively on a small dictionary, on 200 random words of the real one), the
+detection of contradictory answers, and the timed-challenge scoring.
 
 ```bash
 node tools/run-tests.mjs        # terminal

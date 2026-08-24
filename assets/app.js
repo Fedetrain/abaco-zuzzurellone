@@ -132,6 +132,7 @@
 
   function goBack() {
     if (game.timer) stopTimer();
+    Alfa.close();
     show('home');
   }
 
@@ -141,7 +142,11 @@
   $('#btn-stats').addEventListener('click', function () { renderStats(); show('stats'); });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && current !== 'home') goBack();
+    if (e.key !== 'Escape') return;
+    // Esc chiude prima l'alfabeto, poi la schermata: è l'ordine che ci si
+    // aspetta quando sul telefono il pannello copre mezzo schermo.
+    if (Alfa.isOpen()) { Alfa.close(); return; }
+    if (current !== 'home') goBack();
   });
 
   /* ─────────────────────────────────────────────────────────────────────
@@ -383,6 +388,7 @@
         setBound(elLo, loWord);
         setBound(elHi, hiWord);
         draw();
+        Alfa.set(0, N);
       },
 
       /** Nuovo intervallo + nuovo conteggio, con animazione. */
@@ -397,6 +403,7 @@
         elSpan.classList.add('is-sweep');
         elField.classList.toggle('is-tight', count <= 40);
         animate();
+        Alfa.set(nextLo, nextHi);
       },
 
       setCount: function (count) {
@@ -414,6 +421,203 @@
       },
 
       setLabel: function (text) { elCountLab.textContent = text; },
+    };
+  })();
+
+  /* ─────────────────────────────────────────────────────────────────────
+     L'alfabeto aperto
+     ---------------------------------------------------------------------
+     La scala sotto la barra è per forza diradata: più si stringe il campo,
+     più mostra prefissi invece di lettere, e qualcuna sparisce per mancanza
+     di spazio. Qui l'alfabeto si apre per intero — una casella per lettera,
+     con lo stato rispetto al campo, le parole ancora in gioco e il peso di
+     ciascuna sul vocabolario.
+
+     Quando il campo entra tutto dentro una lettera il pannello scende di un
+     livello da solo (dentro la r: ra re ri ro ru…), poi di un altro ancora.
+     Il conto è AZ.breakdown, che lavora a colpi di lowerBound: 26 ricerche
+     binarie, mai una scansione delle 83.362 parole.
+  ───────────────────────────────────────────────────────────────────── */
+  var Alfa = (function () {
+    var elWrap = $('#alfa');
+    var elToggle = $('#alfa-toggle');
+    var elName = $('.alfa-toggle-name');
+    var elHint = $('#alfa-hint');
+    var elCap = $('#alfa-cap');
+    var elCrumbs = $('#alfa-crumbs');
+    var elGrid = $('#alfa-grid');
+    var elLegend = $('#alfa-legend');
+    var elCounts = $('#alfa-counts');
+    var elScrim = $('#alfa-scrim');
+    var elClose = $('#alfa-close');
+    var elField = $('#field');
+
+    var ORDINALI = ['prima', 'seconda', 'terza', 'quarta', 'quinta', 'sesta',
+                    'settima', 'ottava', 'nona', 'decima'];
+    var TAG = {
+      dentro:   { testo: 'in campo',  aria: 'in campo' },
+      parziale: { testo: 'a metà',    aria: 'a cavallo di un estremo' },
+      prima:    { testo: 'fuori ←',   aria: 'esclusa: viene prima del campo' },
+      dopo:     { testo: 'fuori →',   aria: 'esclusa: viene dopo il campo' },
+    };
+
+    var open = false;
+    var lo = 0, hi = 0;
+
+    function ordinale(n) {
+      return n < ORDINALI.length ? ORDINALI[n] : (n + 1) + 'ª';
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    /* Una casella: lettera, conteggi, barra proporzionale, stato a parole. */
+    function cella(v, max, i, extra) {
+      var vuota = v.totale === 0;
+      var stato = TAG[v.stato] || TAG.dentro;
+      var classi = ['alfa-cell', 'alfa-cell--' + v.stato];
+      if (vuota) classi.push('alfa-cell--vuota');
+      if (extra) classi.push(extra);
+
+      var peso = max > 0 ? Math.max(v.totale > 0 ? 2 : 0, v.totale / max * 100) : 0;
+      var quota = v.totale > 0 ? v.vive / v.totale * 100 : 0;
+
+      var etichetta = extra === 'alfa-cell--esatta'
+        ? '·'
+        : esc(v.lettera) + (v.straniera ? '<sup>str</sup>' : '');
+
+      var testoStato = vuota && v.stato !== 'prima' && v.stato !== 'dopo'
+        ? 'nessuna'
+        : stato.testo;
+
+      var aria = (extra === 'alfa-cell--esatta'
+          ? 'la parola «' + v.parola + '» stessa'
+          : 'lettera ' + v.lettera) +
+        ': ' + (vuota ? 'nessuna parola in questo livello'
+                      : num(v.vive) + ' in gioco su ' + num(v.totale)) +
+        ', ' + stato.aria + '.';
+
+      return '<li class="' + classi.join(' ') + '" style="--i:' + i + '" aria-label="' + esc(aria) + '">' +
+        '<span class="alfa-key" aria-hidden="true">' + etichetta + '</span>' +
+        '<span class="alfa-num" aria-hidden="true"><b>' + num(v.vive) + '</b>' +
+          '<em>&#8202;/&#8202;' + num(v.totale) + '</em></span>' +
+        '<span class="alfa-meter" aria-hidden="true"><i style="width:' + peso.toFixed(2) + '%">' +
+          '<b style="width:' + quota.toFixed(2) + '%"></b></i></span>' +
+        '<span class="alfa-tag" aria-hidden="true">' + testoStato +
+          (extra === 'alfa-cell--esatta' ? ' · «' + esc(v.parola) + '»' : '') + '</span>' +
+        '</li>';
+    }
+
+    function render() {
+      if (!game.dict) return;
+      var b = game.dict.breakdown(lo, hi, game.level);
+      var inCampo = b.voci.filter(function (v) { return v.vive > 0; }).length +
+                    (b.esatta && b.esatta.vive > 0 ? 1 : 0);
+
+      /* — la riga di riepilogo — */
+      if (b.profondita === 0) {
+        elCap.innerHTML =
+          'Si decide la <em>prima lettera</em>. <b>' + num(b.vive) + '</b> parole in campo, ' +
+          'sparse su <b>' + inCampo + '</b> lettere delle 26.';
+      } else {
+        elCap.innerHTML =
+          'Il campo è tutto dentro <em>«' + esc(b.prefisso) + '…»</em>: ora si decide la ' +
+          '<em>' + ordinale(b.profondita) + ' lettera</em>. <b>' + num(b.vive) + '</b> ' +
+          (b.vive === 1 ? 'parola in gioco' : 'parole in gioco') +
+          ' sulle <b>' + num(b.totale) + '</b> che cominciano così.';
+      }
+
+      /* — le lettere ormai fissate — */
+      var crumbs = ['<li><b>tutto</b></li>'];
+      for (var k = 0; k < b.prefisso.length; k++) {
+        crumbs.push('<li><b>' + esc(b.prefisso.slice(0, k + 1)) + '</b></li>');
+      }
+      elCrumbs.innerHTML = crumbs.join('');
+
+      /* — la griglia — */
+      var celle = [];
+      var i = 0;
+      if (b.esatta) celle.push(cella(b.esatta, b.max, i++, 'alfa-cell--esatta'));
+      b.voci.forEach(function (v) { celle.push(cella(v, b.max, i++)); });
+      elGrid.innerHTML = celle.join('');
+
+      elLegend.innerHTML =
+        'La barra lunga dice <b>quanto vocabolario pesa</b> quella lettera, la parte accesa ' +
+        'quello <b>ancora in gioco</b>. Le lettere barrate sono già escluse dall\'ordine ' +
+        'alfabetico: nessuna risposta potrà più riportarcele.' +
+        (b.profondita === 0
+          ? ' Quando il campo entrerà dentro una lettera sola, qui compariranno i secondi caratteri.'
+          : '');
+
+      elHint.textContent = b.profondita === 0
+        ? '26 lettere · ' + inCampo + ' in campo'
+        : '«' + b.prefisso + '» · ' + ordinale(b.profondita) + ' lettera';
+    }
+
+    function setOpen(v) {
+      open = !!v;
+      elWrap.classList.toggle('is-open', open);
+      elField.classList.toggle('is-alfa-open', open);
+      elToggle.setAttribute('aria-expanded', String(open));
+      elName.textContent = open ? 'chiudi l\'alfabeto' : 'apri l\'alfabeto';
+      if (open) render();
+    }
+
+    elToggle.addEventListener('click', function () {
+      sfx.click();
+      setOpen(!open);
+      prefs.alfa = prefs.alfa || {};
+      if (game.mode) prefs.alfa[game.mode] = open;
+      savePrefs();
+    });
+    elClose.addEventListener('click', function () { setOpen(false); });
+    elScrim.addEventListener('click', function () { setOpen(false); });
+
+    // La barra è il posto naturale dove cercare di "aprire" l'alfabeto:
+    // cliccarla fa la stessa cosa del pulsante, che resta il comando
+    // raggiungibile da tastiera.
+    $('#field-track').addEventListener('click', function () {
+      sfx.click();
+      setOpen(!open);
+    });
+
+    elCounts.addEventListener('change', function () {
+      elWrap.classList.toggle('is-nocount', !elCounts.checked);
+      prefs.alfaCounts = elCounts.checked;
+      savePrefs();
+    });
+    if (prefs.alfaCounts === false) {
+      elCounts.checked = false;
+      elWrap.classList.add('is-nocount');
+    }
+
+    return {
+      /** Nuovo intervallo: ridisegna se aperto, aggiorna comunque il richiamo. */
+      set: function (nextLo, nextHi) {
+        lo = nextLo; hi = nextHi;
+        if (open) render();
+        else if (game.dict) {
+          var b = game.dict.breakdown(lo, hi, game.level);
+          elHint.textContent = b.profondita === 0
+            ? '26 lettere · ' +
+              (b.voci.filter(function (v) { return v.vive > 0; }).length) + ' in campo'
+            : '«' + b.prefisso + '» · ' + ordinale(b.profondita) + ' lettera';
+        }
+      },
+
+      /* Aperto di default dove insegna qualcosa (il computer che dimezza,
+         la caccia alle parole in mezzo), chiuso in «Indovina tu» dove la
+         sfida sta proprio nel tenere il campo a mente. La scelta però
+         resta all'utente e si ricorda, modalità per modalità. */
+      mode: function (mode) {
+        var salvato = prefs.alfa && prefs.alfa[mode];
+        setOpen(salvato == null ? mode !== 'indovina' : salvato);
+      },
+
+      isOpen: function () { return open; },
+      close: function () { setOpen(false); },
+      refresh: function () { if (open) render(); },
     };
   })();
 
@@ -459,6 +663,7 @@
       $('#level-hint').textContent =
         num(n) + ' parole in gioco — a una ricerca perfetta bastano ' +
         AZ.optimalGuesses(n) + ' tentativi.';
+      Alfa.refresh();
     }
   }
   segButtons.forEach(function (b) {
@@ -514,6 +719,7 @@
     // La schermata va mostrata *prima* di preparare il campo: da nascosto
     // il track misura zero e la scala dell'alfabeto non saprebbe dove andare.
     show('play');
+    Alfa.mode(mode);
 
     if (mode === 'indovina') startIndovina();
     if (mode === 'computer') startComputer();

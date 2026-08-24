@@ -167,6 +167,43 @@
     <div class="field-zoom" id="field-zoom" aria-hidden="true"></div>
   </div>
 
+  <!-- ─────────── l'alfabeto aperto ─────────── -->
+  <div class="alfa" id="alfa">
+    <button class="alfa-toggle" id="alfa-toggle" type="button"
+            aria-expanded="false" aria-controls="alfa-panel">
+      <svg class="alfa-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
+      <span class="alfa-toggle-name">apri l'alfabeto</span>
+      <span class="alfa-toggle-hint" id="alfa-hint"></span>
+    </button>
+
+    <div class="alfa-scrim" id="alfa-scrim"></div>
+
+    <div class="alfa-panel" id="alfa-panel">
+      <div class="alfa-sheet">
+       <div class="alfa-inner">
+        <div class="alfa-grab" aria-hidden="true"></div>
+
+        <div class="alfa-top">
+          <p class="alfa-cap" id="alfa-cap"></p>
+          <div class="alfa-tools">
+            <label class="alfa-opt">
+              <input type="checkbox" id="alfa-counts" checked>
+              <span>conteggi</span>
+            </label>
+            <button class="alfa-close" id="alfa-close" type="button" aria-label="Chiudi l'alfabeto">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <ol class="alfa-crumbs" id="alfa-crumbs" aria-label="Lettere ormai fissate"></ol>
+        <ul class="alfa-grid" id="alfa-grid"></ul>
+        <p class="alfa-legend" id="alfa-legend"></p>
+       </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ─────────── pannello: indovina tu ─────────── -->
   <div class="panel" id="panel-indovina" hidden>
     <form class="guessbar" id="form-indovina" autocomplete="off">
