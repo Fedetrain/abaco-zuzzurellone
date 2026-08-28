@@ -436,7 +436,7 @@
      Quando il campo entra tutto dentro una lettera il pannello scende di un
      livello da solo (dentro la r: ra re ri ro ru…), poi di un altro ancora.
      Il conto è AZ.breakdown, che lavora a colpi di lowerBound: 26 ricerche
-     binarie, mai una scansione delle 83.362 parole.
+     binarie, mai una scansione delle 92.003 parole.
   ───────────────────────────────────────────────────────────────────── */
   var Alfa = (function () {
     var elWrap = $('#alfa');
@@ -629,6 +629,10 @@
     level: prefs.level || 'medio',
     mode: null,
     lo: 0, hi: 0,
+    // Etichette degli estremi mostrati sopra la barra: sono le *parole dette*
+    // ("dopo casa" -> da casa), non le voci di dizionario adiacenti all'
+    // intervallo interno, che sarebbero parole simili mai nominate.
+    loWord: '', hiWord: '',
     secret: -1,
     history: [],
     tried: null,
@@ -702,6 +706,8 @@
     game.tried = new Set();
     game.lo = 0;
     game.hi = game.dict.size;
+    game.loWord = game.dict.words[0];
+    game.hiWord = game.dict.words[game.dict.size - 1];
     game.result = null;
     stopTimer();
 
@@ -799,7 +805,12 @@
       return;
     }
 
-    Field.set(game.lo, game.hi, left, d.words[game.lo], d.words[game.hi - 1]);
+    // Gli estremi mostrati sono le parole effettivamente proposte: chi scrive
+    // «casa» deve vedere "da casa" o "a casa", non la voce di dizionario
+    // adiacente (casacca, casà...) che non ha mai nominato.
+    if (res.esito === 'prima') game.hiWord = w;
+    else game.loWord = w;
+    Field.set(game.lo, game.hi, left, game.loWord, game.hiWord);
     flashBar(formIndovina, 'good');
     sfx.narrow();
     say(
@@ -946,7 +957,11 @@
       game.history.push({ word: word, idx: cpuCurrent, esito: answer, lo: game.lo, hi: game.hi, left: left });
       addHistoryRow(histComputer, n, word, answer, left);
       $('#cpu-count').textContent = n; tick($('#cpu-count'));
-      Field.set(game.lo, game.hi, left, d.words[game.lo], d.words[game.hi - 1]);
+      // Come in «Indovina tu»: l'estremo aggiornato è la parola appena
+      // provata dal computer, non la voce adiacente dell'intervallo interno.
+      if (answer === 'prima') game.hiWord = word;
+      else game.loWord = word;
+      Field.set(game.lo, game.hi, left, game.loWord, game.hiWord);
       cpuCurrent = -1;
       cpuThink();
     });

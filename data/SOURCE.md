@@ -52,6 +52,26 @@ words that already come from source 1.
 Its 453 entries are subtracted from the vocabulary; 49 of them matched. Nothing
 from this file ends up in the shipped data.
 
+## 3-bis. Word-form and first-name lists — validate the recovered common words
+
+| | |
+|---|---|
+| **Files** | `280000_parole_italiane.txt`, `660000_parole_italiane.txt`, `9000_nomi_propri.txt` |
+| **Upstream** | <https://github.com/napolux/paroleitaliane> |
+| **Copyright** | © 2016 Francesco Napoletano |
+| **Licence** | **MIT** |
+
+The Hunspell `.dic` used as source 1 is a *stem* list: thousands of everyday
+words — *casa*, *porta*, *libro*, *pizza*, *tavolo* — only exist in it as affix
+expansions of other stems, so a vocabulary built from the stems alone misses
+simple words while keeping every obscure one. The build recovers them: a word
+from the frequency list (source 2, top ~25 000) that is missing from the stem
+list is added back **only if** it appears in *both* word-form lists, is not an
+Italian first name, contains no foreign letters (j k w x y), is not a
+de-accented typo of a more frequent accented word (*perche*, *cosi*,
+*insegnero*…), and is not in the profanity list (inflected variants included).
+This recovers ~8 600 common words.
+
 ## 4. Hand-written addendum
 
 `tools/extra-words.txt` adds two real Italian words the Hunspell stem list is
@@ -65,7 +85,7 @@ source code.
 ## How the shipped files are produced
 
 ```
-node tools/fetch-sources.mjs      # downloads 1, 2 and 3 into tools/sources/ (git-ignored)
+node tools/fetch-sources.mjs      # downloads 1, 2, 3 and 3-bis into tools/sources/ (git-ignored)
 node tools/build-dictionary.mjs   # writes data/dizionario.txt and data/dizionario.js
 ```
 
@@ -77,6 +97,8 @@ Filters applied by `tools/build-dictionary.mjs`:
   abbreviations, apostrophised and hyphenated forms go away;
 * length is capped to 3–14 characters;
 * the profanity list of source 3 is subtracted;
+* common words missing from the stem list are recovered from the frequency
+  list, validated as described in section 3-bis;
 * the survivors are sorted with `Intl.Collator('it')` — Italian collation, not
   code-point order, so `pera < pero < però < persona`.
 
@@ -84,13 +106,13 @@ Filters applied by `tools/build-dictionary.mjs`:
 
 | | |
 |---|---|
-| Words shipped | **83 362** |
+| Words shipped | **92 003** |
 | First / last entry | `abaco` / `zuzzurellone` |
-| *facile* pool | 2 266 (top ~6 000 by frequency, ≤ 9 letters) |
-| *medio* pool | 9 034 (top ~25 000 by frequency) |
-| *difficile* pool | 83 362 (everything) |
-| `dizionario.txt` | 1.0 MB — `word<TAB>tier`, one per line, human-readable |
-| `dizionario.js` | 440 KB — the same data front-coded, this is what the game loads |
+| *facile* pool | 4 191 (top ~6 000 by frequency, ≤ 9 letters) |
+| *medio* pool | 17 675 (top ~25 000 by frequency) |
+| *difficile* pool | 92 003 (everything) |
+| `dizionario.txt` | 1.1 MB — `word<TAB>tier`, one per line, human-readable |
+| `dizionario.js` | 465 KB — the same data front-coded, this is what the game loads |
 
 `dizionario.js` is loaded with a `<script>` tag rather than `fetch()` so that
 the game also runs when `index.html` is opened straight from disk over the

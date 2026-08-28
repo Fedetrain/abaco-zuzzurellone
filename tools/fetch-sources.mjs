@@ -27,6 +27,21 @@ const FILES = [
     url: 'https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane/lista_badwords.txt',
     note: 'Italian profanity list, used as a negative filter -- MIT',
   },
+  {
+    name: 'parole-280k.txt',
+    url: 'https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane/280000_parole_italiane.txt',
+    note: 'Italian word-form list, validates common-word additions -- MIT',
+  },
+  {
+    name: 'parole-660k.txt',
+    url: 'https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane/660000_parole_italiane.txt',
+    note: 'Italian word-form list, validates common-word additions -- MIT',
+  },
+  {
+    name: 'nomi-propri.txt',
+    url: 'https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane/9000_nomi_propri.txt',
+    note: 'Italian first names, negative filter for common-word additions -- MIT',
+  },
 ];
 
 fs.mkdirSync(DEST, { recursive: true });

@@ -2,13 +2,23 @@
 /**
  * build-dictionary.mjs
  * ---------------------------------------------------------------------------
- * Builds `data/dizionario.txt` from three upstream sources (see data/SOURCE.md):
+ * Builds `data/dizionario.txt` from the upstream sources (see data/SOURCE.md):
  *
  *   tools/sources/it_IT.dic   Hunspell it_IT stem list (LibreOffice)  GPL-3.0
  *   tools/sources/it_50k.txt  OpenSubtitles frequency list (hermitdave) MIT
  *   tools/sources/badwords.txt  Italian profanity list (napolux)        MIT
+ *   tools/sources/parole-280k.txt / parole-660k.txt
+ *                             Italian word-form lists (napolux)         MIT
  *
  * Run `node tools/fetch-sources.mjs` first to download them.
+ *
+ * The Hunspell .dic alone is a *stem* list: thousands of everyday words
+ * ("casa", "porta", "libro", "pizza", "tavolo"...) only exist there as affix
+ * expansions of other stems, so taking the stems verbatim ships a vocabulary
+ * that is missing simple words while keeping every obscure one. To fix that,
+ * frequent words (top MEDIUM_RANK of the subtitle corpus) that are missing
+ * from the stem list are added back, provided they appear in BOTH napolux
+ * word-form lists and survive the filters below.
  *
  * Output format: one entry per line, `word<TAB>tier`
  *   tier 0 = easy   (common word, also present in medium and hard)
@@ -84,13 +94,92 @@ function parseBadwords(text) {
   );
 }
 
+/** Plain one-word-per-line list. */
+function parseWordList(text) {
+  return new Set(
+    text
+      .split(/\r?\n/)
+      .map((l) => l.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+/** Accent-stripped form, used to spot de-accented subtitle typos. */
+function fold(w) {
+  return w.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 const dic = parseDic(read('it_IT.dic'));
 const rank = parseFrequency(read('it_50k.txt'));
 const bad = parseBadwords(read('badwords.txt'));
+const forms280 = parseWordList(read('parole-280k.txt'));
+const forms660 = parseWordList(read('parole-660k.txt'));
+const properNames = parseWordList(read('nomi-propri.txt'));
 
 let removedBad = 0;
 for (const w of bad) {
   if (dic.delete(w)) removedBad += 1;
+}
+
+// ---------------------------------------------------------------------------
+// Common words the stem list is missing.
+//
+// A frequency-list word is added only if ALL of these hold:
+//   - rank within MEDIUM_RANK: we are recovering *simple* words, nothing rare;
+//   - passes the same letter/length filters as every other entry;
+//   - present in BOTH independent napolux word-form lists -- this drops the
+//     subtitle corpus junk: proper names (john, tom), clitic agglutinations
+//     (farlo, dirmi), interjections and typos;
+//   - no foreign letters (j k w x y): keeps anglicisms like "okay" out, and
+//     the stem list already covers the few legitimate ones;
+//   - not an Italian first name ("angela", "sara"...): subtitles are all
+//     lowercase, so names sail through the capital-letter filter;
+//   - not a de-accented typo of an accented word: the subtitle corpus is
+//     full of "perche", "cosi", "insegnero" written without the accent.
+//     A candidate is rejected when an accented variant of the same letters
+//     has comparable or better frequency (the corpus is sloppy enough that
+//     the typo "perche" actually outranks "perché" -- hence the 2x margin,
+//     not a strict comparison). "cosa" survives: its only accented twin,
+//     "cosà", is nowhere near it in frequency;
+//   - not in the profanity list (inflected variants included).
+// ---------------------------------------------------------------------------
+const NO_FOREIGN = /^[a-il-vzàáèéìíîòóùú]+$/; // ALLOWED minus j k w x y
+
+// Best (lowest) corpus rank of any accented word, keyed by its accent-less
+// spelling: accentedRank.get('perche') is the rank of "perché".
+const accentedRank = new Map();
+for (const [w, r] of rank) {
+  const f = fold(w);
+  if (f === w) continue;
+  const cur = accentedRank.get(f);
+  if (cur == null || r < cur) accentedRank.set(f, r);
+}
+
+const added = [];
+for (const [w, r] of rank) {
+  if (r > MEDIUM_RANK) continue;
+  if (dic.has(w)) continue;
+  if (w.length < MIN_LEN || w.length > MAX_LEN) continue;
+  if (!ALLOWED.test(w) || !NO_FOREIGN.test(w)) continue;
+  if (!forms280.has(w) || !forms660.has(w)) continue;
+  if (properNames.has(w)) continue;
+  const ar = accentedRank.get(w);
+  if (ar != null && ar < r * 2) continue;
+  if (badWithVariants(w)) continue;
+  dic.add(w);
+  added.push(w);
+}
+
+/**
+ * The profanity list mostly holds lemmas; the frequency corpus holds inflected
+ * forms too, so "prostitute" would slip past a filter that only knows
+ * "prostituta". Checking the word plus its final-vowel swaps covers the
+ * regular singular/plural/gender variants.
+ */
+function badWithVariants(w) {
+  if (bad.has(w)) return true;
+  const base = w.slice(0, -1);
+  return ['a', 'e', 'i', 'o'].some((v) => bad.has(base + v));
 }
 
 // A tiny hand-curated addendum for real Italian words the Hunspell stem list
@@ -165,4 +254,5 @@ console.log(`  tier 0 (facile):   ${counts[0]}`);
 console.log(`  tier 1 (medio):    ${counts[1]}  -> pool medio = ${counts[0] + counts[1]}`);
 console.log(`  tier 2 (difficile):${counts[2]}  -> pool difficile = ${words.length}`);
 console.log(`  profanities removed: ${removedBad}`);
+console.log(`  common words recovered (missing stems): ${added.length}`);
 console.log(`  first: ${words[0]}   last: ${words[words.length - 1]}`);
