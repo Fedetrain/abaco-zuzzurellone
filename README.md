@@ -102,7 +102,7 @@ the shape without the arithmetic.
 
 You think of the word and answer *prima* / *dopo* / *è questa*. The computer
 always plays the word that sits at the **median of the remaining candidates**
-and shows you the count collapsing: 83 362 → 41 681 → 20 841 → … → 1. It is
+and shows you the count collapsing: 92 003 → 46 002 → 23 001 → … → 1. It is
 the mode that makes the point: seventeen questions are enough for the entire
 Italian vocabulary.
 
@@ -131,8 +131,8 @@ that survived it. The staircase of halving, drawn.
 
 ## Also in the box
 
-* **Three difficulty levels** — *facile* (2 266 common short words), *medio*
-  (9 034), *difficile* (all 83 362, rare words included). The level chooses the
+* **Three difficulty levels** — *facile* (4 191 common short words), *medio*
+  (17 675), *difficile* (all 92 003, rare words included). The level chooses the
   universe the secret is drawn from and the one the counters talk about; your
   guesses are always checked against the full vocabulary, so you are never told
   a real Italian word does not exist.
@@ -177,7 +177,7 @@ pera  <  pero  <  però  <  persona
 ```
 
 The shipped word list is pre-sorted at build time with the same comparator, so
-the browser never has to re-sort 83 362 words, and there is a test that walks
+the browser never has to re-sort 92 003 words, and there is a test that walks
 the whole file to prove the order holds.
 
 ### Why seventeen guesses are enough
@@ -208,7 +208,7 @@ weight, not left-to-right, so the letters that own the most vocabulary survive.
 
 The alphabet panel wants, on every guess, twenty-six pairs of numbers: how many
 words each letter still has in play and how many it has in total. Walking the
-83 362 entries to find out would be the obvious way and the wrong one.
+92 003 entries to find out would be the obvious way and the wrong one.
 
 Instead `AZ.breakdown(lo, hi, livello)` asks `lowerBound` for the twenty-six
 boundaries `prefix+a`, `prefix+b`, … — twenty-six binary searches, seventeen
@@ -238,7 +238,7 @@ if they never arrive.
 
 The list is front-coded before shipping: entries are sorted, so each one is
 stored as `<shared-prefix length><suffix><difficulty tier>`, which takes
-1.0 MB of plain text down to 440 KB with a nine-line decoder.
+1.1 MB of plain text down to 465 KB with a nine-line decoder.
 
 ---
 
@@ -283,7 +283,7 @@ tests.html                 browser test runner
 assets/core.js             pure logic: collation, codec, dictionary, search
 assets/app.js              screens, the interval bar, modes, stats, sharing
 assets/style.css           design tokens, layout, animation
-data/dizionario.js         83 362 words, front-coded (this is what loads)
+data/dizionario.js         92 003 words, front-coded (this is what loads)
 data/dizionario.txt        the same list, human-readable
 data/SOURCE.md             provenance and licence of every data source
 data/LICENSE-DIZIONARIO.txt  GPL-3.0, applying to data/ only
@@ -301,7 +301,7 @@ docs/                      screenshots
 
 | What | Source | Licence |
 |---|---|---|
-| **Vocabulary** (83 362 lemmas) | [LibreOffice Hunspell `it_IT`](https://github.com/LibreOffice/dictionaries/tree/master/it_IT) v5.1.1 — © Gianluca Turconi, Davide Prina, Andrea Pescetti, LibreItalia / Marina Latini | **GPL-3.0** |
+| **Vocabulary** (92 003 words) | [LibreOffice Hunspell `it_IT`](https://github.com/LibreOffice/dictionaries/tree/master/it_IT) v5.1.1 — © Gianluca Turconi, Davide Prina, Andrea Pescetti, LibreItalia / Marina Latini | **GPL-3.0** |
 | **Frequency ranks** (difficulty tiers only) | [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), OpenSubtitles 2018 — © Hermit Dave | MIT |
 | **Profanity filter** (subtracted, never shipped) | [napolux/paroleitaliane](https://github.com/napolux/paroleitaliane) — © Francesco Napoletano | MIT |
 | **Game code, styles, tools** | this repository — © 2026 Federico Traina | MIT |
