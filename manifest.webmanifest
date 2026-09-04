@@ -1,0 +1,15 @@
+{
+  "name": "Abaco Zuzzurellone",
+  "short_name": "Abaco Z.",
+  "description": "Gioco di parole italiano: tutto il vocabolario teso fra abaco e zuzzurellone.",
+  "lang": "it",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#100e0c",
+  "theme_color": "#e0432b",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

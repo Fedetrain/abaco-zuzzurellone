@@ -157,6 +157,9 @@
   ───────────────────────────────────────────────────────────────────── */
   var Field = (function () {
     var elSpan = $('#field-span');
+    var elOutL = $('#field-out-l');
+    var elOutR = $('#field-out-r');
+    var elRails = $('#field-rails');
     var elMarks = $('#field-marks');
     var elScale = $('#field-scale');
     var elZoom = $('#field-zoom');
@@ -234,7 +237,7 @@
        numero fisso: così le lettere singole possono stare fitte — ed è proprio
        il punto, la "s" si prende più spazio di j-k-q-w-x-y messe insieme —
        mentre i prefissi lunghi si diradano da soli. */
-    var CHAR_PX = 5.8;   // larghezza di un carattere del monospaziato a .6rem
+    var CHAR_PX = 6.6;   // larghezza di un carattere del monospaziato a .62rem
     function thinOut(items, a, b) {
       var span = b - a;
       // Quanta parte di campo si prende ogni etichetta: è il criterio con cui
@@ -265,6 +268,7 @@
 
     function renderTicks() {
       elScale.innerHTML = '';
+      elRails.innerHTML = '';
       ticks.forEach(function (t, k) {
         var el = document.createElement('span');
         el.className = 'tick';
@@ -272,6 +276,11 @@
         el.textContent = t.label;
         t.el = el;
         elScale.appendChild(el);
+
+        var rail = document.createElement('span');
+        rail.className = 'rail';
+        t.rail = rail;
+        elRails.appendChild(rail);
       });
     }
 
@@ -313,8 +322,22 @@
     function draw() {
       var l = pct(aLo), r = pct(aHi);
       var left = Math.max(-4, Math.min(104, l));
+      var width = Math.max(0.35, Math.min(108, r) - left);
       elSpan.style.left = left + '%';
-      elSpan.style.width = Math.max(0.35, Math.min(108, r) - left) + '%';
+      elSpan.style.width = width + '%';
+
+      // Il gradiente deve restare ancorato alla traccia: se il blocco è largo
+      // W% e comincia a L%, dipingo uno sfondo largo 100/W volte il blocco e
+      // lo sposto di quanto serve perché il suo inizio cada su L=0 della
+      // traccia. Con background-position in %, lo scorrimento vale
+      // p/100 * (larghezzaBlocco - larghezzaSfondo), da cui la formula.
+      elSpan.style.backgroundSize = (100 / width * 100) + '% 100%';
+      elSpan.style.backgroundPositionX =
+        width >= 99.99 ? '0%' : (left / (100 - width) * 100) + '%';
+
+      // Le due zone escluse, che dicono da che parte si è stretto il campo.
+      elOutL.style.width = Math.max(0, Math.min(100, l)) + '%';
+      elOutR.style.left = Math.max(0, Math.min(100, r)) + '%';
 
       for (var k = 0; k < marks.length; k++) {
         var p = pct(marks[k].i + 0.5);
@@ -324,10 +347,33 @@
       for (var j = 0; j < ticks.length; j++) {
         if (!ticks[j].el) continue;
         var tp = pct(ticks[j].i);
+        var visible = tp >= -2 && tp <= 102;
         ticks[j].el.style.left = tp + '%';
-        ticks[j].el.style.opacity = tp < -2 || tp > 102 ? '0' : '1';
+        ticks[j].el.style.opacity = visible ? '1' : '0';
+        ticks[j].el.classList.toggle('is-in', tp >= l - 0.5 && tp <= r + 0.5);
+        if (ticks[j].rail) {
+          ticks[j].rail.style.left = tp + '%';
+          ticks[j].rail.style.opacity = visible ? '' : '0';
+        }
       }
     }
+
+    /* Porta l'animazione al fotogramma finale, subito. In una scheda in
+       secondo piano requestAnimationFrame non viene mai chiamata: senza
+       questo, chi cambia scheda a metà mossa ritrova il campo e il conteggio
+       congelati sui valori di prima, e non si correggono più da soli. */
+    function settle() {
+      aLo = lo; aHi = hi; fLo = lo; fHi = hi;
+      avLo = vLo; avHi = vHi; fvLo = vLo; fvHi = vHi;
+      countFrom = countTo;
+      elCountNum.textContent = num(countTo);
+      draw();
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { if (raf) { cancelAnimationFrame(raf); raf = null; } settle(); }
+      else settle();
+    });
 
     function animate() {
       measure();
@@ -768,7 +814,7 @@
       return;
     }
 
-    var idx = d.index.get(w);
+    var idx = d.indexOf(w);
     if (idx < game.lo || idx >= game.hi) {
       flashBar(formIndovina, 'bad');
       say('«' + w + '» è già fuori dal campo: lo sai di sicuro.', 'bad');
@@ -982,19 +1028,18 @@
 
   function startTempo() {
     var d = game.dict;
-    // Due estremi riconoscibili (livello facile/medio) con qualche centinaio
-    // di parole in mezzo: abbastanza da riempire tre minuti, non tanto da
-    // rendere la sfida banale.
-    var a, b, guard = 0;
-    do {
-      a = d.randomIndex(0, d.size - 900, 'medio');
-      var span = 500 + Math.floor(Math.random() * 2500);
-      b = Math.min(d.size - 1, a + span);
-      // porta l'estremo destro su una parola riconoscibile
-      while (b > a + 60 && d.tiers[b] > 1) b--;
-      guard++;
-    } while ((a < 0 || b - a < 120) && guard < 40);
-    if (a < 0) { a = 0; b = Math.min(d.size - 1, 1200); }
+    // Gli estremi si scelgono contando le parole *comuni*, non le parole del
+    // vocabolario. Contando quelle grezze, 1 500 voci consecutive stanno tutte
+    // dentro lo stesso prefisso ("intervenite" → "inventa"): l'intervallo
+    // sembra largo e invece non contiene nulla che a qualcuno venga in mente.
+    // Con questo, in mezzo ci sono sempre COMUNI_MIN..COMUNI_MAX parole d'uso.
+    var COMUNI_MIN = 70, COMUNI_MAX = 220;
+    var totComuni = d.countRange(0, d.size, 'medio');
+    var quante = COMUNI_MIN + Math.floor(Math.random() * (COMUNI_MAX - COMUNI_MIN));
+    var rank = Math.floor(Math.random() * Math.max(1, totComuni - quante - 1));
+    var a = d.nthOfLevel(0, d.size, 'medio', rank);
+    var b = d.nthOfLevel(0, d.size, 'medio', rank + quante + 1);
+    if (a < 0 || b < 0 || b <= a) { a = 0; b = Math.min(d.size - 1, 2000); }
 
     tempo = { score: 0, ok: 0, ko: 0, left: DURATA, bounds: { da: d.words[a], a: d.words[b] },
               words: new Set(), lo: a, hi: b + 1 };
@@ -1069,7 +1114,7 @@
       flashBar(formTempo, 'good');
       say('+1 · ' + num(tempo.ok) + (tempo.ok === 1 ? ' parola' : ' parole'), 'good');
       sfx.narrow();
-      Field.mark(game.dict.index.get(res.parola), 'hit');
+      Field.mark(game.dict.indexOf(res.parola), 'hit');
       Field.setCount(tempo.ok);
     } else {
       tempo.ko += 1;
@@ -1223,7 +1268,7 @@
   ───────────────────────────────────────────────────────────────────── */
   function shareText() {
     var r = game.result;
-    var url = 'https://fedetrain.github.io/abaco-zuzzurellone/';
+    var url = 'https://abacozuzzurellone.site/';
     if (!r) return 'Abaco Zuzzurellone 🧮\n' + url;
     var lines = ['Abaco Zuzzurellone 🧮'];
 
@@ -1425,7 +1470,13 @@
       game.dict = new AZ.Dizionario(out.words, out.tiers);
       Field.init(game.dict);
 
-      $('#hero-count').textContent = num(game.dict.size - 2);
+      // I numeri nel testo vengono dal vocabolario, non da una costante: cambiare
+      // dizionario non deve lasciare in giro un "17 mosse per 130.000 parole" falso.
+      var inMezzo = game.dict.size - 2;
+      $('#hero-count').textContent = num(inMezzo);
+      $$('.g-count').forEach(function (el) { el.textContent = num(inMezzo); });
+      $$('.g-total').forEach(function (el) { el.textContent = num(game.dict.size); });
+      $$('.g-opt').forEach(function (el) { el.textContent = AZ.optimalGuesses(game.dict.size); });
       $$('[data-count]').forEach(function (el) {
         var lv = el.dataset.count;
         el.textContent = num(game.dict.countRange(0, game.dict.size, lv));

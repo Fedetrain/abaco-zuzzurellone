@@ -108,8 +108,6 @@
     this.words = words;
     this.tiers = tiers;
     this.size = words.length;
-    this.index = new Map();
-    for (var i = 0; i < words.length; i++) this.index.set(words[i], i);
 
     // Cumulative counts so that "how many level-L words are in [lo, hi)" is an
     // O(1) subtraction instead of an O(n) scan. cum[t][i] = number of words
@@ -124,9 +122,15 @@
     }
   }
 
+  /** Position of an exact word, or -1. */
+  Dizionario.prototype.indexOf = function (word) {
+    var i = this.lowerBound(word);
+    return i < this.size && this.words[i] === word ? i : -1;
+  };
+
   /** True when the word is part of the full Italian vocabulary. */
   Dizionario.prototype.has = function (word) {
-    return this.index.has(word);
+    return this.indexOf(word) >= 0;
   };
 
   /**
@@ -154,15 +158,17 @@
 
   /** The n-th word of the given difficulty inside [lo, hi), or -1. */
   Dizionario.prototype.nthOfLevel = function (lo, hi, livello, n) {
-    var maxTier = LIVELLI[livello].maxTier;
-    var seen = 0;
-    for (var i = lo; i < hi; i++) {
-      if (this.tiers[i] <= maxTier) {
-        if (seen === n) return i;
-        seen += 1;
-      }
+    var c = this.cum[LIVELLI[livello].maxTier];
+    var target = c[Math.max(lo, 0)] + n + 1;   // cum[i+1] first reaches this at i
+    var a = Math.max(lo, 0);
+    var b = Math.min(hi, this.size);
+    if (n < 0 || target > c[b]) return -1;
+    while (a < b) {
+      var mid = (a + b) >> 1;
+      if (c[mid + 1] < target) a = mid + 1;
+      else b = mid;
     }
-    return -1;
+    return a < Math.min(hi, this.size) ? a : -1;
   };
 
   /** A random word index of the given difficulty inside [lo, hi). */
@@ -409,8 +415,9 @@
   /* ---------------------------------------------------------------------
      6. Formatting helpers
      --------------------------------------------------------------------- */
+  var NF = new Intl.NumberFormat('it-IT', { useGrouping: 'always' });
   function formatNumber(n) {
-    return new Intl.NumberFormat('it-IT').format(n);
+    return NF.format(n);
   }
 
   function formatTime(seconds) {

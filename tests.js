@@ -126,6 +126,38 @@
     eq(d.medianIndex(3, 3, 'difficile'), -1, 'intervallo vuoto -> -1');
   });
 
+  test('nthOfLevel: la ricerca binaria sui cumulativi = la scansione lineare', function () {
+    var d = miniDict();
+    // Riferimento ingenuo, quello che il codice faceva prima: scansione.
+    function lineare(lo, hi, livello, n) {
+      var max = AZ.LIVELLI[livello].maxTier, seen = 0;
+      for (var i = lo; i < hi; i++) {
+        if (d.tiers[i] <= max) { if (seen === n) return i; seen++; }
+      }
+      return -1;
+    }
+    ['facile', 'medio', 'difficile'].forEach(function (lv) {
+      for (var lo = 0; lo <= d.size; lo++) {
+        for (var hi = lo; hi <= d.size; hi++) {
+          for (var n = -1; n <= d.countRange(lo, hi, lv); n++) {
+            eq(d.nthOfLevel(lo, hi, lv, n), lineare(lo, hi, lv, n),
+               lv + ' [' + lo + ',' + hi + ') n=' + n);
+          }
+        }
+      }
+    });
+  });
+
+  test('indexOf: posizione esatta, -1 per le parole che non esistono', function () {
+    var d = miniDict();
+    eq(d.indexOf('abaco'), 0);
+    eq(d.indexOf('zuzzurellone'), d.size - 1);
+    eq(d.indexOf('però'), 6);
+    eq(d.indexOf('perp'), -1, 'parola assente fra due esistenti');
+    eq(d.indexOf(''), -1, 'stringa vuota');
+    eq(d.indexOf('zzz'), -1, 'oltre l ultima parola');
+  });
+
   /* ------------------------------------------------------- 4-bis --- */
   /* La scomposizione alfabetica dell'intervallo: quello che il pannello
      "apri l'alfabeto" mette in scena. */

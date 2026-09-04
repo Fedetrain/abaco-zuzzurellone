@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Abaco Zuzzurellone — il gioco della ricerca binaria sul vocabolario</title>
-<meta name="description" content="Un gioco di parole italiano: tutto il vocabolario teso fra abaco e zuzzurellone. Indovina la parola segreta a colpi di prima/dopo, o guarda il computer farlo in 17 mosse.">
+<meta name="description" content="Un gioco di parole italiano: tutto il vocabolario teso fra abaco e zuzzurellone. Indovina la parola segreta a colpi di prima/dopo, o guarda il computer farlo in una manciata di mosse.">
 <meta name="theme-color" content="#f2ede3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#100e0c" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e0432b'/%3E%3Cg stroke='%23f2ede3' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M7 10h18M7 16h18M7 22h18'/%3E%3C/g%3E%3Cg fill='%23f2ede3'%3E%3Ccircle cx='11' cy='10' r='2.6'/%3E%3Ccircle cx='20' cy='16' r='2.6'/%3E%3Ccircle cx='14' cy='22' r='2.6'/%3E%3C/g%3E%3C/svg%3E">
@@ -15,6 +15,31 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Inter:wght@300..800&family=JetBrains+Mono:wght@400;700&display=swap">
 <link rel="stylesheet" href="assets/style.css">
+
+<link rel="canonical" href="https://abacozuzzurellone.site/">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Abaco Zuzzurellone">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Abaco Zuzzurellone">
+<meta property="og:locale" content="it_IT">
+<meta property="og:url" content="https://abacozuzzurellone.site/">
+<meta property="og:title" content="Abaco Zuzzurellone — il gioco della ricerca binaria sul vocabolario">
+<meta property="og:description" content="Tutto il vocabolario italiano teso fra abaco e zuzzurellone. Indovina la parola segreta a colpi di prima/dopo. Tre modalità, tre livelli, niente registrazione.">
+<meta property="og:image" content="https://abacozuzzurellone.site/docs/home-dark.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Abaco Zuzzurellone">
+<meta name="twitter:description" content="Un gioco di parole italiano: indovina la parola segreta a colpi di prima/dopo.">
+<meta name="twitter:image" content="https://abacozuzzurellone.site/docs/home-dark.png">
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoGame","name":"Abaco Zuzzurellone",
+ "url":"https://abacozuzzurellone.site/","inLanguage":"it",
+ "applicationCategory":"Game","genre":"Gioco di parole",
+ "operatingSystem":"Qualsiasi browser","browserRequirements":"Richiede JavaScript",
+ "offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},
+ "description":"Gioco di parole italiano: tutto il vocabolario teso fra abaco e zuzzurellone, si indovina la parola segreta a colpi di prima/dopo."}
+</script>
 </head>
 <body data-loading>
 
@@ -37,7 +62,7 @@
   </button>
 
   <nav class="topbar-actions">
-    <button class="iconbtn" id="btn-rules" type="button" title="Regole" aria-label="Regole">
+    <button class="iconbtn" id="btn-rules" type="button" title="Guida" aria-label="Guida: come si gioca">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.5v.01M12 14c0-2 2.2-2.3 2.2-4.2A2.4 2.4 0 0 0 12 7.4a2.5 2.5 0 0 0-2.4 2"/><circle cx="12" cy="12" r="9.2"/></svg>
     </button>
     <button class="iconbtn" id="btn-stats" type="button" title="Statistiche" aria-label="Statistiche">
@@ -97,7 +122,7 @@
       </span>
       <span class="mode-body">
         <span class="mode-name">Indovina il computer</span>
-        <span class="mode-desc">Pensa tu una parola e rispondi <i>prima</i> o <i>dopo</i>. Guarda l'intervallo dimezzarsi: bastano 17 mosse per 130.000 parole.</span>
+        <span class="mode-desc">Pensa tu una parola e rispondi <i>prima</i> o <i>dopo</i>. Guarda l'intervallo dimezzarsi: <b class="g-opt">…</b> mosse bastano per <b class="g-count">…</b> parole.</span>
       </span>
       <span class="mode-go" aria-hidden="true">→</span>
     </button>
@@ -124,6 +149,10 @@
     </div>
     <p class="level-hint" id="level-hint"></p>
   </div>
+
+  <aside class="adslot" data-ad="home" aria-label="Pubblicità">
+    <span class="adslot-tag">pubblicità</span>
+  </aside>
 </section>
 
 <!-- ══════════════════════════════ GIOCO ══════════════════════════════ -->
@@ -155,7 +184,9 @@
     </div>
 
     <div class="field-track" id="field-track">
-      <div class="field-rails" aria-hidden="true"></div>
+      <div class="field-out field-out--l" id="field-out-l" aria-hidden="true"></div>
+      <div class="field-out field-out--r" id="field-out-r" aria-hidden="true"></div>
+      <div class="field-rails" id="field-rails" aria-hidden="true"></div>
       <div class="field-span" id="field-span">
         <span class="field-span-edge field-span-edge--l"></span>
         <span class="field-span-edge field-span-edge--r"></span>
@@ -307,6 +338,10 @@
     <div class="path" id="end-path" aria-hidden="true"></div>
     <p class="path-caption" id="end-path-caption"></p>
 
+  <aside class="adslot" data-ad="end" aria-label="Pubblicità">
+    <span class="adslot-tag">pubblicità</span>
+  </aside>
+
     <div class="result-actions">
       <button class="btn btn--big" type="button" id="end-again">Ancora</button>
       <button class="btn btn--ghost" type="button" id="end-share">
@@ -319,53 +354,160 @@
   </div>
 </section>
 
-<!-- ══════════════════════════════ REGOLE ══════════════════════════════ -->
+<!-- ══════════════════════════════ GUIDA ══════════════════════════════ -->
 <section class="screen screen--doc" id="screen-rules" aria-labelledby="rules-title" hidden>
   <div class="play-head">
     <button class="backbtn" type="button" data-back aria-label="Indietro">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
     </button>
-    <h2 class="play-title" id="rules-title">Come si gioca</h2>
+    <h2 class="play-title" id="rules-title">Guida</h2>
   </div>
 
   <div class="doc">
-    <section class="doc-block" style="--i:0">
-      <h3>Il gioco</h3>
-      <p>Uno pensa una parola italiana e la tiene segreta. Gli altri propongono parole.
-      L'unica risposta ammessa è se la parola segreta viene <b class="tag tag--a">prima</b>
-      o <b class="tag tag--z">dopo</b> in ordine alfabetico. Ogni risposta restringe
-      l'intervallo di ricerca. Vince chi indovina.</p>
+    <nav class="doc-toc" aria-label="Indice della guida">
+      <a href="#g-gioco">Il gioco in trenta secondi</a>
+      <a href="#g-turno">Un turno, passo per passo</a>
+      <a href="#g-barra">Leggere la barra del campo</a>
+      <a href="#g-alfabeto">L'alfabeto aperto</a>
+      <a href="#g-modalita">Le tre modalità</a>
+      <a href="#g-livelli">I livelli</a>
+      <a href="#g-strategia">Strategia</a>
+      <a href="#g-mate">Perché bastano poche mosse</a>
+      <a href="#g-ordine">L'ordine alfabetico italiano</a>
+      <a href="#g-domande">Domande frequenti</a>
+    </nav>
+
+    <section class="doc-block" id="g-gioco" style="--i:0">
+      <h3>Il gioco in trenta secondi</h3>
+      <p>Qualcuno pensa una parola italiana e la tiene segreta. Gli altri propongono
+      parole. L'unica risposta ammessa è dire se la parola segreta viene
+      <b class="tag tag--a">prima</b> o <b class="tag tag--z">dopo</b> in ordine
+      alfabetico. Ogni risposta restringe il campo. Vince chi indovina.</p>
       <p>Il nome viene dagli estremi di partenza: <em>abaco</em> è tradizionalmente la
       prima voce del vocabolario italiano e <em>zuzzurellone</em> l'ultima. Si parte
-      da lì e si stringe.</p>
+      da lì — <b class="g-count">…</b> parole in mezzo — e si stringe.</p>
     </section>
 
-    <section class="doc-block" style="--i:1">
+    <section class="doc-block" id="g-turno" style="--i:1">
+      <h3>Un turno, passo per passo</h3>
+      <ol class="doc-steps">
+        <li><b>Scrivi una parola</b> nel campo di testo e premi Invio. Va bene qualsiasi
+        parola italiana del vocabolario del gioco, anche le forme flesse:
+        <code>cani</code>, <code>mangiavamo</code>, <code>bellissima</code>.</li>
+        <li><b>Ricevi la risposta.</b> «Prima di <i>x</i>» vuol dire che la parola segreta
+        sta a sinistra della tua; «Dopo <i>x</i>» che sta a destra.</li>
+        <li><b>Guarda il campo restringersi.</b> I due estremi in cima alla barra si
+        aggiornano, e il numero al centro dice quante parole restano davvero possibili.</li>
+        <li><b>Ripeti</b> finché non centri la parola. Il contatore <i>ottimale</i> ti dice
+        quanti tentativi basterebbero a una ricerca perfetta.</li>
+      </ol>
+      <p class="doc-note">Se proponi una parola già esclusa il gioco te lo dice e non
+      conta il tentativo: non c'è modo di sprecare una mossa per distrazione.</p>
+    </section>
+
+    <section class="doc-block" id="g-barra" style="--i:2">
+      <h3>Leggere la barra del campo</h3>
+      <p>La barra è tutto il vocabolario steso da sinistra a destra, da <em>abaco</em> a
+      <em>zuzzurellone</em>. Ogni elemento vuol dire una cosa precisa:</p>
+      <dl class="doc-list">
+        <dt>La fascia colorata</dt>
+        <dd>È il <b>campo</b>: le parole ancora possibili. Il suo colore dice
+        <i>dove</i> sta nel vocabolario — bluastro verso la a, dorato al centro,
+        rosso verso la z — e non cambia quando si stringe, così il colore resta
+        sempre una coordinata affidabile.</dd>
+        <dt>Le due zone spente ai lati</dt>
+        <dd>Quello che hai già escluso. A sinistra è tinta del blu di <em>abaco</em>
+        (l'hai esclusa con dei «prima»), a destra del rosso di <em>zuzzurellone</em>.</dd>
+        <dt>Le linee verticali sottili</dt>
+        <dd>I tuoi tentativi, nel punto esatto in cui sono caduti. Blu se la risposta
+        è stata <i>prima</i>, rossi se <i>dopo</i>, verdi se hai centrato.</dd>
+        <dt>Le lettere sotto</dt>
+        <dd>La scala. Non è a passo costante: ogni lettera occupa lo spazio che le
+        spetta per numero di parole, ed è per questo che la <b>s</b> è larghissima
+        e la <b>q</b> quasi non si vede.</dd>
+        <dt>Il numero al centro</dt>
+        <dd>Quante parole del livello scelto sono ancora possibili. È il numero che
+        conta: dimezzarlo a ogni mossa è l'intero gioco.</dd>
+        <dt>Il badge <span class="doc-chip">zoom ×N</span></dt>
+        <dd>Compare quando il campo diventa troppo stretto per vedersi su tutto il
+        vocabolario: la barra inquadra allora solo la porzione utile, e la scala
+        passa dalle lettere ai prefissi (<code>ze</code>, <code>zu</code>…).</dd>
+      </dl>
+    </section>
+
+    <section class="doc-block" id="g-alfabeto" style="--i:3">
+      <h3>L'alfabeto aperto</h3>
+      <p>Sotto la barra, <b>apri l'alfabeto</b> mostra la stessa informazione scritta per
+      esteso: una casella per lettera, quante parole ha in tutto e quante ne restano in
+      gioco. Le lettere barrate sono ormai fuori — nessuna risposta potrà più riportarcele.</p>
+      <p>Quando il campo entra tutto dentro una lettera sola, il pannello scende di un
+      livello da sé e mostra i secondi caratteri (dentro la <b>r</b>: <code>ra re ri ro
+      ru</code>…), poi i terzi. È il gioco stesso reso visibile.</p>
+    </section>
+
+    <section class="doc-block" id="g-modalita" style="--i:4">
       <h3>Le tre modalità</h3>
       <dl class="doc-list">
         <dt>Indovina tu</dt>
         <dd>Il gioco sceglie la parola. Tu proponi, lui risponde <i>prima</i> o <i>dopo</i>.
         Alla fine confronti i tuoi tentativi con quelli che avrebbe impiegato una
-        ricerca binaria perfetta.</dd>
+        ricerca binaria perfetta: sotto lo zero sei stato più fortunato della matematica.</dd>
         <dt>Indovina il computer</dt>
-        <dd>Pensi tu la parola. Il computer prova sempre la parola a metà dell'intervallo
-        rimasto e ti mostra quante ne restano. Se le tue risposte si contraddicono
-        l'intervallo si svuota e te lo dice.</dd>
+        <dd>Pensi tu la parola e la tieni a mente. Il computer prova sempre la parola a
+        metà dell'intervallo rimasto e ti mostra quante ne restano. Rispondi con i tre
+        pulsanti. Se le tue risposte si contraddicono l'intervallo si svuota e te lo dice
+        — capita più spesso di quanto sembri.</dd>
         <dt>Sfida a tempo</dt>
         <dd>Due estremi casuali, tre minuti, quante più parole comprese fra i due.
-        <b>+1</b> per ogni parola valida, <b>−1</b> se la parola è fuori intervallo o
-        non esiste, i doppioni non contano. È la versione da tavolo del 1995.</dd>
+        <b>+1</b> per ogni parola valida, <b>−1</b> se è fuori intervallo o non esiste,
+        i doppioni non contano né in positivo né in negativo. È la versione da tavolo
+        del 1995.</dd>
       </dl>
     </section>
 
-    <section class="doc-block doc-block--math" style="--i:2">
-      <h3>Perché bastano 17 tentativi</h3>
+    <section class="doc-block" id="g-livelli" style="--i:5">
+      <h3>I livelli</h3>
+      <p>Il livello decide <b>da quale insieme viene pescata la parola segreta</b> e su
+      quale insieme è calcolato il conteggio delle parole rimaste.</p>
+      <dl class="doc-list">
+        <dt>Facile — <b data-count="facile">…</b> parole</dt>
+        <dd>Solo parole comuni e corte: quelle che si usano parlando.</dd>
+        <dt>Medio — <b data-count="medio">…</b> parole</dt>
+        <dd>Il vocabolario di uso normale, flessioni comprese.</dd>
+        <dt>Difficile — <b data-count="difficile">…</b> parole</dt>
+        <dd>Tutto il vocabolario, comprese le voci che si incontrano una volta nella vita.</dd>
+      </dl>
+      <p class="doc-note"><b>I tentativi non sono mai limitati dal livello.</b> Puoi
+      sempre proporre qualsiasi parola del vocabolario completo, anche giocando a
+      facile: il gioco non ti dirà mai che una parola italiana vera non esiste.</p>
+    </section>
+
+    <section class="doc-block" id="g-strategia" style="--i:6">
+      <h3>Strategia</h3>
+      <ul class="doc-bullets">
+        <li><b>Punta alla metà del campo, non alla metà dell'alfabeto.</b> Con tutto il
+        vocabolario davanti, la parola che spacca in due non comincia per <b>m</b>: sta
+        molto prima, perché le prime lettere pesano più delle ultime.</li>
+        <li><b>Usa la scala sotto la barra.</b> Ti dice a occhio dove cade il centro
+        del campo rimasto: proponi una parola che comincia lì.</li>
+        <li><b>Nel finale allunga la parola, non cambiare lettera.</b> Quando il campo è
+        dentro <code>pres…</code>, la mossa utile è <code>presta</code>, non <code>pera</code>.</li>
+        <li><b>Apri l'alfabeto quando ti perdi.</b> Il conteggio per lettera dice
+        subito dove sta il grosso delle parole rimaste.</li>
+        <li><b>Nella sfida a tempo scrivi le parole più corte che ti vengono.</b> Un
+        errore vale −1, ma il tempo perso a pensarci vale di più.</li>
+      </ul>
+    </section>
+
+    <section class="doc-block doc-block--math" id="g-mate" style="--i:7">
+      <h3>Perché bastano poche mosse</h3>
       <p>Ogni risposta <i>prima</i>/<i>dopo</i> vale esattamente un bit: butta via metà
       delle parole rimaste. Se proponi sempre la parola che sta a metà dell'intervallo,
       il numero di candidate va</p>
       <p class="halving" id="halving-demo"></p>
       <p>Dopo <var>k</var> mosse restano al più <code>n / 2ᵏ</code> parole, quindi
-      ne bastano <b>⌈log₂(n+1)⌉</b>: <b>17</b> per 130.000 parole, <b>20</b> per un milione.
+      ne bastano <b>⌈log₂(n+1)⌉</b>: <b class="g-opt">…</b> per le
+      <b class="g-count">…</b> parole di questo gioco, <b>20</b> per un milione.
       Aggiungere parole al vocabolario quasi non costa nulla — è il motivo per cui la
       ricerca binaria è ovunque, dagli indici dei database al debug con <code>git bisect</code>.</p>
       <p class="doc-note">Attenzione: la parola “a metà” non è quella a metà dell'alfabeto,
@@ -373,12 +515,42 @@
       copre più vocabolario di <b>j&nbsp;k&nbsp;q&nbsp;w&nbsp;x&nbsp;y</b> messe insieme.</p>
     </section>
 
-    <section class="doc-block" style="--i:3">
-      <h3>Ordine alfabetico italiano</h3>
+    <section class="doc-block" id="g-ordine" style="--i:8">
+      <h3>L'ordine alfabetico italiano</h3>
       <p>Le parole accentate stanno al loro posto, non in fondo: <code>pera</code> →
       <code>pero</code> → <code>però</code> → <code>persona</code>. Il gioco usa
-      <code>Intl.Collator('it')</code>, non il confronto fra codici di carattere.</p>
+      <code>Intl.Collator('it')</code>, non il confronto fra codici di carattere —
+      altrimenti <code>però</code> finirebbe dopo <code>zebra</code>.</p>
+      <p>Le lettere straniere <b>j k w x y</b> ci sono: poche parole, ma ci sono.</p>
     </section>
+
+    <section class="doc-block" id="g-domande" style="--i:9">
+      <h3>Domande frequenti</h3>
+      <dl class="doc-list">
+        <dt>Ho scritto una parola vera e mi dice che non c'è.</dt>
+        <dd>Il vocabolario contiene <b class="g-total">…</b> parole: le voci del
+        dizionario Hunspell <b>it_IT</b> più tutte le forme flesse attestate in un
+        corpus reale. Restano fuori i nomi propri, le sigle, le parole straniere non
+        italianizzate e le parolacce. Se manca una parola italiana d'uso comune è un
+        bug: segnalalo su GitHub.</dd>
+        <dt>Il gioco funziona senza connessione?</dt>
+        <dd>Sì. Tutto gira nel browser, vocabolario compreso. Dopo la prima apertura
+        non serve più la rete.</dd>
+        <dt>Dove finiscono le mie statistiche?</dt>
+        <dd>Nel tuo browser e basta (<code>localStorage</code>). Non c'è nessun account
+        e nessun server: se svuoti i dati del sito, spariscono.</dd>
+        <dt>Posso giocare in due sullo stesso telefono?</dt>
+        <dd>È il modo migliore. Uno pensa la parola, l'altro usa «Indovina il computer»
+        al contrario — oppure giocate a voce e usate la barra solo per tenere il conto.</dd>
+        <dt>Perché la parola segreta a volte è stranissima?</dt>
+        <dd>Perché sei a livello <b>difficile</b>. A <b>facile</b> la parola segreta è
+        sempre una delle <b data-count="facile">…</b> parole comuni.</dd>
+      </dl>
+    </section>
+
+  <aside class="adslot" data-ad="guida" aria-label="Pubblicità">
+    <span class="adslot-tag">pubblicità</span>
+  </aside>
   </div>
 </section>
 
@@ -406,10 +578,12 @@
 
 <footer class="sitefoot">
   <span>Parole dal dizionario Hunspell <b>it_IT</b> di LibreItalia (GPL-3.0).</span>
+  <a href="privacy.html">Privacy e cookie</a>
   <a href="https://github.com/Fedetrain/abaco-zuzzurellone" rel="noopener">codice su GitHub</a>
 </footer>
 
 <script src="assets/core.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/ads.js"></script>
 </body>
 </html>

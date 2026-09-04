@@ -18,9 +18,14 @@ const FILES = [
     note: 'Hunspell it_IT stem list -- GPL-3.0',
   },
   {
-    name: 'it_50k.txt',
-    url: 'https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/it/it_50k.txt',
-    note: 'OpenSubtitles 2018 frequency list -- MIT',
+    name: 'it_IT.aff',
+    url: 'https://raw.githubusercontent.com/LibreOffice/dictionaries/master/it_IT/it_IT.aff',
+    note: 'Hunspell it_IT affix rules -- GPL-3.0',
+  },
+  {
+    name: 'it_full.txt',
+    url: 'https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/it/it_full.txt',
+    note: 'OpenSubtitles 2018 frequency list, full -- MIT',
   },
   {
     name: 'badwords.txt',

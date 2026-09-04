@@ -1,0 +1,6 @@
+# Authorized Digital Sellers -- https://iabtechlab.com/ads-txt/
+# Sostituisci pub-0000000000000000 con il tuo publisher id AdSense
+# (lo trovi in AdSense -> Account -> Informazioni account) e togli il #.
+# Senza questo file AdSense mostra un avviso e alcuni acquirenti non fanno
+# offerte sul tuo inventario: e' la riga che vale piu' soldi di tutto il file.
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

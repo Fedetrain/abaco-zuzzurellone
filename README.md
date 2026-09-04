@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://fedetrain.github.io/abaco-zuzzurellone/"><b>▶ Play it</b></a>
+  <a href="https://abacozuzzurellone.site/"><b>▶ Play it</b></a>
   ·
   <a href="#the-three-modes">Modes</a>
   ·
@@ -102,8 +102,8 @@ the shape without the arithmetic.
 
 You think of the word and answer *prima* / *dopo* / *è questa*. The computer
 always plays the word that sits at the **median of the remaining candidates**
-and shows you the count collapsing: 83 362 → 41 681 → 20 841 → … → 1. It is
-the mode that makes the point: seventeen questions are enough for the entire
+and shows you the count collapsing: 257 361 → 128 681 → 64 340 → … → 1. It is
+the mode that makes the point: eighteen questions are enough for the entire
 Italian vocabulary.
 
 If your answers contradict each other the interval empties out, and the game
@@ -131,8 +131,8 @@ that survived it. The staircase of halving, drawn.
 
 ## Also in the box
 
-* **Three difficulty levels** — *facile* (2 266 common short words), *medio*
-  (9 034), *difficile* (all 83 362, rare words included). The level chooses the
+* **Three difficulty levels** — *facile* (5 465 common short words), *medio*
+  (37 999), *difficile* (all 257 361, rare words and inflections included). The level chooses the
   universe the secret is drawn from and the one the counters talk about; your
   guesses are always checked against the full vocabulary, so you are never told
   a real Italian word does not exist.
@@ -177,14 +177,14 @@ pera  <  pero  <  però  <  persona
 ```
 
 The shipped word list is pre-sorted at build time with the same comparator, so
-the browser never has to re-sort 83 362 words, and there is a test that walks
+the browser never has to re-sort 257 361 words, and there is a test that walks
 the whole file to prove the order holds.
 
-### Why seventeen guesses are enough
+### Why eighteen guesses are enough
 
 Each *prima* / *dopo* answer is worth exactly one bit: it throws away half of
 the surviving candidates. After *k* guesses at most `n / 2ᵏ` remain, so
-`⌈log₂(n + 1)⌉` guesses always suffice — **17** for 130 000 words, **20** for a
+`⌈log₂(n + 1)⌉` guesses always suffice — **18** for 257 361 words, **20** for a
 million. Doubling the dictionary costs one extra question.
 
 The subtlety the game makes visible: the word "in the middle" is *not* the word
@@ -208,7 +208,7 @@ weight, not left-to-right, so the letters that own the most vocabulary survive.
 
 The alphabet panel wants, on every guess, twenty-six pairs of numbers: how many
 words each letter still has in play and how many it has in total. Walking the
-83 362 entries to find out would be the obvious way and the wrong one.
+257 361 entries to find out would be the obvious way and the wrong one.
 
 Instead `AZ.breakdown(lo, hi, livello)` asks `lowerBound` for the twenty-six
 boundaries `prefix+a`, `prefix+b`, … — twenty-six binary searches, seventeen
@@ -283,7 +283,7 @@ tests.html                 browser test runner
 assets/core.js             pure logic: collation, codec, dictionary, search
 assets/app.js              screens, the interval bar, modes, stats, sharing
 assets/style.css           design tokens, layout, animation
-data/dizionario.js         83 362 words, front-coded (this is what loads)
+data/dizionario.js         257 361 words, front-coded (this is what loads)
 data/dizionario.txt        the same list, human-readable
 data/SOURCE.md             provenance and licence of every data source
 data/LICENSE-DIZIONARIO.txt  GPL-3.0, applying to data/ only
@@ -301,13 +301,16 @@ docs/                      screenshots
 
 | What | Source | Licence |
 |---|---|---|
-| **Vocabulary** (83 362 lemmas) | [LibreOffice Hunspell `it_IT`](https://github.com/LibreOffice/dictionaries/tree/master/it_IT) v5.1.1 — © Gianluca Turconi, Davide Prina, Andrea Pescetti, LibreItalia / Marina Latini | **GPL-3.0** |
-| **Frequency ranks** (difficulty tiers only) | [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), OpenSubtitles 2018 — © Hermit Dave | MIT |
+| **Vocabulary** (257 361 forms) | [LibreOffice Hunspell `it_IT`](https://github.com/LibreOffice/dictionaries/tree/master/it_IT) v5.1.1 — © Gianluca Turconi, Davide Prina, Andrea Pescetti, LibreItalia / Marina Latini | **GPL-3.0** |
+| **Frequency list** (attestation + difficulty tiers) | [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), OpenSubtitles 2018 — © Hermit Dave | MIT |
 | **Profanity filter** (subtracted, never shipped) | [napolux/paroleitaliane](https://github.com/napolux/paroleitaliane) — © Francesco Napoletano | MIT |
 | **Game code, styles, tools** | this repository — © 2026 Federico Traina | MIT |
 
-Only the Hunspell **stem list** is used — dictionary head-words, the right
-granularity for this game. Capitalised entries (proper nouns) and anything with
+The Hunspell **affix rules are applied** (`tools/unmunch.mjs`), so the list is
+not just the 95 000 lemmas but every inflected form they generate — kept only
+where the form is actually attested in the OpenSubtitles corpus. Without that
+step `casa`, `cani` and `mangio` were simply not in the game, and players were
+told that ordinary Italian words do not exist. Capitalised entries (proper nouns) and anything with
 apostrophes, hyphens or digits are filtered out. Two real words missing
 upstream, *zuzzurellone* and *zuzzurellona*, are added by hand from
 `tools/extra-words.txt`; the game would be poorer named without them.

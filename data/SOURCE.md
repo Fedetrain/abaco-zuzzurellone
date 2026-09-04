@@ -14,7 +14,7 @@ is MIT (see [`../LICENSE`](../LICENSE)).
 | | |
 |---|---|
 | **Name** | *Estensione linguistica italiana* — Hunspell `it_IT` dictionary |
-| **File used** | `it_IT.dic` (the stem list, 95 381 entries) |
+| **Files used** | `it_IT.dic` (stem list, 95 381 entries) + `it_IT.aff` (affix rules) |
 | **Upstream** | <https://github.com/LibreOffice/dictionaries/tree/master/it_IT> |
 | **Origin** | Fork of *Dizionario italiano* from <http://linguistico.sourceforge.net/> |
 | **Copyright** | © 2001–2007 Gianluca Turconi, Davide Prina · © 2010–2015 Andrea Pescetti · © 2020–2022 LibreItalia / Marina Latini |
@@ -22,23 +22,35 @@ is MIT (see [`../LICENSE`](../LICENSE)).
 | **Version** | 5.1.1 (07/11/2022) |
 
 This is the spell-checking dictionary that ships with LibreOffice for Italian.
-Only the `.dic` **stem list** is used: those are dictionary head-words (lemmas),
-which is exactly the granularity the game wants. The affix rules in `.aff`,
-which would expand the stems into millions of inflected forms, are not applied.
+
+**Both files are used, and this matters.** The `.dic` on its own is a list of
+lemmas — and Italian lemmas are not the words people type: `casa`, `cani`,
+`mangio`, `bellissima` are all absent from it. A game built on the stem list
+alone tells its players that ordinary Italian words do not exist, which is
+exactly what this one used to do.
+
+So `tools/unmunch.mjs` applies the affix rules and expands the stems into all
+the forms they generate (about 3 million, once the article prefixes `l'`,
+`dell'` … are dropped). That set is then intersected with source 2 below: a
+form is kept only if somebody has actually written it. The intersection throws
+away the theoretical monsters the rules also produce
+(`mangiaglieliene`) while keeping every inflection in real use.
 
 ## 2. Frequency data — used only to grade difficulty
 
 | | |
 |---|---|
-| **Name** | FrequencyWords — `content/2018/it/it_50k.txt` |
+| **Name** | FrequencyWords — `content/2018/it/it_full.txt` |
 | **Upstream** | <https://github.com/hermitdave/FrequencyWords> |
 | **Derived from** | OpenSubtitles 2018 corpus |
 | **Copyright** | © 2016 Hermit Dave |
 | **Licence** | **MIT** |
 
-The rank of a word in this list decides whether it lands in the *facile*,
-*medio* or *difficile* pool. No word text is taken from it — it only sorts the
-words that already come from source 1.
+This list does two jobs. It **attests** the inflected forms (a form the affix
+rules generate is shipped only if it appears here at least once), and its raw
+occurrence counts decide whether a word lands in the *facile*, *medio* or
+*difficile* pool. No word text is taken from it: every word shipped is a form
+the Hunspell dictionary generates.
 
 ## 3. Profanity list — used only as a negative filter
 
@@ -49,7 +61,7 @@ words that already come from source 1.
 | **Copyright** | © 2016 Francesco Napoletano |
 | **Licence** | **MIT** |
 
-Its 453 entries are subtracted from the vocabulary; 49 of them matched. Nothing
+Its 453 entries are subtracted from the vocabulary; 121 of them matched. Nothing
 from this file ends up in the shipped data.
 
 ## 4. Hand-written addendum
@@ -69,14 +81,23 @@ node tools/fetch-sources.mjs      # downloads 1, 2 and 3 into tools/sources/ (gi
 node tools/build-dictionary.mjs   # writes data/dizionario.txt and data/dizionario.js
 ```
 
+The expansion step can also be run on its own:
+
+```
+node tools/unmunch.mjs tools/sources/it_IT.aff tools/sources/it_IT.dic /tmp/forms.txt
+```
+
 Filters applied by `tools/build-dictionary.mjs`:
 
 * entries whose first character is uppercase are dropped — that is how proper
   nouns are marked in this dictionary (`Abacuc`, `Impruneta`, `Sanremo`…);
 * only the letters `a–z` plus `à á è é ì í î ò ó ù ú` are allowed, so
   abbreviations, apostrophised and hyphenated forms go away;
-* length is capped to 3–14 characters;
+* length is capped to 3–16 characters;
 * the profanity list of source 3 is subtracted;
+* anything sorting before `abaco` or after `zuzzurellone` is dropped: those two
+  words are the board, and an inflection just outside them (`abachi`) would
+  leave the field with an edge the rules say cannot exist;
 * the survivors are sorted with `Intl.Collator('it')` — Italian collation, not
   code-point order, so `pera < pero < però < persona`.
 
@@ -84,13 +105,13 @@ Filters applied by `tools/build-dictionary.mjs`:
 
 | | |
 |---|---|
-| Words shipped | **83 362** |
+| Words shipped | **257 361** |
 | First / last entry | `abaco` / `zuzzurellone` |
-| *facile* pool | 2 266 (top ~6 000 by frequency, ≤ 9 letters) |
-| *medio* pool | 9 034 (top ~25 000 by frequency) |
-| *difficile* pool | 83 362 (everything) |
-| `dizionario.txt` | 1.0 MB — `word<TAB>tier`, one per line, human-readable |
-| `dizionario.js` | 440 KB — the same data front-coded, this is what the game loads |
+| *facile* pool | 5 465 (≥ 2 000 occurrences in the corpus, ≤ 9 letters) |
+| *medio* pool | 37 999 (≥ 100 occurrences) |
+| *difficile* pool | 257 361 (everything) |
+| `dizionario.txt` | 3.2 MB — `word<TAB>tier`, one per line, human-readable |
+| `dizionario.js` | 1.0 MB — the same data front-coded (352 KB gzipped over the wire) |
 
 `dizionario.js` is loaded with a `<script>` tag rather than `fetch()` so that
 the game also runs when `index.html` is opened straight from disk over the

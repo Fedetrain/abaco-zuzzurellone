@@ -509,19 +509,45 @@ main { display: block; }
   position: relative;
   height: 52px;
   border-radius: 14px;
-  background:
-    repeating-linear-gradient(90deg, var(--line-soft) 0 1px, transparent 1px 100%) 0 0 / 4% 100%,
-    var(--surface-2);
+  /* Fondo liscio. Prima c'era una griglia fissa ogni 4%: non voleva dire
+     niente (il vocabolario non è distribuito uniformemente) e sotto la parte
+     esclusa sembrava una tabella rotta. Le tacche che contano sono i rail,
+     allineati alle etichette dell'alfabeto qui sotto. */
+  background: var(--surface-2);
   border: 1px solid var(--line-soft);
   overflow: hidden;
 }
 @media (max-width: 34rem) { .field-track { height: 44px; } }
 
+/* Le due zone escluse, tinte del lato che le ha escluse: a sinistra il blu di
+   abaco ("prima"), a destra il rosso di zuzzurellone ("dopo"). È l'unica cosa
+   che rende leggibile a colpo d'occhio da che parte si è ristretto il campo. */
+.field-out {
+  position: absolute; top: 0; bottom: 0;
+  pointer-events: none;
+}
+.field-out--l { left: 0;  width: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--abaco) 30%, transparent), color-mix(in srgb, var(--abaco) 12%, transparent)); }
+.field-out--r { right: 0; left: 100%; background: linear-gradient(90deg, color-mix(in srgb, var(--zuzz) 12%, transparent), color-mix(in srgb, var(--zuzz) 30%, transparent)); }
+
+/* Hairline dentro la traccia, una per etichetta dell'alfabeto: lega la barra
+   alla scala sotto, così si legge *dove* sta il campo e non solo quanto è largo. */
+.field-rails { position: absolute; inset: 0; pointer-events: none; }
+.rail {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--line);
+  opacity: .55;
+}
+
 .field-span {
   position: absolute; top: 0; bottom: 0;
   left: 0; width: 100%;
   border-radius: 12px;
-  background: linear-gradient(100deg, var(--abaco), var(--gold) 54%, var(--zuzz));
+  /* Il gradiente è dipinto nello spazio della *traccia*, non del blocco:
+     background-size e position vengono ricalcolati a ogni frame in app.js.
+     Altrimenti un intervallo stretto ripartiva da capo col blu di abaco pur
+     stando in fondo alla z -- il colore mentiva sulla posizione. */
+  background-image: linear-gradient(90deg, var(--abaco), var(--gold) 54%, var(--zuzz));
+  background-repeat: no-repeat;
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent),
               0 6px 18px -6px color-mix(in srgb, var(--zuzz) 55%, transparent);
   /* left/width sono pilotati fotogramma per fotogramma da app.js con un
@@ -580,17 +606,19 @@ main { display: block; }
   position: absolute; top: 0;
   transform: translateX(-50%);
   font-family: var(--font-mono);
-  font-size: .6rem; font-weight: 500;
-  color: var(--ink-faint);
+  font-size: .62rem; font-weight: 600;
+  color: var(--ink-soft, var(--ink-faint));
   letter-spacing: .02em;
   white-space: nowrap;
   animation: tickIn .45s var(--ease-out) backwards;
   animation-delay: calc(var(--t, 0) * 12ms);
 }
 .tick::before {
-  content: ''; position: absolute; left: 50%; top: -6px;
-  width: 1px; height: 4px; background: var(--line);
+  content: ''; position: absolute; left: 50%; top: -8px;
+  width: 1px; height: 6px; background: var(--line);
 }
+/* l'etichetta sotto un estremo del campo si accende */
+.tick.is-in { color: var(--ink); }
 .tick.is-hot { color: var(--ink); font-weight: 700; }
 @keyframes tickIn { from { opacity: 0; transform: translateX(-50%) translateY(-4px); } }
 
@@ -1313,3 +1341,75 @@ body:not([data-loading]) .loader { opacity: 0; visibility: hidden; }
   .field-span { transition: left .01ms, width .01ms; }
   .backdrop-glow { animation: none; }
 }
+
+
+/* ═══════════════════════ GUIDA ══════════════════════════════════════════
+   Indice, passi numerati ed elenchi puntati: elementi che le vecchie
+   "Regole" non avevano perché erano quattro paragrafi. */
+.doc-toc {
+  display: flex; flex-wrap: wrap; gap: .4rem .5rem;
+  margin: 0 0 1.6rem;
+  padding: .9rem 1rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.doc-toc a {
+  font-size: .78rem; font-weight: 600;
+  color: var(--ink-soft); text-decoration: none;
+  padding: .28rem .6rem; border-radius: 999px;
+  border: 1px solid transparent;
+  transition: color .2s, background .2s, border-color .2s;
+}
+.doc-toc a:hover, .doc-toc a:focus-visible {
+  color: var(--ink); background: var(--surface);
+  border-color: var(--line);
+}
+.doc-steps { margin: .6rem 0 0; padding-left: 1.15rem; }
+.doc-steps li { margin-bottom: .55rem; line-height: 1.6; }
+.doc-steps li::marker { color: var(--gold-ink); font-weight: 700; }
+.doc-bullets { margin: .4rem 0 0; padding-left: 1.15rem; list-style: none; }
+.doc-bullets li { position: relative; margin-bottom: .6rem; line-height: 1.6; }
+.doc-bullets li::before {
+  content: ''; position: absolute; left: -1rem; top: .62em;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--gold);
+}
+.doc-chip {
+  font-family: var(--font-mono); font-size: .72em; font-weight: 700;
+  padding: .1rem .4rem; border-radius: 999px;
+  background: var(--gold-soft); color: var(--gold-ink);
+  white-space: nowrap;
+}
+/* L'ancora non deve finire sotto la topbar fissa. */
+.doc-block[id] { scroll-margin-top: 5rem; }
+
+
+/* ═══════════════════════ RIQUADRI PUBBLICITARI ══════════════════════════
+   Invisibili finché assets/ads.js non trova un publisher id: senza <html
+   class="has-ads"> il riquadro non occupa nemmeno un pixel, così il sito
+   non ha buchi in attesa di annunci che non arriveranno. */
+.adslot { display: none; }
+.has-ads .adslot {
+  display: block;
+  position: relative;
+  margin: 2rem auto 0;
+  width: 100%;
+  max-width: 46rem;
+  /* Spazio riservato prima che l'annuncio arrivi: senza, il testo salta. */
+  min-height: 110px;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line-soft);
+  text-align: center;
+  overflow: hidden;
+}
+.has-ads .adslot-tag {
+  position: absolute; top: .25rem; left: 0;
+  font-size: .55rem; letter-spacing: .16em; text-transform: uppercase;
+  font-weight: 700; color: var(--ink-faint);
+}
+.has-ads .adslot .adsbygoogle { min-height: 90px; }
+@media (min-width: 48rem) { .has-ads .adslot { min-height: 270px; } }
+
+/* La testata di privacy.html usa un <a> al posto del <button>: senza questo
+   eredita la sottolineatura dei link del documento. */
+a.brand, a.backbtn { text-decoration: none; }
