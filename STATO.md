@@ -48,6 +48,9 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
       alla fine di ogni intervallo stretto.
 - [x] Sottolineature e colore `:visited` ereditati sui link di `privacy.html` e
       `guida.html`, dove il gioco usa `<button>`.
+- [x] La scala del campo mostrava lo stesso prefisso in due posti («gravita»,
+      «gravità», «gravita»): tagliati a sette lettere, «gravita» e «gravitano»
+      coincidono. Ora il taglio si allunga finché i prefissi sono tutti diversi.
 
 ### La barra del campo
 - [x] Il gradiente è dipinto nello spazio della **traccia**: un campo stretto
@@ -81,6 +84,11 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
 - [x] Tre riquadri pubblicitari (`home`, `end`, `guida`), mai dentro la partita.
 - [x] Publisher id AdSense `ca-pub-9010134003844365` in `assets/ads.js` e in
       `ads.txt`; lo script di verifica è live su tutte le pagine.
+- [x] **Immagine Open Graph dedicata**, `docs/og.png` (1200×630): è quella che
+      compare quando si condivide il link, su `index.html` e `guida.html`.
+- [x] **Screenshot rifatti** con la versione attuale, e riproducibili:
+      `node tools/screenshots.mjs` guida il gioco vero in un Chromium headless
+      (partite deterministiche, seme fisso) e riscrive `docs/*.png` e `og.png`.
 
 ---
 
@@ -103,10 +111,6 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
 - [ ] Registrare il sito su [Google Search Console](https://search.google.com/search-console)
       e inviare `sitemap.xml`.
 - [ ] Registrarlo anche su Bing Webmaster Tools (due minuti, traffico in più).
-- [ ] Screenshot aggiornati in `docs/` — quelli attuali sono della versione di
-      agosto, senza la parola del giorno e con la vecchia barra.
-- [ ] Immagine Open Graph dedicata (ora punta a `docs/home-dark.png`, che è uno
-      screenshot vecchio: è la prima cosa che si vede quando si condivide il link).
 
 ### 3. Idee, in ordine di quanto porterebbero
 - [ ] **Notifica/promemoria della parola del giorno** — anche solo un invito a
@@ -135,6 +139,12 @@ gh api -X PUT repos/Fedetrain/abaco-zuzzurellone/pages \
 gh api -X POST repos/Fedetrain/abaco-zuzzurellone/pages/builds
 ```
 
+**Gli screenshot e `og.png` sono generati.** Dopo una modifica visibile o un
+cambio del dizionario, `node tools/screenshots.mjs` (serve un Chromium: quello
+di Playwright, Chrome, o `CHROME=/percorso`). Se la macchina non raggiunge
+Google Fonts, `ABACO_FONTS_DIR` punta a una cartella con `fonts.css` e i
+`.woff2` scaricati a mano.
+
 **`guida.html` è generata, non scritta.** Se modifichi la guida dentro
 `index.html`, rigenera — altrimenti la pagina che Google indicizza diverge:
 
@@ -160,6 +170,7 @@ ripetuto, chiude l'account.
 ```bash
 node tools/run-tests.mjs        # 38 test, girano anche in browser (tests.html)
 node tools/build-guide.mjs      # rigenera guida.html da index.html
+node tools/screenshots.mjs      # rifà docs/*.png e docs/og.png con un Chromium headless
 node tools/fetch-sources.mjs    # riscarica le liste sorgente (git-ignored)
 node tools/build-dictionary.mjs # ricostruisce data/dizionario.{txt,js}
 ```

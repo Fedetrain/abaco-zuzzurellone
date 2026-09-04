@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- Template of docs/og.png, the image shown when the site is shared.
+     Rendered by tools/screenshots.mjs at 1200x630; {{count}} and {{optimal}}
+     are filled from the dictionary, the fonts link is the same as index.html. -->
+<html lang="it"><head><meta charset="utf-8"><title>og</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Inter:wght@300..800&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+html,body{margin:0;width:1200px;height:630px;overflow:hidden}
+body{background:#100e0c;color:#f3ece1;font-family:'Inter',system-ui,sans-serif;position:relative}
+.glow-a{position:absolute;left:-180px;top:-200px;width:760px;height:760px;border-radius:50%;background:radial-gradient(circle,rgba(31,69,196,.55),rgba(31,69,196,0) 65%)}
+.glow-z{position:absolute;right:-200px;top:-140px;width:760px;height:760px;border-radius:50%;background:radial-gradient(circle,rgba(217,60,34,.5),rgba(217,60,34,0) 65%)}
+.wrap{position:absolute;inset:0;padding:64px 80px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between}
+.kicker{font-size:19px;letter-spacing:.22em;text-transform:uppercase;color:#b9ab9b;font-weight:600}
+.title{display:flex;align-items:baseline;gap:26px;font-family:'Fraunces',Georgia,serif;font-weight:800;font-size:92px;line-height:1;letter-spacing:-.025em;font-variation-settings:'opsz' 144}
+.title .a{color:#5b7cf0}.title .z{color:#f0644b}
+.mid{flex:1;min-width:210px;height:0;border-top:3px dashed rgba(243,236,225,.28);position:relative;top:-18px}
+.pill{position:absolute;left:50%;top:-30px;transform:translateX(-50%);background:#f3ece1;color:#17130f;border-radius:999px;padding:8px 18px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:20px;line-height:1.05;white-space:nowrap}
+.pill small{display:block;font-family:'Inter',sans-serif;font-weight:600;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#6a5b4c;margin-top:4px}
+.tag{font-size:31px;line-height:1.35;color:#d9cdbb;max-width:1000px}
+.tag b{color:#f3ece1}
+.chip{display:inline-block;padding:2px 14px;border-radius:8px;font-weight:700}
+.chip.a{background:rgba(91,124,240,.22);color:#9db1ff}.chip.z{background:rgba(240,100,75,.22);color:#ffab99}
+.bar{height:16px;border-radius:999px;background:rgba(243,236,225,.12);position:relative;overflow:visible}
+.bar .fill{position:absolute;left:22%;right:31%;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,#1f45c4,#c98a06 55%,#d93c22)}
+.bar .fill:before,.bar .fill:after{content:'';position:absolute;top:-8px;width:4px;height:32px;border-radius:2px;background:#f3ece1}
+.bar .fill:before{left:-2px}.bar .fill:after{right:-2px}
+.scale{display:flex;justify-content:space-between;margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:18px;color:#9a8b7c;letter-spacing:.05em}
+.scale span.on{color:#f3ece1;font-weight:700}
+.foot{display:flex;justify-content:space-between;align-items:center;font-size:21px;color:#b9ab9b;font-weight:500}
+.foot .url{color:#f3ece1;font-weight:700;letter-spacing:.01em}
+</style></head><body>
+<div class="glow-a"></div><div class="glow-z"></div>
+<div class="wrap">
+  <div>
+    <div class="kicker">Un gioco di parole italiano · ricerca binaria travestita</div>
+    <div class="title" style="margin-top:26px"><span class="a">Abaco</span><span class="mid"><span class="pill">{{count}}<small>parole in mezzo</small></span></span><span class="z">Zuzzurellone</span></div>
+  </div>
+  <div class="tag">Uno pensa una parola, gli altri ne propongono e ricevono una sola risposta: <span class="chip a">prima</span> o <span class="chip z">dopo</span>. Ogni risposta dimezza il campo. <b>{{optimal}} mosse bastano per tutto il vocabolario.</b></div>
+  <div>
+    <div class="bar"><div class="fill"></div></div>
+    <div class="scale"><span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span class="on">g</span><span class="on">h</span><span class="on">i</span><span class="on">l</span><span class="on">m</span><span class="on">n</span><span class="on">o</span><span class="on">p</span><span>q</span><span>r</span><span>s</span><span>t</span><span>u</span><span>v</span><span>z</span></div>
+  </div>
+  <div class="foot"><span>Parola del giorno · Indovina tu · Indovina il computer · Sfida a tempo</span><span class="url">abacozuzzurellone.site</span></div>
+</div>
+</body></html>
