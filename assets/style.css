@@ -1419,4 +1419,73 @@ body:not([data-loading]) .loader { opacity: 0; visibility: hidden; }
 
 /* La testata di privacy.html usa un <a> al posto del <button>: senza questo
    eredita la sottolineatura dei link del documento. */
-a.brand, a.backbtn { text-decoration: none; }
+/* privacy.html e guida.html usano <a> dove il gioco usa <button>: senza
+   questo ereditano sottolineatura e colore :visited dei link del documento. */
+a.brand, a.backbtn, a.btn { text-decoration: none; }
+a.brand, a.brand:visited { color: inherit; }
+a.btn, a.btn:visited { color: inherit; }
+
+/* ═══════════════════════ LA PAROLA DEL GIORNO ═══════════════════════════
+   La scheda in cima alla home: si distingue dalle altre perché è l'unica
+   che scade — e i tre pallini dicono a colpo d'occhio cosa manca oggi. */
+.mode--daily {
+  border-color: color-mix(in srgb, var(--gold) 40%, var(--line));
+  background:
+    linear-gradient(135deg, var(--gold-soft), transparent 45%),
+    var(--surface);
+}
+.mode--daily .mode-ico { color: var(--gold-ink); }
+.mode-badge {
+  font-family: var(--font-mono); font-style: normal;
+  font-size: .62em; font-weight: 700; letter-spacing: .02em;
+  color: var(--gold-ink);
+  padding: .1rem .4rem; border-radius: 999px;
+  background: var(--gold-soft);
+  vertical-align: .18em;
+}
+.daily-dots {
+  display: flex; align-items: center; gap: .35rem;
+  margin-top: .6rem;
+}
+.dot {
+  display: grid; place-items: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  font-style: normal;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  transition: background .3s, border-color .3s, color .3s;
+}
+.dot b {
+  font-family: var(--font-mono); font-size: .6rem; font-weight: 700;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.dot--win    { background: color-mix(in srgb, var(--green) 22%, transparent); border-color: color-mix(in srgb, var(--green) 55%, transparent); }
+.dot--win b  { color: var(--green); }
+.dot--doing  { background: var(--gold-soft); border-color: color-mix(in srgb, var(--gold) 55%, transparent); }
+.dot--doing b{ color: var(--gold-ink); }
+.dot--lost   { border-style: dashed; }
+.daily-streak {
+  margin-left: .3rem;
+  font-size: .72rem; font-weight: 700;
+  color: var(--gold-ink);
+}
+.result-next {
+  margin: .2rem 0 1.2rem;
+  font-family: var(--font-mono); font-size: .72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+
+/* Condividi è il pulsante principale a fine partita: è l'unica cosa che
+   porta gente nuova, e «Ancora» resta comunque a un dito di distanza. */
+.btn--share svg { width: 1.05em; height: 1.05em; }
+
+/* guida.html: la pagina statica non ha la barra delle azioni del gioco,
+   quindi l'invito a giocare deve stare dentro il testo. */
+.guide-cta { margin: 2rem 0 0; text-align: center; }
+.btn--small { padding: .4rem .8rem; font-size: .78rem; }
+
+/* La parola del giorno prende tutta la riga: è l'azione del giorno, non una
+   delle quattro modalità — e in griglia a tre colonne una quarta scheda
+   lascerebbe comunque un buco. */
+@media (min-width: 48rem) { .mode--daily { grid-column: 1 / -1; } }

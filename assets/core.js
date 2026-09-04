@@ -416,6 +416,60 @@
   }
 
   /* ---------------------------------------------------------------------
+     5-bis. La parola del giorno
+     ---------------------------------------------------------------------
+     Tre parole al giorno, una per livello, uguali per tutti e senza server:
+     la data e' il seme. Il giorno e' quello italiano (Europe/Rome) e non
+     quello del fuso di chi gioca, altrimenti chi sta a Tokyo e chi sta a
+     Lisbona condividerebbero due parole diverse con lo stesso numero.
+  --------------------------------------------------------------------- */
+  var GIORNO_ZERO = '2026-09-04';   // il primo enigma
+  var romeDay = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Rome' });
+
+  /** La data italiana di un istante, come 'YYYY-MM-DD'. */
+  function dayKey(date) {
+    return romeDay.format(date || new Date());
+  }
+
+  /** Il numero progressivo dell'enigma: 1 il primo giorno. */
+  function dayNumber(key) {
+    var a = Date.UTC.apply(null, GIORNO_ZERO.split('-').map(Number).map(function (n, i) { return i === 1 ? n - 1 : n; }));
+    var b = Date.UTC.apply(null, key.split('-').map(Number).map(function (n, i) { return i === 1 ? n - 1 : n; }));
+    return Math.round((b - a) / 86400000) + 1;
+  }
+
+  /** FNV-1a a 32 bit: deterministico, uguale su ogni browser. */
+  function hash32(s) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = (h + (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24)) >>> 0;
+    }
+    return h >>> 0;
+  }
+
+  /** Indice della parola del giorno per quel livello, o -1. */
+  function dailyIndex(dict, key, livello) {
+    var total = dict.countRange(0, dict.size, livello);
+    if (total <= 0) return -1;
+    return dict.nthOfLevel(0, dict.size, livello, hash32(key + '|' + livello) % total);
+  }
+
+  /** Millisecondi che mancano alla mezzanotte italiana. */
+  function msToNextDay(now) {
+    var d = now || new Date();
+    var today = dayKey(d);
+    // Cerco in avanti a passi di un'ora: e' un modo goffo ma immune ai
+    // cambi di ora legale, che a marzo e ottobre spostano la mezzanotte.
+    var t = d.getTime();
+    var step = 3600000;
+    while (dayKey(new Date(t)) === today) t += step;
+    // Ora sono dentro il giorno dopo: torno indietro al minuto esatto.
+    while (dayKey(new Date(t - 60000)) !== today) t -= 60000;
+    return t - d.getTime();
+  }
+
+  /* ---------------------------------------------------------------------
      6. Formatting helpers
      --------------------------------------------------------------------- */
   var NF = new Intl.NumberFormat('it-IT', { useGrouping: 'always' });
@@ -442,6 +496,11 @@
     applyAnswer: applyAnswer,
     judgeTimed: judgeTimed,
     ESITO: ESITO,
+    dayKey: dayKey,
+    dayNumber: dayNumber,
+    hash32: hash32,
+    dailyIndex: dailyIndex,
+    msToNextDay: msToNextDay,
     formatNumber: formatNumber,
     formatTime: formatTime,
   };

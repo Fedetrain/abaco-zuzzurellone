@@ -105,13 +105,25 @@
   </div>
 
   <div class="modes" role="list">
+    <button class="mode mode--daily" role="listitem" type="button" data-mode="giorno" style="--i:4">
+      <span class="mode-ico" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><rect x="8" y="11" width="32" height="30" rx="4"/><path d="M8 20h32" class="thin"/><path d="M17 7v7M31 7v7"/><path d="M20 30h8" class="thin"/></svg>
+      </span>
+      <span class="mode-body">
+        <span class="mode-name">Parola del giorno <em class="mode-badge" id="daily-num"></em></span>
+        <span class="mode-desc">Tre parole al giorno, una per livello, uguali per tutti fino a mezzanotte. Un solo tentativo a testa.</span>
+        <span class="daily-dots" id="daily-dots" aria-live="polite"></span>
+      </span>
+      <span class="mode-go" aria-hidden="true">→</span>
+    </button>
+
     <button class="mode" role="listitem" type="button" data-mode="indovina" style="--i:5">
       <span class="mode-ico" aria-hidden="true">
         <svg viewBox="0 0 48 48"><circle cx="21" cy="21" r="12.5"/><path d="M30 30l9.5 9.5"/><path d="M21 15.5v6.5l4.5 3" class="thin"/></svg>
       </span>
       <span class="mode-body">
         <span class="mode-name">Indovina tu</span>
-        <span class="mode-desc">Il gioco pensa una parola. Tu proponi, lui risponde solo <i>prima</i> o <i>dopo</i>. Quanto ti avvicini alla ricerca perfetta?</span>
+        <span class="mode-desc">Partita libera, parola a caso, quante ne vuoi. Tu proponi, lui risponde solo <i>prima</i> o <i>dopo</i>.</span>
       </span>
       <span class="mode-go" aria-hidden="true">→</span>
     </button>
@@ -335,6 +347,8 @@
 
     <div class="result-stats" id="end-stats"></div>
 
+    <p class="result-next" id="end-next" hidden></p>
+
     <div class="path" id="end-path" aria-hidden="true"></div>
     <p class="path-caption" id="end-path-caption"></p>
 
@@ -343,11 +357,11 @@
   </aside>
 
     <div class="result-actions">
-      <button class="btn btn--big" type="button" id="end-again">Ancora</button>
-      <button class="btn btn--ghost" type="button" id="end-share">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12h8M12 8v8"/><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/></svg>
+      <button class="btn btn--big btn--share" type="button" id="end-share">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M12 4 8 8M12 4l4 4M5 14v4.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V14"/></svg>
         <span>Condividi</span>
       </button>
+      <button class="btn btn--ghost" type="button" id="end-again">Ancora</button>
       <button class="btn btn--ghost" type="button" data-back>Menu</button>
     </div>
     <pre class="sharebox" id="sharebox" hidden></pre>
@@ -369,7 +383,8 @@
       <a href="#g-turno">Un turno, passo per passo</a>
       <a href="#g-barra">Leggere la barra del campo</a>
       <a href="#g-alfabeto">L'alfabeto aperto</a>
-      <a href="#g-modalita">Le tre modalità</a>
+      <a href="#g-giorno">La parola del giorno</a>
+      <a href="#g-modalita">Le altre modalità</a>
       <a href="#g-livelli">I livelli</a>
       <a href="#g-strategia">Strategia</a>
       <a href="#g-mate">Perché bastano poche mosse</a>
@@ -445,11 +460,31 @@
       ru</code>…), poi i terzi. È il gioco stesso reso visibile.</p>
     </section>
 
-    <section class="doc-block" id="g-modalita" style="--i:4">
-      <h3>Le tre modalità</h3>
+    <section class="doc-block" id="g-giorno" style="--i:4">
+      <h3>La parola del giorno</h3>
+      <p>Ogni giorno ci sono <b>tre parole</b>, una per livello, <b>uguali per tutti</b>
+      nel mondo fino a mezzanotte (ora italiana). Non c'è nessun server: la data è il
+      seme da cui il gioco ricava le tre parole, quindi chiunque apra la pagina lo
+      stesso giorno trova le stesse.</p>
+      <ul class="doc-bullets">
+        <li><b>Un solo tentativo a testa.</b> Ricaricare la pagina non azzera la
+        partita: riprende da dove l'avevi lasciata.</li>
+        <li><b>I tre pallini</b> sulla scheda in home dicono a colpo d'occhio quali
+        livelli hai già risolto oggi.</li>
+        <li><b>La streak</b> 🔥 conta i giorni di fila in cui hai risolto almeno una
+        delle tre. Salta un giorno e riparte da capo.</li>
+        <li><b>Condividi</b> produce un risultato senza spoiler: solo le frecce e il
+        numero di tentativi, mai la parola.</li>
+      </ul>
+      <p class="doc-note">Vuoi giocare senza aspettare domani? <b>Indovina tu</b> pesca
+      una parola a caso ogni volta, quante partite vuoi.</p>
+    </section>
+
+    <section class="doc-block" id="g-modalita" style="--i:5">
+      <h3>Le altre modalità</h3>
       <dl class="doc-list">
         <dt>Indovina tu</dt>
-        <dd>Il gioco sceglie la parola. Tu proponi, lui risponde <i>prima</i> o <i>dopo</i>.
+        <dd>Partita libera, parola a caso, senza limiti di quante. Tu proponi, lui risponde <i>prima</i> o <i>dopo</i>.
         Alla fine confronti i tuoi tentativi con quelli che avrebbe impiegato una
         ricerca binaria perfetta: sotto lo zero sei stato più fortunato della matematica.</dd>
         <dt>Indovina il computer</dt>
@@ -578,6 +613,7 @@
 
 <footer class="sitefoot">
   <span>Parole dal dizionario Hunspell <b>it_IT</b> di LibreItalia (GPL-3.0).</span>
+  <a href="guida.html">Come si gioca</a>
   <a href="privacy.html">Privacy e cookie</a>
   <a href="https://github.com/Fedetrain/abaco-zuzzurellone" rel="noopener">codice su GitHub</a>
 </footer>

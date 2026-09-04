@@ -133,6 +133,8 @@
   function goBack() {
     if (game.timer) stopTimer();
     Alfa.close();
+    Daily.hideCountdown();
+    Daily.render();
     show('home');
   }
 
@@ -465,6 +467,10 @@
         Alfa.set(nextLo, nextHi);
       },
 
+      /** Salta al fotogramma finale: serve dopo aver rigiocato in blocco le
+          mosse di una partita ripresa, dove le animazioni non hanno senso. */
+      settle: settle,
+
       setCount: function (count) {
         countFrom = countTo; countTo = count; countT0 = performance.now();
         if (!raf) raf = requestAnimationFrame(frame);
@@ -772,13 +778,18 @@
 
     $('#play-title').textContent =
       mode === 'indovina' ? 'Indovina tu' :
-      mode === 'computer' ? 'Indovina il computer' : 'Sfida a tempo';
+      mode === 'computer' ? 'Indovina il computer' :
+      mode === 'giorno' ? 'Parola del giorno #' + AZ.dayNumber(Daily.today()) : 'Sfida a tempo';
     // Nella sfida a tempo conta tutto il vocabolario: il livello non si applica.
     $('#play-level').hidden = mode === 'tempo';
     $('#play-level').textContent = AZ.LIVELLI[game.level].label;
 
+    // La parola del giorno riusa per intero il pannello di «Indovina tu»:
+    // stesso campo, stessa cronologia, stesse regole. Cambia solo da dove
+    // viene la parola e il fatto che si gioca una volta sola.
+    var panel = mode === 'giorno' ? 'indovina' : mode;
     $$('.panel').forEach(function (p) { p.hidden = true; });
-    $('#panel-' + mode).hidden = false;
+    $('#panel-' + panel).hidden = false;
     say('');
 
     // La schermata va mostrata *prima* di preparare il campo: da nascosto
@@ -787,6 +798,7 @@
     Alfa.mode(mode);
 
     if (mode === 'indovina') startIndovina();
+    if (mode === 'giorno') startGiorno();
     if (mode === 'computer') startComputer();
     if (mode === 'tempo') startTempo();
   }
@@ -794,6 +806,117 @@
   $$('.mode').forEach(function (card) {
     card.addEventListener('click', function () { sfx.click(); startMode(card.dataset.mode); });
   });
+
+  /* ═══════════════════ LA PAROLA DEL GIORNO ═════════════════════════
+     Tre parole al giorno, una per livello, uguali per tutti: il seme è la
+     data italiana, quindi non serve nessun server e non c'è niente da
+     sincronizzare. Un solo tentativo a testa — che vuol dire che la partita
+     va ripresa dov'era se qualcuno ricarica la pagina, altrimenti bastava
+     un F5 per ricominciare da capo e il punteggio condiviso non varrebbe
+     niente. Salviamo solo le parole proposte: lo stato si ricostruisce
+     rigiocandole, che è più corto da salvare e impossibile da desincronizzare.
+  ═══════════════════════════════════════════════════════════════════ */
+  var Daily = (function () {
+    var LIVELLI = ['facile', 'medio', 'difficile'];
+    var elDots = $('#daily-dots');
+    var elNum = $('#daily-num');
+    var elNext = $('#end-next');
+    var countdown = null;
+
+    function today() { return AZ.dayKey(); }
+
+    /** Lo stato salvato del giorno corrente, ripulito da quelli vecchi. */
+    function state() {
+      var key = today();
+      if (!prefs.daily || prefs.daily.key !== key) {
+        prefs.daily = { key: key, facile: null, medio: null, difficile: null };
+        savePrefs();
+      }
+      return prefs.daily;
+    }
+
+    function save(level, entry) {
+      var s = state();
+      s[level] = entry;
+      savePrefs();
+    }
+
+    /**
+     * Streak: giorni di fila in cui almeno una delle tre è stata risolta.
+     * Si aggiorna solo alla prima vittoria del giorno.
+     */
+    function bumpStreak() {
+      var key = today();
+      var st = prefs.streak || { last: null, n: 0, best: 0 };
+      if (st.last === key) return st;
+      var ieri = AZ.dayKey(new Date(Date.now() - 86400000));
+      st.n = st.last === ieri ? st.n + 1 : 1;
+      st.last = key;
+      st.best = Math.max(st.best || 0, st.n);
+      prefs.streak = st;
+      savePrefs();
+      return st;
+    }
+
+    /** La streak è viva solo se l'ultima vittoria è di oggi o di ieri. */
+    function streakNow() {
+      var st = prefs.streak;
+      if (!st || !st.last) return 0;
+      var key = today();
+      var ieri = AZ.dayKey(new Date(Date.now() - 86400000));
+      return st.last === key || st.last === ieri ? st.n : 0;
+    }
+
+    /** I tre pallini sotto il titolo: fatto / in corso / da fare. */
+    function render() {
+      if (!game.dict) return;
+      elNum.textContent = '#' + AZ.dayNumber(today());
+      var s = state();
+      var out = LIVELLI.map(function (lv) {
+        var e = s[lv];
+        var cls = !e ? 'todo' : e.done ? (e.vinta ? 'win' : 'lost') : 'doing';
+        var label = AZ.LIVELLI[lv].label;
+        var stato = !e ? 'da giocare' : e.done ? (e.vinta ? 'risolta in ' + e.parole.length : 'lasciata') : 'in corso';
+        return '<i class="dot dot--' + cls + '" title="' + label + ': ' + stato + '">' +
+               '<b>' + label[0] + '</b></i>';
+      }).join('');
+      var st = streakNow();
+      elDots.innerHTML = out +
+        (st ? '<span class="daily-streak">🔥 ' + st + (st === 1 ? ' giorno' : ' giorni') + '</span>' : '');
+    }
+
+    function stopCountdown() {
+      if (countdown) { clearInterval(countdown); countdown = null; }
+    }
+
+    /** «La prossima fra 3:41:07» sulla schermata del risultato. */
+    function showCountdown() {
+      stopCountdown();
+      elNext.hidden = false;
+      var tick = function () {
+        var ms = AZ.msToNextDay();
+        if (ms <= 1000) { stopCountdown(); elNext.textContent = 'Le nuove parole sono pronte.'; return; }
+        var s = Math.floor(ms / 1000);
+        var pad = function (n) { return ('0' + n).slice(-2); };
+        elNext.textContent = 'Le prossime tre fra ' + Math.floor(s / 3600) + ':' +
+          pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60) + '.';
+      };
+      tick();
+      countdown = setInterval(tick, 1000);
+    }
+
+    return {
+      render: render,
+      state: state,
+      save: save,
+      bumpStreak: bumpStreak,
+      streakNow: streakNow,
+      showCountdown: showCountdown,
+      stopCountdown: stopCountdown,
+      hideCountdown: function () { stopCountdown(); elNext.hidden = true; },
+      today: today,
+    };
+  })();
 
   /* ══════════════════ MODALITÀ 1 — indovina tu ══════════════════════ */
   var formIndovina = $('#form-indovina');
@@ -812,6 +935,45 @@
     Field.setCount(poolSize());
     setTimeout(function () { if (!('ontouchstart' in window)) inputIndovina.focus(); }, 350);
     say('Ho pensato una parola fra ' + num(poolSize()) + '. Tocca a te.');
+  }
+
+  /**
+   * La parola del giorno. Riusa startIndovina per l'apparecchiatura e poi
+   * sostituisce la parola segreta con quella del seme, rigiocando le
+   * proposte già fatte oggi se c'è una partita da riprendere.
+   */
+  function startGiorno() {
+    var d = game.dict;
+    startIndovina();
+    game.secret = AZ.dailyIndex(d, Daily.today(), game.level);
+
+    var entry = Daily.state()[game.level];
+    if (entry && entry.done) { showGiornoResult(entry); return; }
+
+    var parole = entry ? entry.parole : [];
+    say(parole.length
+      ? 'Ripresa: avevi già provato ' + parole.length +
+        (parole.length === 1 ? ' parola.' : ' parole.')
+      : 'La parola di oggi, livello ' + AZ.LIVELLI[game.level].label.toLowerCase() +
+        '. Uguale per tutti fino a mezzanotte.');
+    parole.forEach(function (w) { playGuess(w, true); });
+    Field.settle();
+  }
+
+  /** Rimette in scena una partita del giorno già conclusa. */
+  function showGiornoResult(entry) {
+    game.history = [];
+    game.result = {
+      mode: 'giorno', word: game.dict.words[game.secret], n: entry.parole.length,
+      opt: AZ.optimalGuesses(poolSize()), delta: entry.parole.length - AZ.optimalGuesses(poolSize()),
+      pool: poolSize(), vinta: entry.vinta, parole: entry.parole, giorno: AZ.dayNumber(Daily.today()),
+    };
+    entry.parole.forEach(function (w) { playGuess(w, true); });
+    Field.settle();
+    game.result.n = game.history.length;
+    game.result.delta = game.result.n - game.result.opt;
+    renderResult();
+    show('end');
   }
 
   formIndovina.addEventListener('submit', function (e) {
@@ -841,8 +1003,21 @@
       return;
     }
 
-    game.tried.add(w);
     inputIndovina.value = '';
+    playGuess(w, false);
+  });
+
+  /**
+   * Gioca una proposta già validata. `muta` serve alla parola del giorno,
+   * che ripercorre le proposte salvate per ricostruire la partita: stesso
+   * codice, così una partita ripresa non può divergere da com'era.
+   */
+  function playGuess(w, muta) {
+    var d = game.dict;
+    var idx = d.indexOf(w);
+    if (idx < 0 || idx < game.lo || idx >= game.hi) return;
+
+    game.tried.add(w);
     var res = AZ.applyGuess({ lo: game.lo, hi: game.hi }, idx, game.secret);
     game.lo = res.lo; game.hi = res.hi;
 
@@ -851,16 +1026,16 @@
 
     var n = game.history.length;
     $('#try-count').textContent = n;
-    tick($('#try-count'));
+    if (!muta) tick($('#try-count'));
     addHistoryRow(histIndovina, n, w, res.esito, left);
     Field.mark(idx, res.esito === 'trovata' ? 'hit' : res.esito === 'prima' ? 'a' : 'z');
 
+    if (game.mode === 'giorno' && !muta) saveGiorno(res.esito === 'trovata');
+
     if (res.esito === 'trovata') {
       Field.set(idx, idx + 1, 1, w, w);
-      flashBar(formIndovina, 'good');
       inputIndovina.disabled = true;
-      sfx.win();
-      finishIndovina(true);
+      if (!muta) { flashBar(formIndovina, 'good'); sfx.win(); finish(); }
       return;
     }
 
@@ -870,6 +1045,7 @@
     if (res.esito === 'prima') game.hiWord = w;
     else game.loWord = w;
     Field.set(game.lo, game.hi, left, game.loWord, game.hiWord);
+    if (muta) return;
     flashBar(formIndovina, 'good');
     sfx.narrow();
     say(
@@ -878,7 +1054,41 @@
         : 'Dopo «' + w + '». Restano ' + num(left) + ' parole.',
       'good'
     );
-  });
+  }
+
+  function finish() {
+    if (game.mode === 'giorno') finishGiorno();
+    else finishIndovina();
+  }
+
+  /** Salva la partita del giorno dopo ogni mossa: un F5 non la azzera. */
+  function saveGiorno(vinta) {
+    Daily.save(game.level, {
+      parole: game.history.map(function (h) { return h.word; }),
+      done: !!vinta,
+      vinta: !!vinta,
+    });
+    if (vinta) Daily.bumpStreak();
+  }
+
+  function finishGiorno() {
+    var pool = poolSize();
+    var opt = AZ.optimalGuesses(pool);
+    var n = game.history.length;
+    game.result = {
+      mode: 'giorno', word: game.dict.words[game.secret], n: n, opt: opt,
+      delta: n - opt, pool: pool, vinta: true,
+      parole: game.history.map(function (h) { return h.word; }),
+      giorno: AZ.dayNumber(Daily.today()),
+    };
+    recordStats('giorno', function (s) {
+      s.partite = (s.partite || 0) + 1;
+      s.tentativi = (s.tentativi || 0) + n;
+      s.best = s.best == null ? n : Math.min(s.best, n);
+    });
+    Daily.render();
+    setTimeout(function () { renderResult(); show('end'); }, 1100);
+  }
 
   function addHistoryRow(list, n, word, esito, left) {
     var li = document.createElement('li');
@@ -1211,6 +1421,32 @@
       if (r.delta <= 0) burst();
     }
 
+    if (r.mode === 'giorno') {
+      kicker.textContent = 'Parola del giorno #' + r.giorno + ' · ' +
+                           AZ.LIVELLI[game.level].label.toLowerCase();
+      title.textContent = r.delta <= 0 ? 'Perfetto.' : r.delta <= 2 ? 'Presa!' : 'Presa.';
+      word.textContent = r.word;
+      var st = Daily.streakNow();
+      sub.innerHTML =
+        '<b>' + r.n + '</b> ' + (r.n === 1 ? 'tentativo' : 'tentativi') +
+        (r.delta <= 0 ? ', meno della ricerca perfetta.' :
+         r.delta === 0 ? ', esattamente quanti ne servivano.' :
+         ' — l\'ottimale era <b>' + r.opt + '</b>.') +
+        (st ? ' Sei al <b>' + st + '°</b> giorno di fila.' : '');
+      stats.innerHTML =
+        rstat(r.n, 'tentativi', r.delta <= 0 ? 'win' : '', 0) +
+        rstat(r.opt, 'ottimale', '', 1) +
+        rstat(st, st === 1 ? 'giorno di fila' : 'giorni di fila', st > 1 ? 'win' : '', 2);
+      renderPath(path);
+      caption.textContent = 'Il campo dopo ogni tentativo.';
+      Daily.showCountdown();
+      $('#end-again').textContent = 'Gioca un\'altra parola';
+      if (r.delta <= 0) burst();
+    } else {
+      Daily.hideCountdown();
+      $('#end-again').textContent = 'Ancora';
+    }
+
     if (r.mode === 'computer') {
       kicker.textContent = AZ.LIVELLI[game.level].label + ' · ' + num(poolSize()) + ' parole';
       if (r.esito === 'trovata') {
@@ -1289,7 +1525,12 @@
     setTimeout(function () { if (b.parentNode) b.remove(); }, 1600);
   }
 
-  $('#end-again').addEventListener('click', function () { sfx.click(); startMode(game.mode); });
+  $('#end-again').addEventListener('click', function () {
+    sfx.click();
+    // La parola del giorno è una sola: «Ancora» apre una partita libera,
+    // non ne rigioca una che darebbe la stessa parola già vista.
+    startMode(game.mode === 'giorno' ? 'indovina' : game.mode);
+  });
 
   /* ─────────────────────────────────────────────────────────────────────
      Condivisione stile Wordle
@@ -1300,7 +1541,16 @@
     if (!r) return 'Abaco Zuzzurellone 🧮\n' + url;
     var lines = ['Abaco Zuzzurellone 🧮'];
 
-    if (r.mode === 'indovina') {
+    if (r.mode === 'giorno') {
+      var st = Daily.streakNow();
+      lines[0] = 'Abaco Zuzzurellone #' + r.giorno + ' 🧮';
+      lines.push(AZ.LIVELLI[game.level].label + ' · ' + r.n + '/' + r.opt +
+                 (r.delta <= 0 ? ' 🎯' : '') + (st > 1 ? ' · 🔥' + st : ''));
+      lines.push(game.history.map(function (h) {
+        return h.esito === 'trovata' ? '🎯' : h.esito === 'prima' ? '⬅️' : '➡️';
+      }).join(''));
+      lines.push(narrowingBar());
+    } else if (r.mode === 'indovina') {
       lines.push('Indovina tu · ' + AZ.LIVELLI[game.level].label.toLowerCase() +
                  ' (' + num(r.pool) + ' parole)');
       lines.push('🎯 ' + r.n + ' tentativi — ottimale ' + r.opt +
@@ -1340,9 +1590,6 @@
 
   $('#end-share').addEventListener('click', function () {
     var text = shareText();
-    var box = $('#sharebox');
-    box.textContent = text;
-    box.hidden = false;
     sfx.click();
 
     var done = function (msg) {
@@ -1352,22 +1599,34 @@
       setTimeout(function () { label.textContent = old; }, 1800);
     };
 
+    // Sul telefono il foglio di condivisione nativo è l'unica strada che
+    // porta davvero il messaggio in WhatsApp: gli appunti richiedono che
+    // l'utente apra un'app e incolli, e quasi nessuno lo fa.
+    if (navigator.share) {
+      navigator.share({ text: text }).then(function () { done('Grazie!'); }, function () { /* annullato */ });
+      return;
+    }
+
+    var box = $('#sharebox');
+    box.textContent = text;
+    box.hidden = false;
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(
         function () { done('Copiato!'); },
         function () { done('Copia a mano ↓'); }
       );
-    } else {
-      try {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed'; ta.style.opacity = '0';
-        document.body.appendChild(ta); ta.select();
-        document.execCommand('copy');
-        ta.remove();
-        done('Copiato!');
-      } catch (e) { done('Copia a mano ↓'); }
+      return;
     }
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      done('Copiato!');
+    } catch (e) { done('Copia a mano ↓'); }
   });
 
   /* ─────────────────────────────────────────────────────────────────────
@@ -1389,8 +1648,9 @@
     var g = s.indovina || {};
     var c = s.computer || {};
     var t = s.tempo || {};
+    var q = s.giorno || {};
 
-    if (!g.partite && !c.partite && !t.partite) {
+    if (!g.partite && !c.partite && !t.partite && !q.partite) {
       $('#stats-body').innerHTML =
         '<div class="doc-block"><h3>Ancora niente</h3>' +
         '<p class="stat-empty">Gioca una partita e qui comparirà il tuo storico. ' +
@@ -1398,6 +1658,19 @@
       return;
     }
 
+    if (q.partite) {
+      var st = prefs.streak || {};
+      out.push(
+        '<section class="doc-block"><h3>Parola del giorno</h3>' +
+        '<div class="stat-grid">' +
+        cell(q.partite, 'risolte') +
+        cell((q.tentativi / q.partite).toFixed(1), 'media tentativi') +
+        cell(q.best == null ? '—' : q.best, 'record') +
+        cell(Daily.streakNow(), 'giorni di fila') +
+        cell(st.best || 0, 'streak record') +
+        '</div></section>'
+      );
+    }
     if (g.partite) {
       var media = (g.tentativi / g.partite);
       var mediaDelta = (g.deltaTot / g.partite);
@@ -1510,6 +1783,7 @@
         el.textContent = num(game.dict.countRange(0, game.dict.size, lv));
       });
       setLevel(game.level);
+      Daily.render();
       renderHalving(game.dict.size);
 
       progress(100, 'pronto');

@@ -422,6 +422,48 @@
   });
 
   /* ---------------------------------------------------------------- 9 */
+  /* ------------------------------------------------------- 5-bis --- */
+  /* La parola del giorno: stesso seme, stessa parola, ovunque. */
+
+  test('parola del giorno: numerazione degli enigmi', function () {
+    eq(AZ.dayNumber('2026-09-04'), 1, 'il primo giorno e il numero 1');
+    eq(AZ.dayNumber('2026-09-06'), 3);
+    eq(AZ.dayNumber('2026-10-01'), 28, 'attraverso il cambio di mese');
+    eq(AZ.dayNumber('2027-01-01'), 120, 'attraverso il cambio d anno');
+    // 2027 non e bisestile, 2028 si: il conto deve reggere lo stesso.
+    eq(AZ.dayNumber('2028-03-01') - AZ.dayNumber('2028-02-28'), 2,
+       'il 29 febbraio 2028 esiste');
+  });
+
+  test('parola del giorno: il seme decide, non il caso', function () {
+    var d = miniDict();
+    var oggi = AZ.dailyIndex(d, '2026-09-05', 'facile');
+    // Deterministica: mille chiamate, sempre la stessa parola.
+    for (var i = 0; i < 50; i++) {
+      eq(AZ.dailyIndex(d, '2026-09-05', 'facile'), oggi, 'stabile nel tempo');
+    }
+    // Tre livelli, tre semi diversi: le parole non devono coincidere per caso
+    // sistematico (qui il vocabolario e minuscolo, basta che l indice sia
+    // dentro il livello giusto).
+    ['facile', 'medio', 'difficile'].forEach(function (lv) {
+      var i = AZ.dailyIndex(d, '2026-09-05', lv);
+      assert(i >= 0 && i < d.size, lv + ': indice dentro il vocabolario');
+      assert(d.tiers[i] <= AZ.LIVELLI[lv].maxTier, lv + ': la parola e di quel livello');
+    });
+    // Giorni diversi, semi diversi: su un vocabolario vero non si ripete per
+    // settimane. Qui basta verificare che il seme entri davvero nel conto.
+    assert(AZ.hash32('2026-09-05|facile') !== AZ.hash32('2026-09-06|facile'),
+           'il giorno cambia il seme');
+    assert(AZ.hash32('2026-09-05|facile') !== AZ.hash32('2026-09-05|medio'),
+           'il livello cambia il seme');
+  });
+
+  test('parola del giorno: il conto alla rovescia cade a mezzanotte', function () {
+    var ms = AZ.msToNextDay(new Date());
+    assert(ms > 0, 'sempre positivo');
+    assert(ms <= 25 * 3600 * 1000, 'mai piu di un giorno, ora legale compresa');
+  });
+
   test('formattazione italiana di numeri e tempo', function () {
     eq(AZ.formatNumber(83362).replace(/ /g, '.'), '83.362');
     eq(AZ.formatTime(180), '3:00');
