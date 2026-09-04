@@ -16,7 +16,7 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
 - [x] `tools/unmunch.mjs` applica le regole di affissazione (`.aff`) e interseca
       i ~3 milioni di forme generate con il corpus OpenSubtitles: si tiene solo
       ciò che qualcuno ha davvero scritto.
-- [x] **83.362 → 257.361 → 267.689 parole.** 1,1 MB, 360 KB gzip. Facile 5.469, medio 38.106.
+- [x] **83.362 → 257.361 → 267.251 parole.** 1,1 MB, 360 KB gzip. Facile 5.468, medio 38.066.
 - [x] Le forme che i sottotitoli non usano mai («affermavamo», «visiteremmo»)
       ora entrano se stanno in **entrambe** le liste napolux *e* il lemma è
       una parola comune (≥ 100 occorrenze): +9.953 flessioni, niente mostri.
@@ -24,9 +24,14 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
       li marca con il flag `È`, che l'`.aff` di LibreOffice non definisce.
       `tools/aff-patch.txt` lo definisce: `siedo`, `possiede`, `sedevo`, `possederà`.
 - [x] `tools/extra-words.txt` accetta i flag Hunspell (`bruschetta/Q` → bruschette)
-      e il tier è facoltativo. 197 voci controllate su Treccani/Zingarelli:
+      e il tier è facoltativo. 201 voci controllate su Treccani/Zingarelli:
       `bruschetta`, `iddio`, `boh`, `tantomeno`, `addirsi`, `ridammi`, `app`,
       `spritz`, `apericena`, `caffelatte`, `tagliaerba`, `phon`, `chignon`…
+- [x] Il filtro delle parolacce toglieva solo i lemmi: «cagavamo» e «chiavarmeli»
+      restavano. Ora via anche le flessioni, se *tutti* i lemmi che le generano
+      sono nella lista («chiavi» resta, la fa anche «chiave»; «scopo» e «tromba»
+      sono lemmi a sé in `extra-words.txt`, perché il `.dic` li raggiunge solo
+      da «scopare» e «trombare»).
 - [x] `tools/fetch-sources.mjs` era troncato (errore di sintassi): non si poteva
       più ricostruire il dizionario da zero.
 - [x] Scoperto e documentato: le liste `napolux/paroleitaliane` (280k, 660k)

@@ -222,3 +222,12 @@ biscuit
 rabbi
 hurrah
 manticora
+
+# Ordinary nouns the stem list only reaches through a vulgar verb ("scopo" is
+# the first person of "scopare" and nothing else, in the upstream .dic): listed
+# as stems of their own so the profanity filter, which drops every inflection
+# of a listed verb, does not take them with it.
+scopo/O
+scopa/Q
+tromba/Q
+trombo/O

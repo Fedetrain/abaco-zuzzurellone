@@ -62,8 +62,11 @@ the Hunspell dictionary generates.
 | **Copyright** | © 2016 Francesco Napoletano |
 | **Licence** | **MIT** |
 
-Its 453 entries are subtracted from the vocabulary; 121 of them matched. Nothing
-from this file ends up in the shipped data.
+Its 453 entries are subtracted from the vocabulary; 122 of them matched, and
+with them go the 438 inflections the affix rules derive from a listed lemma
+(*cagavamo*, *chiavarmeli*) — but only when every lemma producing the form is
+listed, so *chiavi* survives on the strength of *chiave*. Nothing from this
+file ends up in the shipped data.
 
 ## 3-bis. Word-form lists — a second attestation for inflected forms
 
@@ -131,7 +134,7 @@ Filters applied by `tools/build-dictionary.mjs`:
 * length is capped to 3–16 characters;
 * a generated form is shipped only if attested: present in the corpus of
   source 2, or in both lists of source 3-bis with a common lemma;
-* the profanity list of source 3 is subtracted;
+* the profanity list of source 3 is subtracted, inflections included;
 * anything sorting before `abaco` or after `zuzzurellone` is dropped: those two
   words are the board, and an inflection just outside them (`abachi`) would
   leave the field with an edge the rules say cannot exist;
@@ -142,11 +145,11 @@ Filters applied by `tools/build-dictionary.mjs`:
 
 | | |
 |---|---|
-| Words shipped | **267 689** |
+| Words shipped | **267 251** |
 | First / last entry | `abaco` / `zuzzurellone` |
-| *facile* pool | 5 469 (≥ 2 000 occurrences in the corpus, ≤ 9 letters) |
-| *medio* pool | 38 106 (≥ 100 occurrences) |
-| *difficile* pool | 267 689 (everything) |
+| *facile* pool | 5 468 (≥ 2 000 occurrences in the corpus, ≤ 9 letters) |
+| *medio* pool | 38 066 (≥ 100 occurrences) |
+| *difficile* pool | 267 251 (everything) |
 | `dizionario.txt` | 3.3 MB — `word<TAB>tier`, one per line, human-readable |
 | `dizionario.js` | 1.1 MB — the same data front-coded (360 KB gzipped over the wire) |
 

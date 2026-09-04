@@ -517,7 +517,7 @@
      Quando il campo entra tutto dentro una lettera il pannello scende di un
      livello da solo (dentro la r: ra re ri ro ru…), poi di un altro ancora.
      Il conto è AZ.breakdown, che lavora a colpi di lowerBound: 26 ricerche
-     binarie, mai una scansione delle 267.689 parole.
+     binarie, mai una scansione delle 267.251 parole.
   ───────────────────────────────────────────────────────────────────── */
   var Alfa = (function () {
     var elWrap = $('#alfa');

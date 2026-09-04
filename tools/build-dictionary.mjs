@@ -134,13 +134,20 @@ const freq = parseFrequency(read('it_full.txt'));
 const stems = parseStems(dicText);
 const list280 = parseList(read('280000_parole_italiane.txt'));
 const list660 = parseList(read('660000_parole_italiane.txt'));
+const bad = parseList(read('badwords.txt'));
 
 // Highest corpus frequency among the stems that generate each form: the
 // measure of whether the *lemma* is in use, whatever the form's own count.
 const lemmaFreq = new Map();
+// The profanity list holds lemmas; the affix rules conjugate them. A form is
+// profane when every stem that produces it is on the list -- "chiavi" stays,
+// because "chiave" makes it too, "chiavavo" goes.
+const cleanStem = new Map();
 const forms = unmunch(affText, dicText, /^[a-zàáèéìíîòóùú]{2,20}$/, (form, stem) => {
   const f = freq.get(stem) ?? 0;
   if ((lemmaFreq.get(form) ?? -1) < f) lemmaFreq.set(form, f);
+  if (!bad.has(stem)) cleanStem.set(form, true);
+  else if (!cleanStem.has(form)) cleanStem.set(form, false);
 });
 
 const vocab = new Set();
@@ -159,9 +166,10 @@ for (const w of [...vocab]) {
 }
 
 let removedBad = 0;
-for (const line of read('badwords.txt').split(/\r?\n/)) {
-  const w = line.trim().toLowerCase();
-  if (w && vocab.delete(w)) removedBad += 1;
+let removedBadForms = 0;
+for (const w of bad) if (vocab.delete(w)) removedBad += 1;
+for (const w of [...vocab]) {
+  if (cleanStem.get(w) === false && vocab.delete(w)) removedBadForms += 1;
 }
 
 // The hand-written words bypass attestation (that is the point of the file),
@@ -234,7 +242,7 @@ console.log(`dizionario.js  written: ${kb(JS_OUT)} KB (front-coded)`);
 console.log(`  tier 0 (facile):    ${counts[0]}`);
 console.log(`  tier 1 (medio):     ${counts[1]}  -> pool medio = ${counts[0] + counts[1]}`);
 console.log(`  tier 2 (difficile): ${counts[2]}  -> pool difficile = ${words.length}`);
-console.log(`  profanities removed: ${removedBad}`);
+console.log(`  profanities removed: ${removedBad} words + ${removedBadForms} inflections of them`);
 console.log(`  inflections attested by the word-form lists only: ${recovered}`);
 console.log(`  hand-written entries (tools/extra-words.txt): ${extraWords.length}`);
 console.log(`  first: ${words[0]}   last: ${words[words.length - 1]}`);

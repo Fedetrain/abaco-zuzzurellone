@@ -199,7 +199,7 @@
      Il pannello "apri l'alfabeto" chiede, per ogni lettera, quante parole
      sono ancora in gioco e quante ne ha in tutto. Sono 26 domande che si
      risolvono con 26 lowerBound (~17 confronti l'una) piu' due sottrazioni
-     sui cumulativi: nessuna scansione delle 267.689 parole.
+     sui cumulativi: nessuna scansione delle 267.251 parole.
 
      Quando l'intervallo entra dentro una sola lettera la scomposizione
      scende di un livello da sola: il prefisso comune ai due estremi diventa

@@ -104,7 +104,7 @@ the shape without the arithmetic.
 
 You think of the word and answer *prima* / *dopo* / *è questa*. The computer
 always plays the word that sits at the **median of the remaining candidates**
-and shows you the count collapsing: 267 689 → 133 845 → 66 923 → … → 1. It is
+and shows you the count collapsing: 267 251 → 133 626 → 66 813 → … → 1. It is
 the mode that makes the point: nineteen questions are enough for the entire
 Italian vocabulary.
 
@@ -133,8 +133,8 @@ that survived it. The staircase of halving, drawn.
 
 ## Also in the box
 
-* **Three difficulty levels** — *facile* (5 469 common short words), *medio*
-  (38 106), *difficile* (all 267 689, rare words and inflections included). The level chooses the
+* **Three difficulty levels** — *facile* (5 468 common short words), *medio*
+  (38 066), *difficile* (all 267 251, rare words and inflections included). The level chooses the
   universe the secret is drawn from and the one the counters talk about; your
   guesses are always checked against the full vocabulary, so you are never told
   a real Italian word does not exist.
@@ -179,14 +179,14 @@ pera  <  pero  <  però  <  persona
 ```
 
 The shipped word list is pre-sorted at build time with the same comparator, so
-the browser never has to re-sort 267 689 words, and there is a test that walks
+the browser never has to re-sort 267 251 words, and there is a test that walks
 the whole file to prove the order holds.
 
 ### Why nineteen guesses are enough
 
 Each *prima* / *dopo* answer is worth exactly one bit: it throws away half of
 the surviving candidates. After *k* guesses at most `n / 2ᵏ` remain, so
-`⌈log₂(n + 1)⌉` guesses always suffice — **19** for 267 689 words, **20** for a
+`⌈log₂(n + 1)⌉` guesses always suffice — **19** for 267 251 words, **20** for a
 million. Doubling the dictionary costs one extra question.
 
 The subtlety the game makes visible: the word "in the middle" is *not* the word
@@ -210,7 +210,7 @@ weight, not left-to-right, so the letters that own the most vocabulary survive.
 
 The alphabet panel wants, on every guess, twenty-six pairs of numbers: how many
 words each letter still has in play and how many it has in total. Walking the
-267 689 entries to find out would be the obvious way and the wrong one.
+267 251 entries to find out would be the obvious way and the wrong one.
 
 Instead `AZ.breakdown(lo, hi, livello)` asks `lowerBound` for the twenty-six
 boundaries `prefix+a`, `prefix+b`, … — twenty-six binary searches, seventeen
@@ -285,7 +285,7 @@ tests.html                 browser test runner
 assets/core.js             pure logic: collation, codec, dictionary, search
 assets/app.js              screens, the interval bar, modes, stats, sharing
 assets/style.css           design tokens, layout, animation
-data/dizionario.js         267 689 words, front-coded (this is what loads)
+data/dizionario.js         267 251 words, front-coded (this is what loads)
 data/dizionario.txt        the same list, human-readable
 data/SOURCE.md             provenance and licence of every data source
 data/LICENSE-DIZIONARIO.txt  GPL-3.0, applying to data/ only
@@ -303,7 +303,7 @@ docs/                      screenshots
 
 | What | Source | Licence |
 |---|---|---|
-| **Vocabulary** (267 689 forms) | [LibreOffice Hunspell `it_IT`](https://github.com/LibreOffice/dictionaries/tree/master/it_IT) v5.1.1 — © Gianluca Turconi, Davide Prina, Andrea Pescetti, LibreItalia / Marina Latini | **GPL-3.0** |
+| **Vocabulary** (267 251 forms) | [LibreOffice Hunspell `it_IT`](https://github.com/LibreOffice/dictionaries/tree/master/it_IT) v5.1.1 — © Gianluca Turconi, Davide Prina, Andrea Pescetti, LibreItalia / Marina Latini | **GPL-3.0** |
 | **Frequency list** (attestation + difficulty tiers) | [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), OpenSubtitles 2018 — © Hermit Dave | MIT |
 | **Profanity filter** (subtracted, never shipped) | [napolux/paroleitaliane](https://github.com/napolux/paroleitaliane) — © Francesco Napoletano | MIT |
 | **Word-form lists** (attestation only, never shipped) | [napolux/paroleitaliane](https://github.com/napolux/paroleitaliane) `280000` + `660000` — © Francesco Napoletano | MIT |

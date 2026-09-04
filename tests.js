@@ -574,6 +574,15 @@
       assert(d.has(w), '«' + w + '» deve stare nel vocabolario');
     });
 
+    // Il filtro delle parolacce toglie anche le flessioni dei lemmi in lista,
+    // ma non le forme che un lemma pulito produce lo stesso.
+    ['cagavamo', 'chiavavo', 'scopavo'].forEach(function (w) {
+      assert(!d.has(w), '«' + w + '» non deve stare nel vocabolario');
+    });
+    ['chiavi', 'scopo', 'scopi', 'scopa', 'tromba', 'trombe'].forEach(function (w) {
+      assert(d.has(w), '«' + w + '» deve stare nel vocabolario');
+    });
+
     // I due estremi restano gli estremi, qualunque cosa si aggiunga.
     eq(out.words[0], 'abaco');
     eq(out.words[out.words.length - 1], 'zuzzurellone');
@@ -620,7 +629,7 @@
     assert(r.voci.some(function (v) { return v.stato === 'parziale'; }),
       'la lettera che contiene un estremo è a metà');
 
-    // 26 lowerBound per chiamata: deve restare istantaneo anche a 267.689.
+    // 26 lowerBound per chiamata: deve restare istantaneo anche a 267.251.
     var t0 = Date.now();
     for (var k = 0; k < 100; k++) d.breakdown(0, d.size, 'difficile');
     assert(Date.now() - t0 < 2000, 'breakdown troppo lento: niente scansioni');
