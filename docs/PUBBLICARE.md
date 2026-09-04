@@ -24,11 +24,12 @@ gh api -X POST repos/Fedetrain/abaco-zuzzurellone/pages \
 
 ## 2. Il dominio `abacozuzzurellone.site`
 
-Nel repository c'è già il file **`CNAME`** con dentro `abacozuzzurellone.site`.
-GitHub lo legge a ogni pubblicazione: è quello che dice a Pages «rispondi anche
-su questo dominio».
-
-Restano due cose da fare, una dal pannello del registrar e una da GitHub.
+> **Ordine delle operazioni: prima il DNS, poi GitHub.** Appena si dice a Pages
+> «il tuo dominio è abacozuzzurellone.site», GitHub comincia a **rinviare lì
+> anche `fedetrain.github.io/abaco-zuzzurellone`** con un 301. Se il DNS non è
+> ancora pronto, il sito diventa irraggiungibile da entrambi gli indirizzi.
+> Per questo nel repository **non c'è** il file `CNAME`: si aggiunge al punto
+> 2b, quando `nslookup` risponde con gli IP di GitHub.
 
 ### 2a. DNS — su Namecheap
 
@@ -77,11 +78,12 @@ nslookup abacozuzzurellone.site
 # devono comparire i quattro 185.199.10x.153
 ```
 
-### 2b. GitHub — Settings → Pages
+### 2b. GitHub — Settings → Pages (solo dopo che il DNS risponde)
 
 1. Vai su <https://github.com/Fedetrain/abaco-zuzzurellone/settings/pages>.
-2. In **Custom domain** scrivi `abacozuzzurellone.site` e salva.
-   (Se il file `CNAME` è già nel repository il campo risulta già compilato.)
+2. In **Custom domain** scrivi `abacozuzzurellone.site` e salva. GitHub crea
+   da sé il file `CNAME` nel repository: dopo, ricordati di fare
+   `git pull` prima del prossimo push.
 3. Aspetta che il controllo DNS diventi verde.
 4. Spunta **Enforce HTTPS**. Il certificato Let's Encrypt viene emesso da
    GitHub in automatico e può metterci fino a un'ora: se la casella è ancora
