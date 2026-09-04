@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Come si gioca ad Abaco Zuzzurellone — guida, regole e strategia</title>
-<meta name="description" content="Guida completa al gioco di parole Abaco Zuzzurellone: regole, le tre modalità, come leggere la barra dell'intervallo, i livelli, la strategia e perché bastano 18 tentativi per 257.361 parole.">
+<meta name="description" content="Guida completa al gioco di parole Abaco Zuzzurellone: regole, le tre modalità, come leggere la barra dell'intervallo, i livelli, la strategia e perché bastano 19 tentativi per 267.458 parole.">
 <link rel="canonical" href="https://abacozuzzurellone.site/guida.html">
 <meta name="theme-color" content="#f2ede3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#100e0c" media="(prefers-color-scheme: dark)">
@@ -31,7 +31,7 @@
    "name": "Ho scritto una parola vera e mi dice che non c'è.",
    "acceptedAnswer": {
     "@type": "Answer",
-    "text": "Il vocabolario contiene 257.361 parole: le voci del dizionario Hunspell it_IT più tutte le forme flesse attestate in un corpus reale. Restano fuori i nomi propri, le sigle, le parole straniere non italianizzate e le parolacce. Se manca una parola italiana d'uso comune è un bug: segnalalo su GitHub."
+    "text": "Il vocabolario contiene 267.458 parole: le voci del dizionario Hunspell it_IT più tutte le forme flesse attestate in un corpus reale. Restano fuori i nomi propri, le sigle, le parole straniere non italianizzate e le parolacce. Se manca una parola italiana d'uso comune è un bug: segnalalo su GitHub."
    }
   },
   {
@@ -63,7 +63,7 @@
    "name": "Perché la parola segreta a volte è stranissima?",
    "acceptedAnswer": {
     "@type": "Answer",
-    "text": "Perché sei a livello difficile . A facile la parola segreta è sempre una delle 5.465 parole comuni."
+    "text": "Perché sei a livello difficile . A facile la parola segreta è sempre una delle 5.469 parole comuni."
    }
   }
  ]
@@ -128,7 +128,7 @@
       alfabetico. Ogni risposta restringe il campo. Vince chi indovina.</p>
       <p>Il nome viene dagli estremi di partenza: <em>abaco</em> è tradizionalmente la
       prima voce del vocabolario italiano e <em>zuzzurellone</em> l'ultima. Si parte
-      da lì — <b>257.359</b> parole in mezzo — e si stringe.</p>
+      da lì — <b>267.456</b> parole in mezzo — e si stringe.</p>
     </section>
 
     <section class="doc-block" id="g-turno" style="--i:1">
@@ -233,11 +233,11 @@
       <p>Il livello decide <b>da quale insieme viene pescata la parola segreta</b> e su
       quale insieme è calcolato il conteggio delle parole rimaste.</p>
       <dl class="doc-list">
-        <dt>Facile — <b>5.465</b> parole</dt>
+        <dt>Facile — <b>5.469</b> parole</dt>
         <dd>Solo parole comuni e corte: quelle che si usano parlando.</dd>
-        <dt>Medio — <b>37.999</b> parole</dt>
+        <dt>Medio — <b>38.046</b> parole</dt>
         <dd>Il vocabolario di uso normale, flessioni comprese.</dd>
-        <dt>Difficile — <b>257.361</b> parole</dt>
+        <dt>Difficile — <b>267.458</b> parole</dt>
         <dd>Tutto il vocabolario, comprese le voci che si incontrano una volta nella vita.</dd>
       </dl>
       <p class="doc-note"><b>I tentativi non sono mai limitati dal livello.</b> Puoi
@@ -267,10 +267,10 @@
       <p>Ogni risposta <i>prima</i>/<i>dopo</i> vale esattamente un bit: butta via metà
       delle parole rimaste. Se proponi sempre la parola che sta a metà dell'intervallo,
       il numero di candidate va</p>
-      <p class="halving">257.361<span>→</span><b>128.681</b><span>→</span><b>64.341</b><span>→</span><b>32.171</b><span>→</span><b>16.086</b><span>→</span><b>8.043</b><span>→</span><b>4.022</b><span>→</span><b>2.011</b><span>→</span><b>1</b></p>
+      <p class="halving">267.458<span>→</span><b>133.729</b><span>→</span><b>66.865</b><span>→</span><b>33.433</b><span>→</span><b>16.717</b><span>→</span><b>8.359</b><span>→</span><b>4.180</b><span>→</span><b>2.090</b><span>→</span><b>1</b></p>
       <p>Dopo <var>k</var> mosse restano al più <code>n / 2ᵏ</code> parole, quindi
-      ne bastano <b>⌈log₂(n+1)⌉</b>: <b>18</b> per le
-      <b>257.359</b> parole di questo gioco, <b>20</b> per un milione.
+      ne bastano <b>⌈log₂(n+1)⌉</b>: <b>19</b> per le
+      <b>267.456</b> parole di questo gioco, <b>20</b> per un milione.
       Aggiungere parole al vocabolario quasi non costa nulla — è il motivo per cui la
       ricerca binaria è ovunque, dagli indici dei database al debug con <code>git bisect</code>.</p>
       <p class="doc-note">Attenzione: la parola “a metà” non è quella a metà dell'alfabeto,
@@ -291,7 +291,7 @@
       <h3>Domande frequenti</h3>
       <dl class="doc-list">
         <dt>Ho scritto una parola vera e mi dice che non c'è.</dt>
-        <dd>Il vocabolario contiene <b>257.361</b> parole: le voci del
+        <dd>Il vocabolario contiene <b>267.458</b> parole: le voci del
         dizionario Hunspell <b>it_IT</b> più tutte le forme flesse attestate in un
         corpus reale. Restano fuori i nomi propri, le sigle, le parole straniere non
         italianizzate e le parolacce. Se manca una parola italiana d'uso comune è un
@@ -307,7 +307,7 @@
         al contrario — oppure giocate a voce e usate la barra solo per tenere il conto.</dd>
         <dt>Perché la parola segreta a volte è stranissima?</dt>
         <dd>Perché sei a livello <b>difficile</b>. A <b>facile</b> la parola segreta è
-        sempre una delle <b>5.465</b> parole comuni.</dd>
+        sempre una delle <b>5.469</b> parole comuni.</dd>
       </dl>
     </section>
 

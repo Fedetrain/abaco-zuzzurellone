@@ -30,6 +30,19 @@ const FILES = [
   {
     name: 'badwords.txt',
     url: 'https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane/lista_badwords.txt',
+    note: 'Italian profanity list -- MIT',
+  },
+  {
+    name: '280000_parole_italiane.txt',
+    url: 'https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane/280000_parole_italiane.txt',
+    note: 'word-form list, used only to attest inflections -- MIT',
+  },
+  {
+    name: '660000_parole_italiane.txt',
+    url: 'https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane/660000_parole_italiane.txt',
+    note: 'word-form list, used only to attest inflections -- MIT',
+  },
+];
 
 fs.mkdirSync(DEST, { recursive: true });
 

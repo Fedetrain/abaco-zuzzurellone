@@ -16,7 +16,18 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
 - [x] `tools/unmunch.mjs` applica le regole di affissazione (`.aff`) e interseca
       i ~3 milioni di forme generate con il corpus OpenSubtitles: si tiene solo
       ciò che qualcuno ha davvero scritto.
-- [x] **83.362 → 257.361 parole.** 1,0 MB, 352 KB gzip. Facile 5.465, medio 37.999.
+- [x] **83.362 → 257.361 → 267.458 parole.** 1,1 MB, 360 KB gzip. Facile 5.469, medio 38.046.
+- [x] Le forme che i sottotitoli non usano mai («affermavamo», «visiteremmo»)
+      ora entrano se stanno in **entrambe** le liste napolux *e* il lemma è
+      una parola comune (≥ 100 occorrenze): +9.953 flessioni, niente mostri.
+- [x] **`sedere` e `possedere` non avevano nessuna coniugazione**: il `.dic`
+      li marca con il flag `È`, che l'`.aff` di LibreOffice non definisce.
+      `tools/aff-patch.txt` lo definisce: `siedo`, `possiede`, `sedevo`, `possederà`.
+- [x] `tools/extra-words.txt` accetta i flag Hunspell (`bruschetta/Q` → bruschette)
+      e il tier è facoltativo. 44 voci controllate su Treccani/Zingarelli:
+      `bruschetta`, `iddio`, `boh`, `tantomeno`, `app`, `spritz`, `apericena`…
+- [x] `tools/fetch-sources.mjs` era troncato (errore di sintassi): non si poteva
+      più ricostruire il dizionario da zero.
 - [x] Scoperto e documentato: le liste `napolux/paroleitaliane` (280k, 660k)
       **non sono usabili** come vocabolario — sono state ripulite sottraendo un
       elenco di cognomi, e con i cognomi sono sparite `casa`, `cane`, `mare`,
@@ -59,7 +70,7 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
       È **generata** da `tools/build-guide.mjs`, non scritta a mano.
 - [x] **Condividi** promosso a pulsante principale, con `navigator.share` sul
       telefono.
-- [x] 37 test, verdi (`node tools/run-tests.mjs`).
+- [x] 38 test, verdi (`node tools/run-tests.mjs`).
 
 ### Online
 - [x] Dominio `abacozuzzurellone.site` attivo, **HTTPS** attivo,
@@ -146,7 +157,7 @@ ripetuto, chiude l'account.
 ## Comandi utili
 
 ```bash
-node tools/run-tests.mjs        # 37 test, girano anche in browser (tests.html)
+node tools/run-tests.mjs        # 38 test, girano anche in browser (tests.html)
 node tools/build-guide.mjs      # rigenera guida.html da index.html
 node tools/fetch-sources.mjs    # riscarica le liste sorgente (git-ignored)
 node tools/build-dictionary.mjs # ricostruisce data/dizionario.{txt,js}

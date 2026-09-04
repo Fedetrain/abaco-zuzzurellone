@@ -1,0 +1,112 @@
+# Affix rules missing from the upstream it_IT.aff, appended to it before the
+# expansion. Same syntax as the .aff file; lines starting with # are dropped.
+#
+# Flag È is carried by sedere, possedere, risedere and soprassedere in the
+# upstream .dic but is defined nowhere in the .aff, so Hunspell (and this
+# build) had no conjugation at all for them: no "siedo", no "possiede", not
+# even the regular "sedevo". The rules below are the stem-changing present
+# (sed- -> sied-) followed by the regular second-conjugation paradigm of flag
+# B minus its present tense and its 2nd-person imperative clitics, which for
+# these verbs would produce non-words ("possedo", "sedimi").
+SFX È Y 101
+SFX È edere iedo edere
+SFX È edere iedi edere
+SFX È edere iede edere
+SFX È edere iedono edere
+SFX È edere ieda edere
+SFX È edere iedano edere
+SFX È edere iediti edere
+SFX È edere iedimi edere
+SFX È edere iedici edere
+SFX È edere iedilo edere
+SFX È edere iedila edere
+SFX È edere iedili edere
+SFX È edere iedile edere
+SFX È edere iedine edere
+SFX È edere iedigli edere
+SFX È ere iamo [^i]ere
+SFX È re te ere
+SFX È re vo ere
+SFX È re vi ere
+SFX È re va ere
+SFX È re vamo ere
+SFX È re vate ere
+SFX È re vano ere
+SFX È re tti ere
+SFX È re i ere
+SFX È re sti ere
+SFX È ere é ere
+SFX È re tte ere
+SFX È re mmo ere
+SFX È re ste ere
+SFX È re ttero ere
+SFX È e ono ere
+SFX È e ò ere
+SFX È e ai ere
+SFX È e à ere
+SFX È 0 mo ere
+SFX È 0 te ere
+SFX È e anno ere
+SFX È ere iate [^i]ere
+SFX È re ssi ere
+SFX È re sse ere
+SFX È re ssimo ere
+SFX È re ssero ere
+SFX È 0 i ere
+SFX È 0 sti ere
+SFX È 0 bbe ere
+SFX È 0 mmo ere
+SFX È 0 ste ere
+SFX È 0 bbero ere
+SFX È re nte ere
+SFX È re nti ere
+SFX È ere iamoci [^i]ere
+SFX È ere iamolo [^i]ere
+SFX È ere iamola [^i]ere
+SFX È ere iamoli [^i]ere
+SFX È ere iamole [^i]ere
+SFX È ere iamone [^i]ere
+SFX È ere iamocelo [^i]ere
+SFX È ere iamocela [^i]ere
+SFX È ere iamoceli [^i]ere
+SFX È ere iamocele [^i]ere
+SFX È ere iamocene [^i]ere
+SFX È ere iamogli [^i]ere
+SFX È ere iamoglielo [^i]ere
+SFX È ere iamogliela [^i]ere
+SFX È ere iamoglieli [^i]ere
+SFX È ere iamogliele [^i]ere
+SFX È ere iamogliene [^i]ere
+SFX È re telo ere
+SFX È re teli ere
+SFX È re tela ere
+SFX È re tele ere
+SFX È re tene ere
+SFX È re tevelo ere
+SFX È re teveli ere
+SFX È re tevela ere
+SFX È re tevele ere
+SFX È re tevene ere
+SFX È re tecelo ere
+SFX È re teceli ere
+SFX È re tecela ere
+SFX È re tecele ere
+SFX È re tecene ere
+SFX È re teglielo ere
+SFX È re teglieli ere
+SFX È re tegliela ere
+SFX È re tegliele ere
+SFX È re tegliene ere
+SFX È re temi ere
+SFX È re tegli ere
+SFX È re teci ere
+SFX È re tevi ere
+SFX È re temene ere
+SFX È re temelo ere
+SFX È re temeli ere
+SFX È re temela ere
+SFX È re temele ere
+SFX È re ntesi ere
+SFX È re ntisi ere
+SFX È re vasi ere
+SFX È re si ere

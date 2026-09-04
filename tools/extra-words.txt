@@ -1,6 +1,63 @@
-# Legitimate Italian words missing from the Hunspell it_IT stem list.
-# Hand-checked against the Treccani / De Mauro dictionaries.
-# Format: word<TAB>tier  (0 = easy, 1 = medium, 2 = hard)
+# Real Italian words missing from the Hunspell it_IT stem list.
+# Every entry was checked against the Treccani / Zingarelli dictionaries.
 # This file is original work, MIT-licensed like the rest of the source code.
+#
+# Format:  word[/FLAGS]<TAB>[tier]
+#   FLAGS  optional Hunspell it_IT affix flags: the entry is then inflected by
+#          the same rules as the upstream stems (Q = -a/-e plural, S = -e/-i
+#          plural, ALKhlI = a regular -are verb, like "ballare"). The bare word
+#          is always kept; its inflections go through the usual attestation.
+#   tier   optional: 0 = easy, 1 = medium, 2 = hard. Left out, the tier comes
+#          from corpus frequency like for every other word.
+
+# The two ends of the board and their spelling variants (Treccani lists
+# "zuzzerellone" as a variant of "zuzzurellone").
 zuzzurellone	2
 zuzzurellona	2
+zuzzerellone	2
+zuzzerellona	2
+
+# Everyday words the stem list simply lacks.
+bruschetta/Q
+cercapersone
+iddio
+tantomeno
+boh
+evvai
+limonare/ALKhlI
+droide/S
+apericena
+spritz
+movida
+esodato/oW
+ecobonus
+
+# Loanwords that Italian dictionaries record as Italian headwords -- the stem
+# list already has computer, film, internet, chat, download, streaming...
+app
+laptop
+router
+spam
+offline
+cloud
+upload
+logout
+reset
+googlare/ALKhlI
+influencer
+blogger
+gamer
+geek
+meme
+emoji
+startup
+fake
+brand
+cartoon
+cosplay
+notebook
+sneakers
+poncho
+hummus
+lockdown
+cyberbullismo

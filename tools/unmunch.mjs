@@ -57,20 +57,27 @@ function apply(word, entry, isSuffix) {
  *                           Essential: the article prefixes (l', dell', ...)
  *                           cross-multiply into millions of apostrophised
  *                           forms that would blow past the Set size limit.
+ * @param {(form: string, stem: string) => void} [onForm]
+ *                           called for every accepted form with the stem that
+ *                           produced it (a form can be reached from several
+ *                           stems: the callback fires once per stem).
  * @returns {Set<string>}
  */
-export function unmunch(affText, dicText, accept) {
+export function unmunch(affText, dicText, accept, onForm) {
   const { SFX, PFX } = parseAff(affText);
   const forms = new Set();
+  let stem = '';
   const add = (w) => {
-    if (accept.test(w)) forms.add(w);
+    if (!accept.test(w)) return;
+    forms.add(w);
+    if (onForm) onForm(w, stem);
   };
 
   for (const line of dicText.split(/\r?\n/)) {
     const s = line.trim();
     if (!s || s.startsWith('/') || /^\d+$/.test(s)) continue;
     const slash = s.indexOf('/');
-    const stem = slash < 0 ? s : s.slice(0, slash);
+    stem = slash < 0 ? s : s.slice(0, slash);
     const flags = slash < 0 ? '' : s.slice(slash + 1);
     if (!stem) continue;
     add(stem);

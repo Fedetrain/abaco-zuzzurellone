@@ -47,7 +47,8 @@ away the theoretical monsters the rules also produce
 | **Licence** | **MIT** |
 
 This list does two jobs. It **attests** the inflected forms (a form the affix
-rules generate is shipped only if it appears here at least once), and its raw
+rules generate is shipped if it appears here at least once — or, failing that,
+under the stricter rule of source 3-bis below), and its raw
 occurrence counts decide whether a word lands in the *facile*, *medio* or
 *difficile* pool. No word text is taken from it: every word shipped is a form
 the Hunspell dictionary generates.
@@ -64,33 +65,47 @@ the Hunspell dictionary generates.
 Its 453 entries are subtracted from the vocabulary; 121 of them matched. Nothing
 from this file ends up in the shipped data.
 
-## 3-bis. Word-form and first-name lists — validate the recovered common words
+## 3-bis. Word-form lists — a second attestation for inflected forms
 
 | | |
 |---|---|
-| **Files** | `280000_parole_italiane.txt`, `660000_parole_italiane.txt`, `9000_nomi_propri.txt` |
+| **Files** | `280000_parole_italiane.txt`, `660000_parole_italiane.txt` |
 | **Upstream** | <https://github.com/napolux/paroleitaliane> |
 | **Copyright** | © 2016 Francesco Napoletano |
 | **Licence** | **MIT** |
 
-The Hunspell `.dic` used as source 1 is a *stem* list: thousands of everyday
-words — *casa*, *porta*, *libro*, *pizza*, *tavolo* — only exist in it as affix
-expansions of other stems, so a vocabulary built from the stems alone misses
-simple words while keeping every obscure one. The build recovers them: a word
-from the frequency list (source 2, top ~25 000) that is missing from the stem
-list is added back **only if** it appears in *both* word-form lists, is not an
-Italian first name, contains no foreign letters (j k w x y), is not a
-de-accented typo of a more frequent accented word (*perche*, *cosi*,
-*insegnero*…), and is not in the profanity list (inflected variants included).
-This recovers ~8 600 common words.
+The subtitle corpus is spoken language: it never contains *affermavamo*,
+*visiteremmo* or *annegavate*, so those regular inflections of everyday verbs
+used to be rejected as non-words. A form the affix rules generate is now also
+kept when it appears in **both** napolux lists **and** the lemma it inflects is
+itself common (≥ 100 occurrences in the corpus, the same threshold as the
+*medio* pool). That recovers 9 953 forms. Requiring a common lemma is what
+keeps *pinacoidi* and *crisoprasi* out; requiring both lists is what keeps out
+the junk either one carries on its own.
 
-## 4. Hand-written addendum
+These lists are **not** usable as a vocabulary: they were cleaned upstream by
+subtracting a list of surnames, and with the surnames went *casa*, *cane*,
+*mare* and *albero*. They only ever confirm a form Hunspell already generates;
+no word text is taken from them.
 
-`tools/extra-words.txt` adds two real Italian words the Hunspell stem list is
-missing — **zuzzurellone** and **zuzzurellona** — checked against the Treccani
-and De Mauro dictionaries. Without them the game could not contain the word it
-is named after. This file is original work, MIT-licensed like the rest of the
-source code.
+## 4. Hand-written additions
+
+`tools/extra-words.txt` adds a few dozen real Italian words the Hunspell stem
+list is missing — **zuzzurellone** and **zuzzurellona** first, since without
+them the game could not contain the word it is named after, then everyday
+words such as *bruschetta*, *iddio*, *boh*, *tantomeno* and loanwords that
+Italian dictionaries record as headwords (*app*, *laptop*, *spam*,
+*influencer*). Each entry was checked against the Treccani or Zingarelli
+dictionaries. An entry may carry Hunspell affix flags (`bruschetta/Q`), in
+which case it is inflected by the same rules as every upstream stem.
+
+`tools/aff-patch.txt` repairs a gap in the upstream files: the `.dic` marks
+*sedere*, *possedere*, *risedere* and *soprassedere* with flag `È`, which the
+`.aff` never defines, so those verbs had no conjugation at all — no *siedo*, no
+*possiede*, not even *sedevo*. The patch defines the flag: the stem-changing
+present plus the regular second-conjugation paradigm.
+
+Both files are original work, MIT-licensed like the rest of the source code.
 
 ---
 
@@ -114,6 +129,8 @@ Filters applied by `tools/build-dictionary.mjs`:
 * only the letters `a–z` plus `à á è é ì í î ò ó ù ú` are allowed, so
   abbreviations, apostrophised and hyphenated forms go away;
 * length is capped to 3–16 characters;
+* a generated form is shipped only if attested: present in the corpus of
+  source 2, or in both lists of source 3-bis with a common lemma;
 * the profanity list of source 3 is subtracted;
 * anything sorting before `abaco` or after `zuzzurellone` is dropped: those two
   words are the board, and an inflection just outside them (`abachi`) would
@@ -125,13 +142,13 @@ Filters applied by `tools/build-dictionary.mjs`:
 
 | | |
 |---|---|
-| Words shipped | **257 361** |
+| Words shipped | **267 458** |
 | First / last entry | `abaco` / `zuzzurellone` |
-| *facile* pool | 5 465 (≥ 2 000 occurrences in the corpus, ≤ 9 letters) |
-| *medio* pool | 37 999 (≥ 100 occurrences) |
-| *difficile* pool | 257 361 (everything) |
-| `dizionario.txt` | 3.2 MB — `word<TAB>tier`, one per line, human-readable |
-| `dizionario.js` | 1.0 MB — the same data front-coded (352 KB gzipped over the wire) |
+| *facile* pool | 5 469 (≥ 2 000 occurrences in the corpus, ≤ 9 letters) |
+| *medio* pool | 38 046 (≥ 100 occurrences) |
+| *difficile* pool | 267 458 (everything) |
+| `dizionario.txt` | 3.3 MB — `word<TAB>tier`, one per line, human-readable |
+| `dizionario.js` | 1.1 MB — the same data front-coded (360 KB gzipped over the wire) |
 
 `dizionario.js` is loaded with a `<script>` tag rather than `fetch()` so that
 the game also runs when `index.html` is opened straight from disk over the
