@@ -30,7 +30,26 @@ su questo dominio».
 
 Restano due cose da fare, una dal pannello del registrar e una da GitHub.
 
-### 2a. DNS — dal pannello di chi ti ha venduto il dominio
+### 2a. DNS — su Namecheap
+
+> Il dominio è registrato su **Namecheap** e oggi punta ancora alla loro pagina
+> di parcheggio (`abacozuzzurellone.site` → `192.64.119.30`,
+> `www` → `parkingpage.namecheap.com`). Finché quei record restano lì, il sito
+> non si vede: vanno **cancellati**, non affiancati.
+
+Percorso: **Namecheap → Domain List → `abacozuzzurellone.site` → Manage →
+Advanced DNS**.
+
+1. In **Host Records** cancella tutto quello che c'è (di solito una `URL
+   Redirect Record` su `@` e un `CNAME` `www → parkingpage.namecheap.com`).
+2. Aggiungi i cinque record della tabella qui sotto con **Add New Record**.
+   In Namecheap la colonna «Nome» si chiama **Host** e il valore **Value**;
+   per il dominio nudo il Host è `@`.
+3. Salva con la spunta verde di ogni riga.
+4. In **Domain → Nameservers** deve restare selezionato **Namecheap BasicDNS**:
+   se sono impostati nameserver di terzi, l'Advanced DNS non viene letto.
+
+
 
 Crea **cinque** record. Quattro `A` per il dominio nudo e un `CNAME` per il www:
 
