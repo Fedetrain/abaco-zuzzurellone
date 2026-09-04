@@ -16,7 +16,7 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
 - [x] `tools/unmunch.mjs` applica le regole di affissazione (`.aff`) e interseca
       i ~3 milioni di forme generate con il corpus OpenSubtitles: si tiene solo
       ciò che qualcuno ha davvero scritto.
-- [x] **83.362 → 257.361 → 267.458 parole.** 1,1 MB, 360 KB gzip. Facile 5.469, medio 38.046.
+- [x] **83.362 → 257.361 → 267.689 parole.** 1,1 MB, 360 KB gzip. Facile 5.469, medio 38.106.
 - [x] Le forme che i sottotitoli non usano mai («affermavamo», «visiteremmo»)
       ora entrano se stanno in **entrambe** le liste napolux *e* il lemma è
       una parola comune (≥ 100 occorrenze): +9.953 flessioni, niente mostri.
@@ -24,8 +24,9 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
       li marca con il flag `È`, che l'`.aff` di LibreOffice non definisce.
       `tools/aff-patch.txt` lo definisce: `siedo`, `possiede`, `sedevo`, `possederà`.
 - [x] `tools/extra-words.txt` accetta i flag Hunspell (`bruschetta/Q` → bruschette)
-      e il tier è facoltativo. 44 voci controllate su Treccani/Zingarelli:
-      `bruschetta`, `iddio`, `boh`, `tantomeno`, `app`, `spritz`, `apericena`…
+      e il tier è facoltativo. 197 voci controllate su Treccani/Zingarelli:
+      `bruschetta`, `iddio`, `boh`, `tantomeno`, `addirsi`, `ridammi`, `app`,
+      `spritz`, `apericena`, `caffelatte`, `tagliaerba`, `phon`, `chignon`…
 - [x] `tools/fetch-sources.mjs` era troncato (errore di sintassi): non si poteva
       più ricostruire il dizionario da zero.
 - [x] Scoperto e documentato: le liste `napolux/paroleitaliane` (280k, 660k)

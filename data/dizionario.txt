@@ -5846,10 +5846,16 @@ addetti	1
 addetto	1
 addì	2
 addiaccio	2
+addica	1
+addice	1
+addiceva	2
+addicevano	2
+addicono	1
 addietro	1
 addii	1
 addio	0
 addirittura	1
+addirsi	2
 addisoniana	2
 addisoniano	2
 addita	2
@@ -10685,6 +10691,7 @@ alcuni	0
 alcuno	1
 aldeide	2
 aldeidi	2
+aldermanno	1
 aldilà	1
 aldina	2
 aldini	2
@@ -10780,6 +10787,7 @@ alfanumerico	2
 alfi	2
 alfiere	1
 alfieri	2
+alfine	2
 alga	1
 algale	2
 algebra	1
@@ -17420,6 +17428,7 @@ antisettiche	2
 antisettici	2
 antisettico	2
 antisfondamento	2
+antisiero	2
 antisimmetrica	2
 antisimmetrico	2
 antisindacale	2
@@ -21079,6 +21088,7 @@ armadietto	1
 armadilli	2
 armadillo	1
 armadio	0
+armagnac	2
 armai	2
 armaiola	2
 armaioli	2
@@ -25995,9 +26005,11 @@ atossiche	2
 atossici	2
 atossico	2
 atout	2
+atra	2
 atrabile	2
 atrabiliare	2
 atrazina	2
+atre	2
 atreplice	2
 atrepsia	2
 atresia	2
@@ -26008,6 +26020,7 @@ atrichia	2
 atrii	2
 atrio	1
 atriplice	2
+atro	2
 atroce	1
 atrocemente	2
 atroci	1
@@ -27529,6 +27542,7 @@ auditiva	2
 auditive	2
 auditivi	2
 auditivo	2
+auditorio	2
 auditorium	1
 auditrice	2
 audizione	0
@@ -34272,6 +34286,7 @@ betaina	2
 betatrone	2
 betatronoterapia	2
 bete	2
+betel	2
 betonaggio	2
 betonica	2
 betoniera	2
@@ -34353,6 +34368,7 @@ bevile	2
 bevili	2
 bevilo	1
 bevine	1
+beviti	1
 bevitore	1
 bevitori	1
 bevitrice	2
@@ -34421,6 +34437,7 @@ bianchissimo	2
 bianchita	2
 bianchito	2
 bianco	0
+biancomangiare	2
 biancone	2
 bianconeri	2
 bianconero	2
@@ -34633,6 +34650,7 @@ bidelle	2
 bidelli	2
 bidello	1
 bidente	2
+bidet	1
 bidimensionale	2
 bidimensionali	2
 bidimensionalità	2
@@ -35472,6 +35490,7 @@ biscotto	0
 biscroma	2
 biscugini	2
 biscugino	2
+biscuit	1
 bisdosso	2
 bisdrucciolo	2
 bisecando	2
@@ -35846,6 +35865,7 @@ blaterone	2
 blatta	2
 blatte	2
 blattoideo	2
+blazer	1
 bleah	1
 blefarite	2
 blefarospasmo	2
@@ -35895,6 +35915,7 @@ blindino	2
 blindo	2
 blitz	1
 blitzkrieg	2
+blizzard	2
 blocca	1
 bloccabile	2
 bloccabili	2
@@ -36219,6 +36240,8 @@ boia	1
 boiacca	2
 boiari	2
 boiaro	2
+boiata	2
+boiate	2
 boicelli	2
 boicotta	2
 boicottaggi	2
@@ -36530,6 +36553,7 @@ bombatura	2
 bombature	2
 bombava	2
 bombe	0
+bomber	1
 bomberai	2
 bomberina	2
 bombetta	2
@@ -36619,6 +36643,7 @@ booleani	2
 booleano	2
 boom	0
 boomerang	1
+booster	2
 boot	1
 bora	1
 borace	2
@@ -36998,6 +37023,8 @@ boutique	1
 bovari	2
 bovarismo	2
 bovaro	2
+bove	2
+bovi	2
 bovide	2
 bovina	2
 bovindo	2
@@ -37213,6 +37240,7 @@ brahmanico	2
 brahmano	2
 brahmsiano	2
 braille	1
+brainstorming	1
 brama	1
 bramabile	2
 bramai	2
@@ -39378,6 +39406,7 @@ caffeinato	2
 caffeine	2
 caffeinico	2
 caffeismo	2
+caffelatte	1
 caffellatte	1
 caffettani	2
 caffettano	2
@@ -42256,6 +42285,7 @@ captive	2
 captivo	2
 capto	2
 captò	2
+capufficio	2
 capziosa	2
 capziose	2
 capziosità	2
@@ -43229,6 +43259,7 @@ casati	2
 casato	1
 casatorre	2
 casba	2
+casbah	2
 casca	1
 cascai	2
 cascame	2
@@ -45349,6 +45380,8 @@ cerar	2
 cerare	2
 cerarlo	2
 cerarti	2
+cerasa	1
+cerase	2
 cerata	2
 cerate	2
 cerati	2
@@ -45837,6 +45870,7 @@ cevano	2
 chalet	1
 champagne	0
 chance	0
+chaperon	1
 charme	1
 charter	1
 chartreuse	2
@@ -45882,6 +45916,7 @@ chenopodiacee	2
 chenopodio	2
 chenzia	2
 cheppia	2
+cheque	2
 cheratina	2
 cheratinocita	2
 cheratinociti	2
@@ -46430,6 +46465,7 @@ chiffero	2
 chiffon	2
 chiglia	2
 chiglie	2
+chignon	2
 chiletti	2
 chiletto	2
 chili	0
@@ -46631,6 +46667,7 @@ chirurgico	1
 chirurgie	2
 chirurgo	0
 chissà	0
+chissenefrega	1
 chitarra	0
 chitarre	1
 chitarrista	1
@@ -47251,6 +47288,7 @@ cincischiavamo	2
 cincischiavo	2
 cincischio	2
 cinconismo	2
+cine	2
 cineamatore	2
 cineamatori	2
 cineamatrice	2
@@ -48030,6 +48068,7 @@ citrico	2
 citrina	2
 citrine	2
 citrino	2
+citronella	2
 citrulla	2
 citrullaggine	2
 citrulle	2
@@ -48049,11 +48088,50 @@ cittadino	0
 cittaduzza	2
 city	0
 ciucca	2
+ciuccerà	2
+ciuccerei	2
+ciuccerete	2
 ciucche	2
 ciucci	2
+ciuccia	2
+ciucciai	2
+ciucciala	2
+ciucciali	2
+ciuccialo	2
+ciucciamela	2
+ciucciami	2
+ciucciamo	2
+ciucciano	2
+ciucciarcele	2
+ciucciare	2
+ciucciargli	2
+ciucciarglielo	2
+ciucciarle	2
+ciucciarlo	2
+ciucciarmelo	2
+ciucciarmi	2
+ciucciarne	2
+ciucciarsi	2
+ciucciartela	2
+ciucciarti	2
+ciucciarvelo	2
+ciucciarvi	2
+ciucciasse	2
+ciucciassi	2
+ciucciate	2
+ciucciatelo	2
+ciucciatemi	2
+ciucciatevi	2
+ciucciati	2
+ciucciava	2
+ciucciavate	2
+ciucciavi	2
+ciucciavo	2
+ciuccino	2
 ciuccio	1
 ciuchesco	2
 ciuchi	2
+ciuchino	1
 ciuco	2
 ciuffetelli	2
 ciuffetti	2
@@ -48403,6 +48481,7 @@ clinostatismo	2
 clip	1
 clipeato	2
 clipeo	2
+clipper	2
 cliserio	2
 clisma	2
 clismi	2
@@ -49158,6 +49237,7 @@ coito	1
 cokeria	2
 col	0
 cola	1
+colà	2
 colabrodo	1
 colagogo	2
 colai	2
@@ -58019,6 +58099,7 @@ controllavano	1
 controllavate	2
 controllavi	2
 controllavo	1
+controller	1
 controllerà	1
 controllerai	2
 controlleranno	1
@@ -60732,6 +60813,7 @@ cotidale	2
 cotile	2
 cotiledone	2
 cotiledoni	2
+cotillon	2
 cotogna	2
 cotognata	2
 cotogne	2
@@ -61924,6 +62006,7 @@ crogioliamo	2
 crogioliamoci	2
 crogiolo	2
 crogiolò	2
+crogiuolo	2
 croissant	1
 crolla	1
 crollai	2
@@ -63096,6 +63179,7 @@ damine	2
 damista	2
 dammela	0
 dammele	1
+dammeli	1
 dammelo	0
 dammene	1
 dammeno	2
@@ -65387,6 +65471,7 @@ degusterai	2
 degusti	2
 degustiamo	2
 degusto	2
+deh	1
 dei	0
 deicida	2
 deicidio	2
@@ -66154,6 +66239,7 @@ denigriate	2
 denigrino	2
 denigro	2
 denigrò	2
+denim	1
 denitrificazione	2
 denomina	2
 denominabile	2
@@ -68448,6 +68534,7 @@ devozionale	2
 devozionali	2
 devozione	1
 devozioni	2
+dharma	1
 dia	0
 diabase	2
 diabete	1
@@ -75239,6 +75326,8 @@ ditirambo	2
 ditischi	2
 ditisco	2
 dito	0
+ditone	2
+ditoni	2
 ditta	0
 dittafoni	2
 dittafono	2
@@ -77333,6 +77422,7 @@ dreni	2
 dreniamo	2
 dreniamogli	2
 dreno	2
+dressage	2
 driade	2
 driadi	2
 dribbla	2
@@ -78191,6 +78281,7 @@ eclissatevi	2
 eclissati	2
 eclissato	2
 eclissava	2
+eclisse	1
 eclisserà	2
 eclisserai	2
 eclisserebbe	2
@@ -79055,6 +79146,7 @@ elegiaca	2
 elegiache	2
 elegiaco	2
 elegie	2
+elementale	2
 elementare	1
 elementari	1
 elementarissima	2
@@ -80682,6 +80774,7 @@ enoteismo	2
 enoteracea	2
 enotermo	2
 enovaglio	2
+ensemble	2
 ensiforme	2
 entalpia	2
 entalpica	2
@@ -84414,6 +84507,7 @@ essudatizio	2
 essudato	2
 essudazione	2
 est	0
+establishment	2
 estasi	1
 estasia	2
 estasiando	2
@@ -86840,6 +86934,7 @@ famigliarizzando	2
 famigliarizzare	2
 famigliarizzato	2
 famiglie	0
+famiglio	2
 famigliola	1
 famigliole	2
 familiare	0
@@ -91176,6 +91271,7 @@ foche	1
 fochista	2
 fochisti	2
 foci	2
+foco	2
 focolai	2
 focolaio	1
 focolare	1
@@ -91971,6 +92067,7 @@ formassi	2
 formassimo	2
 formaste	2
 formasti	2
+format	2
 formata	1
 formatasi	2
 formate	1
@@ -93818,6 +93915,7 @@ frenopatia	2
 frenotomia	2
 frenulo	2
 frenza	2
+freon	2
 frequenta	1
 frequentabile	2
 frequentai	2
@@ -93954,6 +94052,8 @@ fricassea	2
 fricassee	2
 fricative	2
 fricativo	2
+fricchettone	2
+fricchettoni	2
 frigga	2
 friggano	2
 frigge	2
@@ -95188,6 +95288,7 @@ funzionò	1
 fuocherelli	2
 fuocherello	2
 fuochi	0
+fuochino	1
 fuochista	2
 fuochisti	2
 fuoco	0
@@ -95826,6 +95927,7 @@ gambale	2
 gambaletti	2
 gambaletto	2
 gambali	2
+gambalunga	2
 gambe	0
 gamberetti	1
 gamberetto	1
@@ -96405,6 +96507,7 @@ gavotte	2
 gay	0
 gazebo	1
 gazometro	2
+gazpacho	1
 gazza	1
 gazzarra	2
 gazze	2
@@ -97039,6 +97142,7 @@ gerarchizzato	2
 gerarchizzazione	2
 gerbera	2
 gerbere	2
+gerbillo	2
 geremiade	2
 geremiadi	2
 gerente	2
@@ -97186,6 +97290,7 @@ gessoso	2
 gesta	1
 gestacci	2
 gestaccio	2
+gestalt	2
 gestaltica	2
 gestaltico	2
 gestaltismo	2
@@ -98914,6 +99019,7 @@ giunture	1
 giunzionale	2
 giunzione	1
 giunzioni	2
+giuoco	2
 giura	1
 giurabile	2
 giuraci	2
@@ -100021,6 +100127,7 @@ gotti	1
 gotto	2
 gottosi	2
 gottoso	2
+gourmet	1
 governa	1
 governabile	2
 governabilità	2
@@ -100384,6 +100491,7 @@ grafomania	2
 grafometro	2
 gragnola	2
 grama	2
+gramaglia	2
 gramaglie	2
 grame	2
 grami	2
@@ -101345,6 +101453,7 @@ gruzzoletto	1
 gruzzoli	2
 gruzzolo	1
 guaa	2
+guacamole	1
 guaco	2
 guada	2
 guadabile	2
@@ -102196,6 +102305,7 @@ gutturalismo	2
 habitat	1
 habitué	2
 habitus	2
+hacienda	1
 hacker	0
 hackera	2
 hackerai	2
@@ -102231,6 +102341,7 @@ haitiana	2
 haitiane	2
 haitiani	2
 haitiano	1
+halibut	2
 hall	0
 hallo	1
 hamburger	0
@@ -102261,6 +102372,7 @@ help	1
 herpes	1
 hertz	1
 hidalgo	1
+highball	2
 himalaiana	2
 himalaiani	2
 himalaiano	2
@@ -102285,12 +102397,14 @@ hollywoodiane	2
 hollywoodiani	2
 hollywoodiano	2
 homo	1
+homunculus	2
 honduregna	2
 honduregne	2
 honduregni	2
 honduregno	2
 honorem	2
 honoris	2
+hooligan	2
 horror	1
 hospice	2
 hostess	1
@@ -102303,6 +102417,7 @@ hummus	1
 humour	1
 humus	2
 hurrà	1
+hurrah	2
 iaculatore	2
 iaculo	2
 iafetico	2
@@ -102412,6 +102527,7 @@ ibridologica	2
 ibridologico	2
 ibseniana	2
 ibseniano	2
+ibuprofene	1
 icariana	2
 icariano	2
 icastica	2
@@ -106496,6 +106612,7 @@ impazzivamo	2
 impazzivano	2
 impazzivi	2
 impazzivo	2
+impeachment	1
 impeccabile	1
 impeccabili	1
 impeccabilissima	2
@@ -121792,6 +121909,7 @@ interspecifici	2
 interspecifico	2
 interspinale	2
 interspinali	2
+interstatale	1
 interstazionale	2
 interstellare	1
 interstellari	2
@@ -127937,6 +128055,7 @@ laniero	2
 lanifici	2
 lanificio	2
 lanina	2
+lanista	2
 lanital	2
 lanolina	2
 lanosa	2
@@ -129978,6 +130097,7 @@ levavi	2
 levavo	2
 leve	1
 leverà	2
+leverage	2
 leveraggio	2
 leverai	2
 leveranno	2
@@ -130518,6 +130638,7 @@ licopeni	2
 licopodio	2
 lidi	2
 lido	2
+lidocaina	1
 lieta	0
 lietamente	2
 liete	1
@@ -132627,6 +132748,7 @@ macabro	1
 macachi	2
 macaco	2
 macadam	2
+macadamia	2
 macao	1
 macaone	2
 maccabei	2
@@ -133958,11 +134080,13 @@ malvivenza	2
 malvolentieri	2
 malvolere	2
 malvoluto	2
+mamba	1
 mambi	2
 mambo	1
 mamelucchi	2
 mamelucco	2
 mamma	0
+mammà	1
 mammalucche	2
 mammalucchi	2
 mammalucco	2
@@ -134319,6 +134443,7 @@ mandorli	2
 mandorlo	2
 mandragola	2
 mandragole	2
+mandragora	2
 mandria	1
 mandriana	2
 mandriane	2
@@ -134842,10 +134967,12 @@ mannaro	1
 manne	2
 mannelli	2
 mannello	2
+mannequin	2
 mannite	2
 mannosio	2
 mano	0
 manodopera	1
+manolesta	2
 manomessa	1
 manomesse	2
 manomessi	2
@@ -135076,6 +135203,7 @@ manterrò	1
 manti	2
 mantice	2
 mantici	2
+manticora	2
 mantide	1
 mantidi	2
 mantiene	1
@@ -135195,6 +135323,7 @@ marabù	2
 marabut	2
 marabutti	2
 marabutto	2
+maracas	2
 marachella	2
 marachelle	2
 maramalderia	2
@@ -135865,6 +135994,8 @@ mascella	1
 mascellare	2
 mascellari	2
 mascelle	1
+mascellone	2
+mascelloni	2
 maschera	0
 mascherai	2
 mascheraia	2
@@ -136131,6 +136262,7 @@ massaggiò	2
 massaia	2
 massaie	2
 massaio	2
+massaro	2
 masse	1
 massellatura	2
 massello	2
@@ -136772,6 +136904,7 @@ mecenate	1
 mecenatesco	2
 mecenati	2
 mecenatismo	2
+meco	2
 meconio	2
 meconismo	2
 meda	2
@@ -137456,6 +137589,7 @@ menomazioni	2
 menomiamo	2
 menopausa	1
 menopause	2
+menorah	2
 mensa	0
 menscevichi	2
 menscevico	2
@@ -137940,6 +138074,7 @@ merovingio	2
 merozoite	2
 mesa	1
 mesata	2
+mescal	2
 mescalina	2
 mescaline	2
 mesce	2
@@ -140843,6 +140978,10 @@ moccoli	2
 moccolo	2
 mocio	1
 moda	0
+modaiola	2
+modaiole	2
+modaioli	2
+modaiolo	2
 modale	2
 modali	2
 modalità	1
@@ -141174,6 +141313,7 @@ moglie	0
 mogliettina	1
 mogliettine	2
 mogol	2
+mohair	2
 moicana	2
 moicane	2
 moicani	2
@@ -141291,6 +141431,8 @@ molitorio	2
 molitrice	2
 molitura	2
 molla	0
+mollaccione	2
+mollaccioni	2
 mollaci	2
 mollagli	2
 mollagliela	2
@@ -143972,6 +144114,7 @@ muta	1
 mutabile	2
 mutabili	2
 mutabilità	2
+mutaforma	1
 mutagena	2
 mutagene	2
 mutagenesi	2
@@ -144237,6 +144380,7 @@ narcisistiche	2
 narcisistici	2
 narcisistico	2
 narciso	1
+narco	2
 narcodollari	2
 narcodollaro	2
 narcolessia	2
@@ -146919,6 +147063,7 @@ notti	0
 nottola	2
 nottole	2
 nottolino	2
+nottolone	2
 nottua	2
 nottue	2
 notturlabio	2
@@ -150395,6 +150540,7 @@ oppugnatrice	2
 oppugnazione	2
 oppugno	2
 oppure	0
+opra	2
 opsia	2
 opsonica	2
 opsonico	2
@@ -152147,6 +152293,7 @@ ossibuchivora	2
 ossibuchivoro	2
 ossicini	2
 ossicino	2
+ossicodone	1
 ossida	2
 ossidabile	2
 ossidabilità	2
@@ -152895,6 +153042,7 @@ ottosillabo	2
 ottotipica	2
 ottotipico	2
 ottotipo	2
+ottovolante	2
 ottriata	2
 ottriato	2
 ottuagenari	2
@@ -152947,6 +153095,7 @@ ottusi	2
 ottusità	2
 ottuso	1
 out	0
+outdoor	2
 outing	1
 output	2
 outsider	1
@@ -153164,6 +153313,7 @@ pacchiani	2
 pacchiano	1
 pacchie	2
 pacciamatura	2
+pacciame	2
 pacco	0
 paccottiglia	2
 paccottiglie	2
@@ -153931,6 +154081,12 @@ pallonetti	2
 pallonetto	2
 palloni	1
 pallore	2
+pallosa	2
+pallose	2
+pallosi	2
+pallosissima	2
+pallosissimo	2
+palloso	1
 pallottola	1
 pallottole	1
 pallottoliere	2
@@ -154249,6 +154405,7 @@ panegirici	2
 panegirico	2
 panegirista	2
 panegiristico	2
+panel	2
 panellenico	2
 panellenismo	2
 panellenistico	2
@@ -156496,6 +156653,7 @@ pastose	2
 pastosi	2
 pastosità	2
 pastoso	2
+pastrami	1
 pastrana	2
 pastranella	2
 pastrani	2
@@ -159013,6 +159171,7 @@ performativa	2
 performative	2
 performativi	2
 performativo	2
+performer	2
 perforo	2
 perforò	2
 perfosfato	2
@@ -159104,6 +159263,7 @@ perifrastico	2
 perigastrico	2
 perigastrite	2
 perigeo	2
+periglio	2
 perigoni	2
 perigonio	2
 perii	2
@@ -160672,6 +160832,7 @@ pezzullo	2
 pezzuola	2
 pezzuole	2
 pfennig	2
+phon	1
 phylum	2
 pia	1
 piaccia	0
@@ -169661,6 +169822,7 @@ prezzolata	2
 prezzolate	2
 prezzolati	2
 prezzolato	2
+pria	1
 priamo	2
 priapeo	2
 priapismo	2
@@ -174759,6 +174921,7 @@ purulenti	2
 purulento	2
 purulenza	2
 pus	1
+pusher	1
 pusillanime	2
 pusillanimi	2
 pusillanimità	2
@@ -175446,6 +175609,7 @@ questure	2
 questurini	2
 questurino	2
 qui	0
+quiche	1
 quid	1
 quiescente	2
 quiescenti	2
@@ -175617,6 +175781,7 @@ rabberciati	2
 rabberciato	2
 rabberciatura	2
 rabberciature	2
+rabbi	1
 rabbia	0
 rabbici	2
 rabbico	2
@@ -179100,6 +179265,7 @@ rassomiglio	2
 rassottigliando	2
 rassottigliare	2
 rassottigliato	2
+rasta	1
 rastrella	2
 rastrellai	2
 rastrellale	2
@@ -179192,6 +179358,7 @@ ratifichiamo	2
 ratifichino	2
 ratifico	2
 ratificò	2
+rating	1
 ratio	2
 rationem	2
 rato	2
@@ -187946,6 +188113,7 @@ ricontatti	2
 ricontattiamo	2
 ricontattiamoci	2
 ricontatto	2
+riconteggio	1
 riconterà	2
 riconteranno	2
 riconti	2
@@ -188810,6 +188978,10 @@ ridaglielo	2
 ridai	1
 ridallo	2
 ridami	2
+ridammela	1
+ridammeli	1
+ridammelo	1
+ridammi	1
 ridammo	2
 ridanciana	2
 ridanciano	2
@@ -189980,6 +190152,7 @@ rieseguito	2
 riesercitando	2
 riesercitare	2
 riesercitato	2
+riesling	2
 riespellendo	2
 riespelleranno	2
 riespellere	2
@@ -205038,6 +205211,7 @@ samoana	2
 samoane	2
 samoani	2
 samoano	2
+samovar	2
 sampan	2
 sampietrini	2
 sampietrino	2
@@ -205767,6 +205941,7 @@ sauropode	2
 sauropodi	2
 savana	1
 savane	2
+savanna	2
 savarin	2
 savi	1
 savia	2
@@ -211668,6 +211843,7 @@ schizzinosi	2
 schizzinoso	1
 schizzo	1
 schizzò	2
+schnauzer	2
 schuss	2
 sci	1
 scia	1
@@ -211944,6 +212120,13 @@ scibile	2
 scibili	2
 sciccheria	2
 sciccherie	2
+sciccosa	2
+sciccose	2
+sciccosi	2
+sciccosissime	2
+sciccosissimi	2
+sciccosissimo	2
+sciccoso	2
 scie	2
 sciente	2
 scientemente	2
@@ -212335,6 +212518,8 @@ scippò	2
 sciroccale	2
 sciroccata	2
 sciroccate	2
+sciroccati	2
+sciroccato	2
 scirocchi	2
 scirocco	1
 sciroppando	2
@@ -212382,6 +212567,7 @@ scistosità	2
 scistoso	2
 scitaminea	2
 sciupa	2
+sciupafemmine	2
 sciupai	2
 sciupando	2
 sciupandola	2
@@ -219056,6 +219242,7 @@ settentrionale	1
 settentrionali	2
 settentrione	2
 settenvirato	2
+setter	2
 setterà	2
 setterai	2
 setterò	2
@@ -221212,6 +221399,17 @@ sgabelli	1
 sgabello	1
 sgabuzzini	2
 sgabuzzino	1
+sgama	2
+sgamano	2
+sgamarci	2
+sgamare	2
+sgamarli	2
+sgamarlo	2
+sgamarmi	2
+sgamarono	2
+sgamarti	2
+sgamate	2
+sgamati	2
 sgamba	2
 sgambando	2
 sgambare	2
@@ -221241,6 +221439,12 @@ sgambetti	2
 sgambetto	1
 sgambettò	2
 sgambo	2
+sgameranno	2
+sgamerebbe	2
+sgamerebbero	2
+sgami	2
+sgamino	2
+sgamo	2
 sganasci	2
 sganasciando	2
 sganasciarci	2
@@ -222370,7 +222574,9 @@ shockeranno	2
 shockiamo	2
 shockterapia	2
 shogun	1
+shopper	2
 shopping	0
+shorts	1
 show	0
 showgirl	2
 showman	2
@@ -222848,6 +223054,7 @@ silografo	2
 silologia	2
 silologico	2
 silometro	2
+silos	1
 siltie	2
 siluramento	2
 silurando	2
@@ -223766,6 +223973,7 @@ sistolico	2
 sistri	2
 sistro	2
 sita	1
+sitar	2
 sitcom	1
 site	2
 siti	0
@@ -224105,6 +224313,7 @@ slogò	2
 slombando	2
 slombare	2
 slombato	2
+sloop	2
 slot	1
 slovacca	2
 slovacche	2
@@ -229330,6 +229539,7 @@ sottaceva	2
 sottaciuta	2
 sottaciuti	2
 sottaciuto	2
+sottacqua	2
 sottana	1
 sottane	2
 sottanella	2
@@ -234667,6 +234877,7 @@ splaine	2
 splancnico	2
 splancnologia	2
 splancnoptosi	2
+splash	1
 splashdown	2
 spleen	2
 splenda	1
@@ -237763,6 +237974,7 @@ stargli	1
 stari	2
 starla	1
 starle	1
+starlet	2
 starletta	2
 starlette	2
 starli	2
@@ -237861,6 +238073,7 @@ startela	2
 starteli	2
 startelo	2
 startene	1
+starter	2
 starters	2
 starti	1
 startup	2
@@ -240748,6 +240961,7 @@ stressiate	2
 stressino	2
 stresso	2
 stressò	2
+stretch	1
 stretching	1
 stretta	0
 strettala	2
@@ -242845,6 +243059,7 @@ succhiartelo	2
 succhiarti	1
 succhiarvelo	2
 succhiarvi	2
+succhiasangue	1
 succhiasse	2
 succhiassero	2
 succhiassi	2
@@ -246317,6 +246532,7 @@ tagliacelo	2
 tagliacozzo	2
 tagliacque	2
 tagliacuce	2
+tagliaerba	1
 tagliaferri	2
 tagliaferro	2
 tagliafieno	2
@@ -246880,6 +247096,7 @@ tantissimi	1
 tantissimo	1
 tanto	0
 tantomeno	1
+tantra	2
 tantrica	2
 tantriche	2
 tantrici	2
@@ -247521,6 +247738,7 @@ tastò	2
 tastone	2
 tastoni	2
 tata	0
+tatami	2
 tatari	2
 tate	1
 tatti	2
@@ -249229,6 +249447,7 @@ teppaglia	2
 teppismo	2
 teppista	1
 teppiste	2
+teppistello	1
 teppisti	1
 teppistico	2
 tequila	0
@@ -249536,6 +249755,7 @@ termoregolato	2
 termoregolatore	2
 termoregolazione	2
 termoretraibile	2
+termos	2
 termosaldando	2
 termosaldare	2
 termosaldato	2
@@ -250380,6 +250600,7 @@ tienimelo	2
 tienimene	2
 tienimi	1
 tienine	2
+tienitelo	1
 tieniti	0
 tientela	2
 tientele	2
@@ -253942,6 +254163,7 @@ transessualità	2
 transetti	2
 transetto	2
 transeunte	2
+transfer	2
 transfert	1
 transfinito	2
 transfluendo	2
@@ -254266,6 +254488,7 @@ trapianto	0
 trapiantò	2
 trapiantologia	2
 trappa	2
+trapper	2
 trappista	2
 trappisti	2
 trappola	0
@@ -259767,6 +259990,7 @@ uperizzato	2
 uperizzatore	2
 uperizzatrice	2
 uperizzazione	2
+upgrade	1
 upload	1
 uppercut	2
 upupa	2
@@ -261832,6 +262056,7 @@ vaticini	2
 vaticinio	2
 vaticino	2
 vattela	2
+vattelapesca	2
 vattelappesca	2
 vattele	2
 vatteli	2
@@ -263296,6 +263521,7 @@ verminoso	2
 vermocane	2
 vermone	2
 vermoni	2
+vermouth	1
 vermut	2
 vermuttino	2
 vernaccia	2
@@ -264126,6 +264352,7 @@ vicereame	2
 vicereami	2
 viceregina	2
 vicerettore	2
+vicesceriffo	1
 vicesegretario	2
 vicesindaca	2
 vicesindache	2
@@ -265422,6 +265649,7 @@ vittimizzate	2
 vittimizzati	2
 vittimizzato	2
 vittimizzazione	2
+vittimologia	1
 vitto	1
 vittoria	0
 vittoriale	2
@@ -266570,6 +266798,7 @@ votivi	2
 votivo	2
 voto	0
 votò	2
+voucher	2
 voyeur	2
 voyeurismo	2
 voyeuristica	2
@@ -267375,6 +267604,8 @@ zoticone	1
 zoticoni	1
 zozza	1
 zozze	2
+zozzone	2
+zozzoni	2
 zuava	2
 zuavi	2
 zuavo	2

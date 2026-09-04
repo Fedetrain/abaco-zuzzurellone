@@ -620,7 +620,7 @@
     assert(r.voci.some(function (v) { return v.stato === 'parziale'; }),
       'la lettera che contiene un estremo è a metà');
 
-    // 26 lowerBound per chiamata: deve restare istantaneo anche a 267.458.
+    // 26 lowerBound per chiamata: deve restare istantaneo anche a 267.689.
     var t0 = Date.now();
     for (var k = 0; k < 100; k++) d.breakdown(0, d.size, 'difficile');
     assert(Date.now() - t0 < 2000, 'breakdown troppo lento: niente scansioni');

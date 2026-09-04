@@ -90,8 +90,8 @@ no word text is taken from them.
 
 ## 4. Hand-written additions
 
-`tools/extra-words.txt` adds a few dozen real Italian words the Hunspell stem
-list is missing — **zuzzurellone** and **zuzzurellona** first, since without
+`tools/extra-words.txt` adds about two hundred real Italian words the Hunspell
+stem list is missing — **zuzzurellone** and **zuzzurellona** first, since without
 them the game could not contain the word it is named after, then everyday
 words such as *bruschetta*, *iddio*, *boh*, *tantomeno* and loanwords that
 Italian dictionaries record as headwords (*app*, *laptop*, *spam*,
@@ -142,11 +142,11 @@ Filters applied by `tools/build-dictionary.mjs`:
 
 | | |
 |---|---|
-| Words shipped | **267 458** |
+| Words shipped | **267 689** |
 | First / last entry | `abaco` / `zuzzurellone` |
 | *facile* pool | 5 469 (≥ 2 000 occurrences in the corpus, ≤ 9 letters) |
-| *medio* pool | 38 046 (≥ 100 occurrences) |
-| *difficile* pool | 267 458 (everything) |
+| *medio* pool | 38 106 (≥ 100 occurrences) |
+| *difficile* pool | 267 689 (everything) |
 | `dizionario.txt` | 3.3 MB — `word<TAB>tier`, one per line, human-readable |
 | `dizionario.js` | 1.1 MB — the same data front-coded (360 KB gzipped over the wire) |
 
