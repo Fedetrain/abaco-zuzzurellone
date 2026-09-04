@@ -64,6 +64,26 @@ the Hunspell dictionary generates.
 Its 453 entries are subtracted from the vocabulary; 121 of them matched. Nothing
 from this file ends up in the shipped data.
 
+## 3-bis. Word-form and first-name lists — validate the recovered common words
+
+| | |
+|---|---|
+| **Files** | `280000_parole_italiane.txt`, `660000_parole_italiane.txt`, `9000_nomi_propri.txt` |
+| **Upstream** | <https://github.com/napolux/paroleitaliane> |
+| **Copyright** | © 2016 Francesco Napoletano |
+| **Licence** | **MIT** |
+
+The Hunspell `.dic` used as source 1 is a *stem* list: thousands of everyday
+words — *casa*, *porta*, *libro*, *pizza*, *tavolo* — only exist in it as affix
+expansions of other stems, so a vocabulary built from the stems alone misses
+simple words while keeping every obscure one. The build recovers them: a word
+from the frequency list (source 2, top ~25 000) that is missing from the stem
+list is added back **only if** it appears in *both* word-form lists, is not an
+Italian first name, contains no foreign letters (j k w x y), is not a
+de-accented typo of a more frequent accented word (*perche*, *cosi*,
+*insegnero*…), and is not in the profanity list (inflected variants included).
+This recovers ~8 600 common words.
+
 ## 4. Hand-written addendum
 
 `tools/extra-words.txt` adds two real Italian words the Hunspell stem list is
@@ -77,7 +97,7 @@ source code.
 ## How the shipped files are produced
 
 ```
-node tools/fetch-sources.mjs      # downloads 1, 2 and 3 into tools/sources/ (git-ignored)
+node tools/fetch-sources.mjs      # downloads 1, 2, 3 and 3-bis into tools/sources/ (git-ignored)
 node tools/build-dictionary.mjs   # writes data/dizionario.txt and data/dizionario.js
 ```
 

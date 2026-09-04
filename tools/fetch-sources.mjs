@@ -30,9 +30,6 @@ const FILES = [
   {
     name: 'badwords.txt',
     url: 'https://raw.githubusercontent.com/napolux/paroleitaliane/master/paroleitaliane/lista_badwords.txt',
-    note: 'Italian profanity list, used as a negative filter -- MIT',
-  },
-];
 
 fs.mkdirSync(DEST, { recursive: true });
 

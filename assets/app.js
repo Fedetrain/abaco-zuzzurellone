@@ -236,8 +236,13 @@
        minima dipende da quanto sono lunghe le due etichette vicine, non da un
        numero fisso: così le lettere singole possono stare fitte — ed è proprio
        il punto, la "s" si prende più spazio di j-k-q-w-x-y messe insieme —
-       mentre i prefissi lunghi si diradano da soli. */
+       mentre i prefissi lunghi si diradano da soli. Chi non trova posto sulla
+       prima riga prova la seconda, sotto: raddoppiare le righe raddoppia lo
+       spazio senza cambiare il criterio, e molte meno lettere spariscono del
+       tutto (a schermo intero, senza la seconda riga anche una "h" o una "q"
+       — pur essendo lettere italiane vere — restavano quasi sempre fuori). */
     var CHAR_PX = 6.6;   // larghezza di un carattere del monospaziato a .62rem
+    var TICK_ROWS = 2;
     function thinOut(items, a, b) {
       var span = b - a;
       // Quanta parte di campo si prende ogni etichetta: è il criterio con cui
@@ -252,18 +257,25 @@
         cand.push({ item: items[k], pct: pct, peso: next - items[k].i });
       }
       var byWeight = cand.slice().sort(function (x, y) { return y.peso - x.peso; });
-      var kept = [];
+      var rows = [];
+      for (var r = 0; r < TICK_ROWS; r++) rows.push([]);
       byWeight.forEach(function (c) {
         var len = c.item.label.length;
-        for (var j = 0; j < kept.length; j++) {
-          var needed = ((kept[j].item.label.length + len) / 2 * CHAR_PX + 7) / trackW * 100;
-          if (Math.abs(c.pct - kept[j].pct) < needed) return;
+        for (var r = 0; r < rows.length; r++) {
+          var row = rows[r];
+          var fits = true;
+          for (var j = 0; j < row.length; j++) {
+            var needed = ((row[j].item.label.length + len) / 2 * CHAR_PX + 7) / trackW * 100;
+            if (Math.abs(c.pct - row[j].pct) < needed) { fits = false; break; }
+          }
+          if (fits) { row.push({ item: c.item, pct: c.pct, row: r }); return; }
         }
-        kept.push(c);
       });
+      var kept = [];
+      rows.forEach(function (row) { kept = kept.concat(row); });
       return kept
         .sort(function (x, y) { return x.pct - y.pct; })
-        .map(function (c) { return c.item; });
+        .map(function (c) { return { i: c.item.i, label: c.item.label, row: c.row }; });
     }
 
     function renderTicks() {
@@ -273,6 +285,7 @@
         var el = document.createElement('span');
         el.className = 'tick';
         el.style.setProperty('--t', k);
+        el.style.setProperty('--row', t.row || 0);
         el.textContent = t.label;
         t.el = el;
         elScale.appendChild(el);
@@ -482,7 +495,7 @@
      Quando il campo entra tutto dentro una lettera il pannello scende di un
      livello da solo (dentro la r: ra re ri ro ru…), poi di un altro ancora.
      Il conto è AZ.breakdown, che lavora a colpi di lowerBound: 26 ricerche
-     binarie, mai una scansione delle 83.362 parole.
+     binarie, mai una scansione delle 257.361 parole.
   ───────────────────────────────────────────────────────────────────── */
   var Alfa = (function () {
     var elWrap = $('#alfa');
@@ -675,6 +688,10 @@
     level: prefs.level || 'medio',
     mode: null,
     lo: 0, hi: 0,
+    // Etichette degli estremi mostrati sopra la barra: sono le *parole dette*
+    // ("dopo casa" -> da casa), non le voci di dizionario adiacenti all'
+    // intervallo interno, che sarebbero parole simili mai nominate.
+    loWord: '', hiWord: '',
     secret: -1,
     history: [],
     tried: null,
@@ -748,6 +765,8 @@
     game.tried = new Set();
     game.lo = 0;
     game.hi = game.dict.size;
+    game.loWord = game.dict.words[0];
+    game.hiWord = game.dict.words[game.dict.size - 1];
     game.result = null;
     stopTimer();
 
@@ -845,7 +864,12 @@
       return;
     }
 
-    Field.set(game.lo, game.hi, left, d.words[game.lo], d.words[game.hi - 1]);
+    // Gli estremi mostrati sono le parole effettivamente proposte: chi scrive
+    // «casa» deve vedere "da casa" o "a casa", non la voce di dizionario
+    // adiacente (casacca, casà...) che non ha mai nominato.
+    if (res.esito === 'prima') game.hiWord = w;
+    else game.loWord = w;
+    Field.set(game.lo, game.hi, left, game.loWord, game.hiWord);
     flashBar(formIndovina, 'good');
     sfx.narrow();
     say(
@@ -992,7 +1016,11 @@
       game.history.push({ word: word, idx: cpuCurrent, esito: answer, lo: game.lo, hi: game.hi, left: left });
       addHistoryRow(histComputer, n, word, answer, left);
       $('#cpu-count').textContent = n; tick($('#cpu-count'));
-      Field.set(game.lo, game.hi, left, d.words[game.lo], d.words[game.hi - 1]);
+      // Come in «Indovina tu»: l'estremo aggiornato è la parola appena
+      // provata dal computer, non la voce adiacente dell'intervallo interno.
+      if (answer === 'prima') game.hiWord = word;
+      else game.loWord = word;
+      Field.set(game.lo, game.hi, left, game.loWord, game.hiWord);
       cpuCurrent = -1;
       cpuThink();
     });

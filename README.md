@@ -238,7 +238,7 @@ if they never arrive.
 
 The list is front-coded before shipping: entries are sorted, so each one is
 stored as `<shared-prefix length><suffix><difficulty tier>`, which takes
-1.0 MB of plain text down to 440 KB with a nine-line decoder.
+1.1 MB of plain text down to 465 KB with a nine-line decoder.
 
 ---
 

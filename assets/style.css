@@ -599,11 +599,14 @@ main { display: block; }
 
 .field-scale {
   position: relative;
-  height: 22px;
+  /* Due righe: le etichette che non stanno affiancate sulla stessa riga
+     vanno su quella sotto invece di sparire — vedi thinOut() in app.js. */
+  height: 35px;
   margin-top: .5rem;
 }
 .tick {
-  position: absolute; top: 0;
+  position: absolute;
+  top: calc(var(--row, 0) * 13px);
   transform: translateX(-50%);
   font-family: var(--font-mono);
   font-size: .62rem; font-weight: 600;
@@ -614,8 +617,12 @@ main { display: block; }
   animation-delay: calc(var(--t, 0) * 12ms);
 }
 .tick::before {
-  content: ''; position: absolute; left: 50%; top: -8px;
-  width: 1px; height: 6px; background: var(--line);
+  /* Le etichette di riga 1 sono più lontane dalla barra: il trattino si
+     allunga per raggiungerla comunque, così resta chiaro a quale punto
+     dell'intervallo appartiene l'etichetta. */
+  content: ''; position: absolute; left: 50%;
+  top: calc(-6px - var(--row, 0) * 13px);
+  width: 1px; height: calc(4px + var(--row, 0) * 13px); background: var(--line);
 }
 /* l'etichetta sotto un estremo del campo si accende */
 .tick.is-in { color: var(--ink); }

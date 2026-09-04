@@ -71,6 +71,15 @@
     eq(AZ.normalize(null), '');
   });
 
+  test('normalize: gli accenti combinanti diventano precomposti (NFC)', function () {
+    // Alcune tastiere emettono "o" + accento combinante U+0300: senza NFC
+    // la parola non combacerebbe mai con la "\u00F2" precomposta del dizionario.
+    var decomposta = 'pero\u0300';
+    var precomposta = 'per\u00F2';
+    assert(decomposta !== precomposta, 'precondizione: le due stringhe differiscono');
+    eq(AZ.normalize(decomposta), precomposta);
+  });
+
   /* ---------------------------------------------------------------- 2 */
   test('codec front-coded: round-trip esatto', function () {
     var words = MINI.map(function (r) { return r[0]; });
@@ -465,6 +474,35 @@
     }
   });
 
+  test('dizionario reale (se caricato): le parole di tutti i giorni ci sono', function () {
+    var data = root.ABACO_DATA;
+    if (!data) throw new Error('SKIP: data/dizionario.js non caricato');
+    var out = AZ.unpack(data.packed, data.count);
+    var d = new AZ.Dizionario(out.words, out.tiers);
+
+    // Lo stem list Hunspell da solo perde migliaia di parole comuni (le
+    // genera per affissi da altri lemmi): la build le deve recuperare.
+    ['casa', 'porta', 'libro', 'pizza', 'tavolo', 'cosa', 'sole', 'pane',
+     'strada', 'scuola', 'amore'].forEach(function (w) {
+      assert(d.has(w), '«' + w + '» deve stare nel vocabolario');
+    });
+
+    // E l'espansione non deve trascinarsi dietro la spazzatura del corpus:
+    // refusi senza accento, nomi propri, anglicismi. Sono tenuti fuori perché
+    // le regole di affissazione non li generano: il corpus attesta, non decide.
+    ['perche', 'insegnero', 'angela', 'maria', 'john', 'yeah'].forEach(function (w) {
+      assert(!d.has(w), '«' + w + '» non deve stare nel vocabolario');
+    });
+
+    // Ci sono invece le forme agglutinate coi clitici e i plurali che
+    // sembrano refusi: «farlo» e «cosi» (plurale di coso) sono italiano vero,
+    // li genera Hunspell e li scrive la gente. Escluderli vorrebbe dire
+    // rifiutare parole che un giocatore digita davvero.
+    ['farlo', 'dirmi', 'cosi', 'andarsene'].forEach(function (w) {
+      assert(d.has(w), '«' + w + '» deve stare nel vocabolario');
+    });
+  });
+
   test('dizionario reale (se caricato): scomposizione alfabetica coerente', function () {
     var data = root.ABACO_DATA;
     if (!data) throw new Error('SKIP: data/dizionario.js non caricato');
@@ -504,7 +542,7 @@
     assert(r.voci.some(function (v) { return v.stato === 'parziale'; }),
       'la lettera che contiene un estremo è a metà');
 
-    // 26 lowerBound per chiamata: deve restare istantaneo anche a 83.362.
+    // 26 lowerBound per chiamata: deve restare istantaneo anche a 257.361.
     var t0 = Date.now();
     for (var k = 0; k < 100; k++) d.breakdown(0, d.size, 'difficile');
     assert(Date.now() - t0 < 2000, 'breakdown troppo lento: niente scansioni');
