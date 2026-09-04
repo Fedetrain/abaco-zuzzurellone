@@ -8,6 +8,8 @@
 <p align="center">
   <a href="https://abacozuzzurellone.site/"><b>▶ Play it</b></a>
   ·
+  <a href="STATO.md">Stato / TODO</a>
+  ·
   <a href="#the-three-modes">Modes</a>
   ·
   <a href="#the-technical-bit">How it works</a>
