@@ -182,6 +182,7 @@
     var ticks = [];
     var letterTicks = null;
     var countFrom = 0, countTo = 0, countT0 = 0;
+    var etichetta = ['parole nel campo', 'parola nel campo'];
     var trackW = 600;   // stima iniziale, sostituita alla prima misura
 
     function measure() {
@@ -327,6 +328,7 @@
       var ct = Math.min(1, (now - countT0) / 700);
       var cv = Math.round(countFrom + (countTo - countFrom) * (reduced() ? 1 : easeOutExpo(ct)));
       elCountNum.textContent = num(cv);
+      elCountLab.textContent = etichetta[cv === 1 ? 1 : 0];
 
       if (t < 1 || ct < 1) raf = requestAnimationFrame(frame);
       else raf = null;
@@ -382,6 +384,7 @@
       avLo = vLo; avHi = vHi; fvLo = vLo; fvHi = vHi;
       countFrom = countTo;
       elCountNum.textContent = num(countTo);
+      elCountLab.textContent = etichetta[countTo === 1 ? 1 : 0];
       draw();
     }
 
@@ -439,7 +442,8 @@
       reset: function (loWord, hiWord, label) {
         marks.forEach(function (m) { m.el.remove(); });
         marks = [];
-        elCountLab.textContent = label || 'parole nel campo';
+        etichetta = label || ['parole nel campo', 'parola nel campo'];
+        elCountLab.textContent = etichetta[0];
         lo = 0; hi = N; aLo = 0; aHi = N; fLo = 0; fHi = N;
         vLo = 0; vHi = N; avLo = 0; avHi = N; fvLo = 0; fvHi = N;
         measure();
@@ -485,7 +489,8 @@
         marks.push({ i: i, el: el });
       },
 
-      setLabel: function (text) { elCountLab.textContent = text; },
+      /** @param {[string,string]} label plurale e singolare. */
+      setLabel: function (label) { etichetta = label; elCountLab.textContent = label[0]; },
     };
   })();
 
@@ -706,6 +711,12 @@
   };
 
   function poolSize() { return game.dict.countRange(0, game.dict.size, game.level); }
+
+  /** «Restano 12 parole» / «Resta 1 parola»: l'accordo lo fa il numero. */
+  function restano(n, grassetto) {
+    var v = grassetto ? '<b>' + num(n) + '</b>' : num(n);
+    return (n === 1 ? 'Resta ' : 'Restano ') + v + (n === 1 ? ' parola' : ' parole');
+  }
 
   /* ─────────────────────────────────────────────────────────────────────
      Selettore di livello
@@ -931,7 +942,7 @@
     inputIndovina.disabled = false;
     $('#try-count').textContent = '0';
     $('#try-optimal').textContent = AZ.optimalGuesses(poolSize());
-    Field.reset(d.words[0], d.words[d.size - 1], 'parole nel campo');
+    Field.reset(d.words[0], d.words[d.size - 1], ['parole nel campo', 'parola nel campo']);
     Field.setCount(poolSize());
     setTimeout(function () { if (!('ontouchstart' in window)) inputIndovina.focus(); }, 350);
     say('Ho pensato una parola fra ' + num(poolSize()) + '. Tocca a te.');
@@ -1048,12 +1059,8 @@
     if (muta) return;
     flashBar(formIndovina, 'good');
     sfx.narrow();
-    say(
-      res.esito === 'prima'
-        ? 'Prima di «' + w + '». Restano ' + num(left) + ' parole.'
-        : 'Dopo «' + w + '». Restano ' + num(left) + ' parole.',
-      'good'
-    );
+    say((res.esito === 'prima' ? 'Prima' : 'Dopo') + ' di «' + w + '». ' +
+        restano(left) + '.', 'good');
   }
 
   function finish() {
@@ -1142,7 +1149,7 @@
     cpuReason.innerHTML =
       'Pensa una parola italiana fra le <b>' + num(poolSize()) +
       '</b> del livello ' + AZ.LIVELLI[game.level].label.toLowerCase() + ' e tienila a mente.';
-    Field.reset(d.words[0], d.words[d.size - 1], 'parole possibili');
+    Field.reset(d.words[0], d.words[d.size - 1], ['parole possibili', 'parola possibile']);
     Field.setCount(poolSize());
     say('');
   }
@@ -1184,8 +1191,7 @@
       $$('#cpu-answers [data-answer]').forEach(function (b) { b.disabled = false; });
       $('.cpu').classList.remove('is-thinking');
       setCpuWord(d.words[idx]);
-      cpuReason.innerHTML =
-        'Restano <b>' + num(left) + '</b> parole. Provo quella esattamente a metà.';
+      cpuReason.innerHTML = restano(left, true) + '. Provo quella esattamente a metà.';
       sfx.narrow();
     }, reduced() ? 0 : 480);
   }
@@ -1294,7 +1300,7 @@
     $('#tempo-submit').disabled = true;
     $('#tempo-start-wrap').hidden = false;
 
-    Field.reset(d.words[0], d.words[d.size - 1], 'parole in mezzo');
+    Field.reset(d.words[0], d.words[d.size - 1], ['parole in mezzo', 'parola in mezzo']);
     setTimeout(function () {
       Field.set(a, b + 1, d.countRange(a + 1, b, 'difficile'), d.words[a], d.words[b]);
     }, 60);
@@ -1307,7 +1313,7 @@
     inputTempo.disabled = false;
     $('#tempo-submit').disabled = false;
     inputTempo.focus();
-    Field.setLabel('parole trovate');
+    Field.setLabel(['parole trovate', 'parola trovata']);
     Field.setCount(0);
     runTimer();
   });
