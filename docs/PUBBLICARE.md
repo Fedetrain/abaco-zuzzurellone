@@ -49,9 +49,8 @@ Advanced DNS**.
 4. In **Domain → Nameservers** deve restare selezionato **Namecheap BasicDNS**:
    se sono impostati nameserver di terzi, l'Advanced DNS non viene letto.
 
-
-
-Crea **cinque** record. Quattro `A` per il dominio nudo e un `CNAME` per il www:
+I record da creare sono **cinque**: quattro `A` per il dominio nudo e un
+`CNAME` per il www.
 
 | Tipo | Nome / Host | Valore | TTL |
 |---|---|---|---|
@@ -88,15 +87,12 @@ nslookup abacozuzzurellone.site
    GitHub in automatico e può metterci fino a un'ora: se la casella è ancora
    grigia, riprova più tardi — non è un errore.
 
-### 2c. Aggiornare gli indirizzi nel codice
+### 2c. Gli indirizzi nel codice
 
-Quando il dominio funziona, il link che il pulsante **Condividi** mette nel
-testo va cambiato:
-
-- `assets/app.js`, funzione `shareText()` → `var url = 'https://abacozuzzurellone.site/';`
-
-Le meta tag `og:url`, `canonical`, `sitemap.xml` e `robots.txt` puntano già al
-dominio nuovo.
+Già fatti: il link del pulsante **Condividi** (`shareText()` in
+`assets/app.js`), le meta `og:url` e `canonical`, `sitemap.xml` e
+`robots.txt` puntano tutti a `https://abacozuzzurellone.site/`. Se un giorno
+il dominio cambia, sono quei cinque punti da toccare.
 
 ---
 
@@ -145,7 +141,6 @@ anteprime automatiche per ogni pull request, che Vercel dà gratis.
 - [ ] `http://` reindirizza a `https://`
 - [ ] `www.abacozuzzurellone.site` funziona anche lui
 - [ ] `/privacy.html`, `/robots.txt`, `/sitemap.xml`, `/ads.txt` rispondono
-- [ ] il link in `shareText()` punta al dominio nuovo
 - [ ] il sito è registrato su [Google Search Console](https://search.google.com/search-console)
       e la sitemap è stata inviata
 - [ ] `node tools/run-tests.mjs` passa
