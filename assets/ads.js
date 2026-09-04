@@ -20,7 +20,7 @@
 window.ABACO_ADS = {
   /* Il tuo publisher id AdSense, tutto compreso: 'ca-pub-0000000000000000'.
      Finché è vuoto, nel sito non c'è nessuna pubblicità e nessun tracciante. */
-  client: '',
+  client: 'ca-pub-9010134003844365',
 
   /* Gli id numerici dei tre blocchi creati in AdSense (Annunci → Per unità
      pubblicitaria → Display). Uno per posizione: servono separati per poter
@@ -36,19 +36,23 @@ window.ABACO_ADS = {
   'use strict';
 
   var cfg = window.ABACO_ADS;
+  if (!cfg.client) return;   // non configurato: nessuna pubblicità, nessun tracciante
+
   var slots = Array.prototype.slice.call(document.querySelectorAll('[data-ad]'));
-  if (!slots.length) return;
 
-  if (!cfg.client) return;   // non configurato: i riquadri restano nascosti
+  var configurati = Object.keys(cfg.slots).some(function (k) { return cfg.slots[k]; });
+  if (configurati) document.documentElement.classList.add('has-ads');
 
-  document.documentElement.classList.add('has-ads');
-
+  // Lo script si carica anche senza slot: e' il modo in cui AdSense verifica
+  // la proprieta' del sito, e prima della verifica gli slot non esistono.
   var script = document.createElement('script');
   script.async = true;
   script.crossOrigin = 'anonymous';
   script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' +
                encodeURIComponent(cfg.client);
   document.head.appendChild(script);
+
+  if (!slots.length) return;   // es. privacy.html: solo la verifica del sito
 
   function fill(box) {
     var name = box.dataset.ad;
