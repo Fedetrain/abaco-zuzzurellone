@@ -542,6 +542,51 @@
     });
   });
 
+  test('dizionario reale (se caricato): flessioni scritte, verbi riparati, aggiunte a mano', function () {
+    var data = root.ABACO_DATA;
+    if (!data) throw new Error('SKIP: data/dizionario.js non caricato');
+    var out = AZ.unpack(data.packed, data.count);
+    var d = new AZ.Dizionario(out.words, out.tiers);
+
+    // Forme regolari di verbi comuni che i sottotitoli non usano mai: entrano
+    // perché stanno in entrambe le liste di forme e il lemma è una parola comune.
+    ['affermavamo', 'visiteremmo', 'annegavate', 'tossivamo', 'protesteremmo'].forEach(function (w) {
+      assert(d.has(w), '«' + w + '» deve stare nel vocabolario');
+    });
+
+    // «sedere» e «possedere» portano nel .dic un flag che l'.aff non definisce:
+    // senza tools/aff-patch.txt non avevano nessuna coniugazione.
+    ['siedo', 'siedi', 'siede', 'siedono', 'possiede', 'possiedono', 'sedevo',
+     'possederà', 'posseduto', 'sedete'].forEach(function (w) {
+      assert(d.has(w), '«' + w + '» deve stare nel vocabolario');
+    });
+    // ...e la patch non deve regalargli il presente regolare, che non esiste.
+    ['possedo', 'possede', 'possedono', 'sedimi'].forEach(function (w) {
+      assert(!d.has(w), '«' + w + '» non deve stare nel vocabolario');
+    });
+
+    // Aggiunte a mano (tools/extra-words.txt), con le flessioni dei flag.
+    ['bruschetta', 'bruschette', 'iddio', 'boh', 'tantomeno', 'app', 'spritz',
+     'droide', 'droidi', 'zuzzerellone'].forEach(function (w) {
+      assert(d.has(w), '«' + w + '» deve stare nel vocabolario');
+    });
+
+    // Il filtro delle parolacce toglie anche le flessioni dei lemmi in lista,
+    // ma non le forme che un lemma pulito produce lo stesso.
+    ['cagavamo', 'chiavavo', 'scopavo'].forEach(function (w) {
+      assert(!d.has(w), '«' + w + '» non deve stare nel vocabolario');
+    });
+    ['chiavi', 'scopo', 'scopi', 'scopa', 'tromba', 'trombe'].forEach(function (w) {
+      assert(d.has(w), '«' + w + '» deve stare nel vocabolario');
+    });
+
+    // I due estremi restano gli estremi, qualunque cosa si aggiunga.
+    eq(out.words[0], 'abaco');
+    eq(out.words[out.words.length - 1], 'zuzzurellone');
+    // Il livello facile dice davvero «facile»: «possiede» è una parola di tutti.
+    eq(d.tiers[d.indexOf('possiede')], 0, 'possiede deve essere tier 0');
+  });
+
   test('dizionario reale (se caricato): scomposizione alfabetica coerente', function () {
     var data = root.ABACO_DATA;
     if (!data) throw new Error('SKIP: data/dizionario.js non caricato');
@@ -583,7 +628,7 @@
     assert(r.voci.some(function (v) { return v.stato === 'parziale'; }),
       'la lettera che contiene un estremo è a metà');
 
-    // 26 lowerBound per chiamata: deve restare istantaneo anche a 257.361.
+    // 26 lowerBound per chiamata: deve restare istantaneo anche a 267.251.
     var t0 = Date.now();
     for (var k = 0; k < 100; k++) d.breakdown(0, d.size);
     assert(Date.now() - t0 < 2000, 'breakdown troppo lento: niente scansioni');

@@ -68,6 +68,26 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
       `pizza`, `libro`, `albero` non esistevano: il `.dic` di Hunspell è una lista
       di **lemmi**, e i lemmi italiani non sono le parole che si digitano.
 - [x] `tools/unmunch.mjs` applica le regole di affissazione (`.aff`) e interseca
+      i ~3 milioni di forme generate con il corpus OpenSubtitles: si tiene solo
+      ciò che qualcuno ha davvero scritto.
+- [x] **83.362 → 257.361 → 267.251 parole.** 1,1 MB, 360 KB gzip. Facile 5.468, medio 38.066.
+- [x] Le forme che i sottotitoli non usano mai («affermavamo», «visiteremmo»)
+      ora entrano se stanno in **entrambe** le liste napolux *e* il lemma è
+      una parola comune (≥ 100 occorrenze): +9.953 flessioni, niente mostri.
+- [x] **`sedere` e `possedere` non avevano nessuna coniugazione**: il `.dic`
+      li marca con il flag `È`, che l'`.aff` di LibreOffice non definisce.
+      `tools/aff-patch.txt` lo definisce: `siedo`, `possiede`, `sedevo`, `possederà`.
+- [x] `tools/extra-words.txt` accetta i flag Hunspell (`bruschetta/Q` → bruschette)
+      e il tier è facoltativo. 201 voci controllate su Treccani/Zingarelli:
+      `bruschetta`, `iddio`, `boh`, `tantomeno`, `addirsi`, `ridammi`, `app`,
+      `spritz`, `apericena`, `caffelatte`, `tagliaerba`, `phon`, `chignon`…
+- [x] Il filtro delle parolacce toglieva solo i lemmi: «cagavamo» e «chiavarmeli»
+      restavano. Ora via anche le flessioni, se *tutti* i lemmi che le generano
+      sono nella lista («chiavi» resta, la fa anche «chiave»; «scopo» e «tromba»
+      sono lemmi a sé in `extra-words.txt`, perché il `.dic` li raggiunge solo
+      da «scopare» e «trombare»).
+- [x] `tools/fetch-sources.mjs` era troncato (errore di sintassi): non si poteva
+      più ricostruire il dizionario da zero.
       i ~3 milioni di forme generate con il corpus OpenSubtitles.
 - [x] Scoperto e documentato: le liste `napolux/paroleitaliane` (280k, 660k)
       **non sono usabili** come vocabolario — sono state ripulite sottraendo un
@@ -79,6 +99,18 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
 - [x] Il campo si **congelava per sempre** cambiando scheda a metà mossa
       (`requestAnimationFrame` non gira in background).
 - [x] `nthOfLevel` scandiva l'intervallo linearmente: 250k iterazioni per mossa.
+- [x] La `Map` da 257k voci costava ~150 ms a ogni caricamento per quello che
+      `lowerBound` già rispondeva.
+- [x] La sfida a tempo sceglieva gli estremi contando parole grezze
+      («intervenite → inventa», 1500 flessioni della stessa radice). Ora conta
+      parole comuni: «bui → cadavere», «svaniti → svolgono».
+- [x] Accordo di numero: «1 parole trovate» e «Restano 1 parole» comparivano
+      alla fine di ogni intervallo stretto.
+- [x] Sottolineature e colore `:visited` ereditati sui link di `privacy.html` e
+      `guida.html`, dove il gioco usa `<button>`.
+- [x] La scala del campo mostrava lo stesso prefisso in due posti («gravita»,
+      «gravità», «gravita»): tagliati a sette lettere, «gravita» e «gravitano»
+      coincidono. Ora il taglio si allunga finché i prefissi sono tutti diversi.
 - [x] La `Map` da 257k voci costava ~150 ms a ogni caricamento.
 - [x] La sfida a tempo sceglieva gli estremi contando parole grezze.
 - [x] Accordo di numero: «1 parole trovate» e «Restano 1 parole».
@@ -98,6 +130,10 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
 - [x] **Guida** riscritta: indice, turno passo per passo, come leggere la barra
       elemento per elemento, strategia, FAQ.
 - [x] **`guida.html`** come pagina vera: URL, `<title>` e meta description
+      mirati, dati strutturati FAQ, in sitemap, linkata da tutti i footer.
+      È **generata** da `tools/build-guide.mjs`, non scritta a mano.
+- [x] **Condividi** promosso a pulsante principale, con `navigator.share` sul
+      telefono.
       mirati, dati strutturati FAQ, in sitemap. È **generata** da
       `tools/build-guide.mjs`, non scritta a mano.
 - [x] **Condividi** promosso a pulsante principale, con `navigator.share`.
@@ -111,6 +147,11 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
 - [x] Tre riquadri pubblicitari (`home`, `end`, `guida`), mai dentro la partita.
 - [x] Publisher id AdSense `ca-pub-9010134003844365` in `assets/ads.js` e in
       `ads.txt`; lo script di verifica è live su tutte le pagine.
+- [x] **Immagine Open Graph dedicata**, `docs/og.png` (1200×630): è quella che
+      compare quando si condivide il link, su `index.html` e `guida.html`.
+- [x] **Screenshot rifatti** con la versione attuale, e riproducibili:
+      `node tools/screenshots.mjs` guida il gioco vero in un Chromium headless
+      (partite deterministiche, seme fisso) e riscrive `docs/*.png` e `og.png`.
 
 ---
 
@@ -139,6 +180,7 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
 ### 2. Farsi trovare
 - [ ] Registrare il sito su [Google Search Console](https://search.google.com/search-console)
       e inviare `sitemap.xml`.
+- [ ] Registrarlo anche su Bing Webmaster Tools (due minuti, traffico in più).
 - [ ] Registrarlo anche su Bing Webmaster Tools.
 - [ ] Screenshot aggiornati in `docs/` — quelli attuali sono della versione di
       agosto, **col selettore di livello che non esiste più**.
@@ -167,6 +209,12 @@ gh api -X PUT repos/Fedetrain/abaco-zuzzurellone/pages \
   -f build_type=legacy -f "source[branch]=main" -f "source[path]=/"
 gh api -X POST repos/Fedetrain/abaco-zuzzurellone/pages/builds
 ```
+
+**Gli screenshot e `og.png` sono generati.** Dopo una modifica visibile o un
+cambio del dizionario, `node tools/screenshots.mjs` (serve un Chromium: quello
+di Playwright, Chrome, o `CHROME=/percorso`). Se la macchina non raggiunge
+Google Fonts, `ABACO_FONTS_DIR` punta a una cartella con `fonts.css` e i
+`.woff2` scaricati a mano.
 
 **`guida.html` è generata, non scritta.** Se modifichi la guida dentro
 `index.html`, rigenera — altrimenti la pagina che Google indicizza diverge:
@@ -202,6 +250,7 @@ screenshot.
 ```bash
 node tools/run-tests.mjs        # 38 test, girano anche in browser (tests.html)
 node tools/build-guide.mjs      # rigenera guida.html da index.html
+node tools/screenshots.mjs      # rifà docs/*.png e docs/og.png con un Chromium headless
 node tools/fetch-sources.mjs    # riscarica le liste sorgente (git-ignored)
 node tools/build-dictionary.mjs # ricostruisce data/dizionario.{txt,js}
 ```

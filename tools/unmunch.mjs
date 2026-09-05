@@ -57,36 +57,50 @@ function apply(word, entry, isSuffix) {
  *                           Essential: the article prefixes (l', dell', ...)
  *                           cross-multiply into millions of apostrophised
  *                           forms that would blow past the Set size limit.
+ * @param {(form: string, stem: string) => void} [onForm]
+ *                           called for every accepted form with the stem that
+ *                           produced it (a form can be reached from several
+ *                           stems: the callback fires once per stem).
  * @returns {Set<string>}
  */
-export function unmunch(affText, dicText, accept) {
+export function unmunch(affText, dicText, accept, onForm) {
   const { SFX, PFX } = parseAff(affText);
 
-  // The it_IT 5.1.0 .aff has four stems flagged È without ever defining an
-  // È table: sedere, possedere, risedere, soprassedere came out of the
-  // expansion with no conjugation at all ("sedete" and "possiede" did not
-  // exist). È stands for the regular -ere paradigm, which the file does
-  // define as B; the diphthong forms (siedo, possiede...) are listed by hand
-  // in tools/extra-words.txt.
-  const ALIAS = { 'È': 'B' };
+  // ⚠ QUI C ERA UN ALIAS È -> B, ED E STATO TOLTO AL MERGE DEL 06/09/2026.
+  //
+  // I quattro stems marcati È (sedere, possedere, risedere, soprassedere) non
+  // avevano nessuna coniugazione, perche l .aff porta il flag e non definisce
+  // mai la tabella. La prima soluzione fu rimappare È sul paradigma regolare
+  // in -ere (B). Funzionava per «sedevo» ma generava anche «possedo»,
+  // «possede» e «sedono», che in italiano non esistono: il dittongo tonico
+  // (possiedo) non e nel paradigma regolare.
+  //
+  // La soluzione buona e arrivata dopo, su un altro ramo: tools/aff-patch.txt
+  // DEFINISCE la tabella È, col cambio di tema sed- -> sied-. Tenere anche
+  // l alias significa generare tutt e due le versioni e far entrare quelle
+  // sbagliate — che e esattamente cio che il test «possedo non deve stare nel
+  // vocabolario» di tests.js prende.
+
   const forms = new Set();
+  let stem = '';
   const add = (w) => {
-    if (accept.test(w)) forms.add(w);
+    if (!accept.test(w)) return;
+    forms.add(w);
+    if (onForm) onForm(w, stem);
   };
 
   for (const line of dicText.split(/\r?\n/)) {
     const s = line.trim();
     if (!s || s.startsWith('/') || /^\d+$/.test(s)) continue;
     const slash = s.indexOf('/');
-    const stem = slash < 0 ? s : s.slice(0, slash);
+    stem = slash < 0 ? s : s.slice(0, slash);
     const flags = slash < 0 ? '' : s.slice(slash + 1);
     if (!stem) continue;
     add(stem);
 
     const crossable = [];
     const prefixFlags = [];
-    for (const f0 of flags) {
-      const f = ALIAS[f0] || f0;
+    for (const f of flags) {
       const sfx = SFX.get(f);
       if (sfx) {
         for (const w of apply(stem, sfx, true)) {

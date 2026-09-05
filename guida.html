@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Come si gioca ad Abaco Zuzzurellone — guida, regole e strategia</title>
-<meta name="description" content="Guida completa al gioco di parole Abaco Zuzzurellone: regole, le quattro modalità, come leggere la barra dell'intervallo, la strategia e perché bastano 16 tentativi per 38.025 parole.">
+<meta name="description" content="Guida completa al gioco di parole Abaco Zuzzurellone: regole, le quattro modalità, come leggere la barra dell'intervallo, la strategia e perché bastano 16 tentativi per 38.061 parole.">
 <link rel="canonical" href="https://abacozuzzurellone.site/guida.html">
 <meta name="theme-color" content="#f2ede3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#100e0c" media="(prefers-color-scheme: dark)">
@@ -15,6 +15,11 @@
 <meta property="og:url" content="https://abacozuzzurellone.site/guida.html">
 <meta property="og:title" content="Come si gioca ad Abaco Zuzzurellone">
 <meta property="og:description" content="Regole, modalità, come leggere la barra dell'intervallo e la strategia del gioco di parole italiano.">
+<meta property="og:image" content="https://abacozuzzurellone.site/docs/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://abacozuzzurellone.site/docs/og.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,7 +36,7 @@
    "name": "Ho scritto una parola vera e mi dice che non c'è.",
    "acceptedAnswer": {
     "@type": "Answer",
-    "text": "Il vocabolario contiene 308.012 parole: le voci del dizionario Hunspell it_IT , tutte le forme flesse attestate in un corpus reale e le forme che completano un paradigma già attestato (se il corpus ha bellissima , il gioco accetta anche bellissime ). Restano fuori i nomi propri, le sigle, le parole straniere non italianizzate e le parolacce. Se manca una parola italiana d'uso comune è un bug: segnalalo su GitHub."
+    "text": "Il vocabolario contiene 288.541 parole: le voci del dizionario Hunspell it_IT , tutte le forme flesse attestate in un corpus reale e le forme che completano un paradigma già attestato (se il corpus ha bellissima , il gioco accetta anche bellissime ). Restano fuori i nomi propri, le sigle, le parole straniere non italianizzate e le parolacce. Se manca una parola italiana d'uso comune è un bug: segnalalo su GitHub."
    }
   },
   {
@@ -63,7 +68,7 @@
    "name": "Perché posso proporre parole che la segreta non sarà mai?",
    "acceptedAnswer": {
     "@type": "Answer",
-    "text": "Sono due insiemi diversi, di proposito. La segreta esce dalle 38.025 parole di uso comune, così è sempre una parola che qualcuno potrebbe pensare davvero; le proposte valgono su tutte le 308.012 forme del vocabolario, così nessuna parola italiana vera ti viene mai rifiutata."
+    "text": "Sono due insiemi diversi, di proposito. La segreta esce dalle 38.061 parole di uso comune, così è sempre una parola che qualcuno potrebbe pensare davvero; le proposte valgono su tutte le 288.541 forme del vocabolario, così nessuna parola italiana vera ti viene mai rifiutata."
    }
   }
  ]
@@ -129,8 +134,8 @@
       prima voce del vocabolario italiano e <em>zuzzurellone</em> l'ultima. Si parte
       da lì e si stringe.</p>
       <p><b>Una sola difficoltà.</b> La parola segreta esce sempre dalle
-      <b>38.025</b> parole di uso comune; le proposte invece sono accettate
-      su tutto il vocabolario, <b>308.012</b> forme. Chi gioca non deve
+      <b>38.061</b> parole di uso comune; le proposte invece sono accettate
+      su tutto il vocabolario, <b>288.541</b> forme. Chi gioca non deve
       scegliere niente prima di cominciare.</p>
     </section>
 
@@ -251,10 +256,10 @@
       <p>Ogni risposta <i>prima</i>/<i>dopo</i> vale esattamente un bit: butta via metà
       delle parole rimaste. Se proponi sempre la parola che sta a metà dell'intervallo,
       il numero di candidate va</p>
-      <p class="halving">38.025<span>→</span><b>19.013</b><span>→</span><b>9.507</b><span>→</span><b>4.754</b><span>→</span><b>2.377</b><span>→</span><b>1.189</b><span>→</span><b>595</b><span>→</span><b>298</b><span>→</span><b>1</b></p>
+      <p class="halving">38.061<span>→</span><b>19.031</b><span>→</span><b>9.516</b><span>→</span><b>4.758</b><span>→</span><b>2.379</b><span>→</span><b>1.190</b><span>→</span><b>595</b><span>→</span><b>298</b><span>→</span><b>1</b></p>
       <p>Dopo <var>k</var> mosse restano al più <code>n / 2ᵏ</code> parole, quindi
       ne bastano <b>⌈log₂(n+1)⌉</b>: <b>16</b> per le
-      <b>38.025</b> parole di questo gioco, <b>20</b> per un milione.
+      <b>38.061</b> parole di questo gioco, <b>20</b> per un milione.
       Aggiungere parole al vocabolario quasi non costa nulla — è il motivo per cui la
       ricerca binaria è ovunque, dagli indici dei database al debug con <code>git bisect</code>.</p>
       <p class="doc-note">Attenzione: la parola “a metà” non è quella a metà dell'alfabeto,
@@ -275,7 +280,7 @@
       <h3>Domande frequenti</h3>
       <dl class="doc-list">
         <dt>Ho scritto una parola vera e mi dice che non c'è.</dt>
-        <dd>Il vocabolario contiene <b>308.012</b> parole: le voci del
+        <dd>Il vocabolario contiene <b>288.541</b> parole: le voci del
         dizionario Hunspell <b>it_IT</b>, tutte le forme flesse attestate in un corpus
         reale e le forme che completano un paradigma già attestato (se il corpus ha
         <code>bellissima</code>, il gioco accetta anche <code>bellissime</code>). Restano fuori i nomi propri, le sigle, le parole straniere non
@@ -292,9 +297,9 @@
         al contrario — oppure giocate a voce e usate la barra solo per tenere il conto.</dd>
         <dt>Perché posso proporre parole che la segreta non sarà mai?</dt>
         <dd>Sono due insiemi diversi, di proposito. La segreta esce dalle
-        <b>38.025</b> parole di uso comune, così è sempre una parola che
+        <b>38.061</b> parole di uso comune, così è sempre una parola che
         qualcuno potrebbe pensare davvero; le proposte valgono su tutte le
-        <b>308.012</b> forme del vocabolario, così nessuna parola italiana
+        <b>288.541</b> forme del vocabolario, così nessuna parola italiana
         vera ti viene mai rifiutata.</dd>
       </dl>
     </section>

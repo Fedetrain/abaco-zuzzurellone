@@ -104,7 +104,7 @@ the shape without the arithmetic.
 
 You think of the word and answer *prima* / *dopo* / *è questa*. The computer
 always plays the word that sits at the **median of the remaining candidates**
-and shows you the count collapsing: 38 025 → 19 013 → 9 507 → … → 1. It is
+and shows you the count collapsing: 38 061 → 19 013 → 9 507 → … → 1. It is
 the mode that makes the point: sixteen questions are enough for every word in
 everyday Italian use.
 
@@ -134,9 +134,9 @@ that survived it. The staircase of halving, drawn.
 ## Also in the box
 
 * **One difficulty, two word sets.** There is no level picker and nothing to
-  choose before playing. The secret is always drawn from the **38 025 words in
+  choose before playing. The secret is always drawn from the **38 061 words in
   common use** — the set the counters talk about too — while your guesses are
-  checked against the **308 012 forms** of the full vocabulary, so you are
+  checked against the **288 541 forms** of the full vocabulary, so you are
   never told that a real Italian word does not exist.
 * **Dark mode** following `prefers-color-scheme`, with a manual toggle that
   overrides it in both directions and is remembered.
@@ -179,15 +179,15 @@ pera  <  pero  <  però  <  persona
 ```
 
 The shipped word list is pre-sorted at build time with the same comparator, so
-the browser never has to re-sort 308 012 words, and there is a test that walks
+the browser never has to re-sort 288 541 words, and there is a test that walks
 the whole file to prove the order holds.
 
 ### Why sixteen guesses are enough
 
 Each *prima* / *dopo* answer is worth exactly one bit: it throws away half of
 the surviving candidates. After *k* guesses at most `n / 2ᵏ` remain, so
-`⌈log₂(n + 1)⌉` guesses always suffice — **16** for the 38 025 words the secret
-can be, **19** for all 308 012, **20** for a million. Doubling the dictionary
+`⌈log₂(n + 1)⌉` guesses always suffice — **16** for the 38 061 words the secret
+can be, **19** for all 288 541, **20** for a million. Doubling the dictionary
 costs one extra question.
 
 The subtlety the game makes visible: the word "in the middle" is *not* the word
@@ -211,7 +211,7 @@ weight, not left-to-right, so the letters that own the most vocabulary survive.
 
 The alphabet panel wants, on every guess, twenty-six pairs of numbers: how many
 words each letter still has in play and how many it has in total. Walking the
-308 012 entries to find out would be the obvious way and the wrong one.
+288 541 entries to find out would be the obvious way and the wrong one.
 
 Instead `AZ.breakdown(lo, hi)` asks `lowerBound` for the twenty-six boundaries
 `prefix+a`, `prefix+b`, … — twenty-six binary searches, eighteen comparisons
@@ -240,8 +240,8 @@ purely cosmetic — there is a real fallback stack, and the layout does not move
 if they never arrive.
 
 The list is front-coded before shipping: entries are sorted, so each one is
-stored as `<shared-prefix length><suffix><tier digit>`, which takes 3.9 MB of
-plain text down to 1.2 MB (410 KB over the wire) with a nine-line decoder.
+stored as `<shared-prefix length><suffix><tier digit>`, which takes 3.6 MB of
+plain text down to 1.1 MB (410 KB over the wire) with a nine-line decoder.
 
 ---
 
@@ -287,7 +287,7 @@ tests.html                 browser test runner
 assets/core.js             pure logic: collation, codec, dictionary, search
 assets/app.js              screens, the interval bar, modes, stats, sharing
 assets/style.css           design tokens, layout, animation
-data/dizionario.js         308 012 words, front-coded (this is what loads)
+data/dizionario.js         288 541 words, front-coded (this is what loads)
 data/dizionario.txt        the same list, human-readable
 data/SOURCE.md             provenance and licence of every data source
 data/LICENSE-DIZIONARIO.txt  GPL-3.0, applying to data/ only
@@ -305,19 +305,26 @@ docs/                      screenshots
 
 | What | Source | Licence |
 |---|---|---|
-| **Vocabulary** (308 012 forms) | [LibreOffice Hunspell `it_IT`](https://github.com/LibreOffice/dictionaries/tree/master/it_IT) v5.1.1 — © Gianluca Turconi, Davide Prina, Andrea Pescetti, LibreItalia / Marina Latini | **GPL-3.0** |
+| **Vocabulary** (288 541 forms) | [LibreOffice Hunspell `it_IT`](https://github.com/LibreOffice/dictionaries/tree/master/it_IT) v5.1.1 — © Gianluca Turconi, Davide Prina, Andrea Pescetti, LibreItalia / Marina Latini | **GPL-3.0** |
 | **Frequency list** (attestation + difficulty tiers) | [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), OpenSubtitles 2018 — © Hermit Dave | MIT |
 | **Profanity filter** (subtracted, never shipped) | [napolux/paroleitaliane](https://github.com/napolux/paroleitaliane) — © Francesco Napoletano | MIT |
+| **Word-form lists** (attestation only, never shipped) | [napolux/paroleitaliane](https://github.com/napolux/paroleitaliane) `280000` + `660000` — © Francesco Napoletano | MIT |
 | **Game code, styles, tools** | this repository — © 2026 Federico Traina | MIT |
 
 The Hunspell **affix rules are applied** (`tools/unmunch.mjs`), so the list is
 not just the 95 000 lemmas but every inflected form they generate — kept only
-where the form is actually attested in the OpenSubtitles corpus. Without that
-step `casa`, `cani` and `mangio` were simply not in the game, and players were
-told that ordinary Italian words do not exist. Capitalised entries (proper nouns) and anything with
-apostrophes, hyphens or digits are filtered out. Two real words missing
-upstream, *zuzzurellone* and *zuzzurellona*, are added by hand from
-`tools/extra-words.txt`; the game would be poorer named without them.
+where the form is actually attested: in the OpenSubtitles corpus, or — for
+the written-language forms subtitles never use, *affermavamo*,
+*visiteremmo* — in both napolux word-form lists, provided the lemma itself is
+a common word. Without that step `casa`, `cani` and `mangio` were simply not
+in the game, and players were told that ordinary Italian words do not exist.
+Capitalised entries (proper nouns) and anything with apostrophes, hyphens or
+digits are filtered out. The upstream files also carry one broken flag —
+*sedere* and *possedere* had no conjugation at all, not even *siedo* or
+*possiede* — which `tools/aff-patch.txt` repairs. About two hundred real
+words missing upstream, from *zuzzurellone* to *bruschetta*, *siedi* with its
+clitics and *app*, are added by hand from `tools/extra-words.txt`, each checked
+against Treccani or Zingarelli.
 
 Full details, filters and counts: [`data/SOURCE.md`](data/SOURCE.md).
 Code licence: [`LICENSE`](LICENSE). Word-list licence:

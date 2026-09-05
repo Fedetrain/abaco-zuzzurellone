@@ -1,41 +1,28 @@
-# Legitimate Italian words missing from the Hunspell it_IT stem list.
-# Hand-checked against the Treccani / De Mauro dictionaries.
-# Format: word<TAB>tier  (0 = easy, 1 = medium, 2 = hard)
+# Real Italian words missing from the Hunspell it_IT stem list.
+# Every entry was checked against the Treccani / Zingarelli dictionaries.
 # This file is original work, MIT-licensed like the rest of the source code.
+
 
 zuzzurellone	2
 zuzzurellona	2
 
-# sedere / possedere / soprassedere: the .aff file flags them È and then never
-# defines an È table. tools/unmunch.mjs aliases È to the regular -ere paradigm
-# (B), which covers everything except the e -> ie diphthong of the stressed
-# present forms. Those are here.
-# sedere
-siedo	0
-siedi	0
-siede	0
-siedono	0
-sieda	0
-siedano	0
-# possedere
-possiedo	1
-possiedi	1
-possiede	1
-possiedono	1
-possieda	1
-possiedano	1
-# risedere
-risiedo	2
-risiedi	2
-risiedono	2
-risiedano	2
-# soprassedere
-soprassiedo	2
-soprassiedi	2
-soprassiede	2
-soprassiedono	2
-soprassieda	2
-soprassiedano	2
+# ⚠ QUI C ERA UN BLOCCO A MANO PER sedere/possedere/risedere/soprassedere,
+# TOLTO AL MERGE DEL 06/09/2026.
+#
+# Serviva quando unmunch.mjs rimappava il flag È sul paradigma regolare in
+# -ere: quella rimappatura non produceva il dittongo tonico, quindi siedo,
+# possiede e compagnia si scrivevano qui a mano. Adesso tools/aff-patch.txt
+# DEFINISCE la tabella È col cambio di tema sed- -> sied-, e quelle forme
+# escono dall espansione come tutte le altre.
+#
+# Tenerle qui non era solo ridondante, era PEGGIO: le voci a mano portano un
+# tier fisso, e possiede era inchiodato a 1 mentre nel corpus ha 4.239
+# occorrenze — cioe tier 0, «facile». Una parola comunissima restava fuori
+# dal gruppo da cui esce la parola segreta. Il test
+# «possiede deve essere tier 0» di tests.js prende esattamente questo.
+#
+# Restano solo gli imperativi con pronome enclitico, in fondo al file: quelli
+# l espansione non li produce.
 
 # Everyday Italian the 2020 stem list predates or simply misses.
 altronde	1
@@ -56,3 +43,237 @@ ossicodone	2
 ketamina	2
 droide	2
 droidi	2
+#
+# Format:  word[/FLAGS]<TAB>[tier]
+#   FLAGS  optional Hunspell it_IT affix flags: the entry is then inflected by
+#          the same rules as the upstream stems (Q = -a/-e plural, S = -e/-i
+#          plural, ALKhlI = a regular -are verb, like "ballare"). The bare word
+#          is always kept; its inflections go through the usual attestation.
+#   tier   optional: 0 = easy, 1 = medium, 2 = hard. Left out, the tier comes
+#          from corpus frequency like for every other word.
+
+# The two ends of the board and their spelling variants (Treccani lists
+# "zuzzerellone" as a variant of "zuzzurellone").
+zuzzerellone	2
+zuzzerellona	2
+
+# Everyday words the stem list simply lacks.
+bruschetta/Q
+tantomeno
+boh
+evvai
+limonare/ALKhlI
+droide/S
+apericena
+spritz
+movida
+esodato/oW
+ecobonus
+
+# Loanwords that Italian dictionaries record as Italian headwords -- the stem
+# list already has computer, film, internet, chat, download, streaming...
+app
+laptop
+router
+spam
+offline
+cloud
+upload
+logout
+reset
+googlare/ALKhlI
+influencer
+blogger
+gamer
+geek
+meme
+emoji
+startup
+fake
+brand
+cartoon
+cosplay
+notebook
+sneakers
+poncho
+hummus
+lockdown
+cyberbullismo
+
+# "addirsi" is not in the stem list at all (defective verb, "si addice").
+addirsi
+addice
+addica
+addicono
+addiceva
+addicevano
+
+# Imperatives with clitics that the affix rules do not produce for these verbs.
+ridammi
+ridammelo
+ridammela
+ridammeli
+dammeli
+tienitelo
+beviti
+
+# More everyday and literary words the stem list lacks (Treccani / Zingarelli).
+caffelatte
+tagliaerba
+phon
+palloso/oW
+eclisse
+zozzone/S
+sciupafemmine
+gerbillo/S
+ottovolante
+chignon
+mandragora
+mollaccione/S
+alfine
+sciccoso/oW
+nottolone/S
+sottacqua
+termos
+periglio
+samovar
+fricchettone/S
+narco
+boiata/Q
+sgamare/ALKhlI
+manolesta
+capufficio
+citronella
+ciucciare/ALKhlI
+biancomangiare
+bove/S
+famiglio
+ditone/S
+sciroccato/oW
+crogiuolo
+giuoco
+pacciame
+auditorio
+massaro
+lanista
+gambalunga
+mascellone/S
+gramaglia/Q
+vattelapesca
+antisiero
+modaiolo/oW
+deh
+colà
+pria
+opra
+foco
+atro/oW
+meco
+mammà
+cine
+cerasa/Q
+mutaforma
+chissenefrega
+ibuprofene
+lidocaina
+guacamole
+pastrami
+vicesceriffo
+interstatale
+succhiasangue
+teppistello/S
+riconteggio
+vittimologia
+ciuchino
+fuochino
+aldermanno
+
+# Loanwords recorded as headwords by Italian dictionaries.
+cotillon
+tatami
+quiche
+bidet
+blazer
+bomber
+gourmet
+denim
+vermouth
+silos
+mamba
+upgrade
+brainstorming
+impeachment
+controller
+shorts
+chaperon
+pusher
+rating
+stretch
+hacienda
+establishment
+booster
+panel
+halibut
+casbah
+freon
+riesling
+menorah
+macadamia
+outdoor
+hooligan
+elementale
+shopper
+starter
+dressage
+leverage
+ensemble
+transfer
+schnauzer
+sitar
+starlet
+clipper
+armagnac
+maracas
+mescal
+mohair
+blizzard
+trapper
+betel
+setter
+homunculus
+cheque
+format
+tantra
+highball
+sloop
+mannequin
+gestalt
+performer
+savanna
+voucher
+rasta
+dharma
+splash
+gazpacho
+biscuit
+rabbi
+hurrah
+manticora
+
+# Ordinary nouns the stem list only reaches through a vulgar verb ("scopo" is
+# the first person of "scopare" and nothing else, in the upstream .dic): listed
+# as stems of their own so the profanity filter, which drops every inflection
+# of a listed verb, does not take them with it.
+scopo/O
+scopa/Q
+tromba/Q
+trombo/O
+# Imperativi di "possedere" con pronome enclitico. Uscivano dal ramo di main e
+# non piu' dopo il merge del 06/09/2026: l'.aff li generava per una strada che
+# la chiusura dei paradigmi non ripercorre. Sono italiano corretto, quindi
+# tornano a mano.
+# Le forme gemelle di "sedere" (siedila, siedile, siedimi) NON tornano: sedere
+# e' intransitivo e quelle erano sovra-generazione di Hunspell.
+possiedila
+possiedilo
+possiedimi

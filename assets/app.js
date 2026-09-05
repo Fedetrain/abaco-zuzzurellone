@@ -216,20 +216,31 @@
 
     /* Sceglie le etichette della scala per la porzione inquadrata: le lettere
        quando si vede tutto il vocabolario, prefissi via via più lunghi mano a
-       mano che si entra dentro una parola. */
+       mano che si entra dentro una parola. Un prefisso deve comparire una
+       volta sola: «gravita», «gravità», «gravitano» tagliati a sette lettere
+       danno due «gravita» con «gravità» in mezzo, e la scala mostrava lo
+       stesso nome per due posti diversi. In quel caso si allunga il taglio. */
+    var MAX_PREFIX = 12;
     function computeTicks(a, b) {
       var n = b - a;
       // Finché si vede tanto vocabolario le etichette sono le iniziali; più
       // in basso diventano prefissi sempre più lunghi.
       if (n > 40000) return thinOut(letterTicks, a, b);
-      for (var L = 1; L <= 7; L++) {
+      for (var L = 1; L <= MAX_PREFIX; L++) {
         var items = [];
         var last = null;
+        var seen = {};
+        var doppio = false;
         for (var i = a; i < b; i++) {
           var p = game.dict.words[i].slice(0, L);
-          if (p !== last) { items.push({ i: i, label: p }); last = p; }
+          if (p !== last) {
+            if (seen[p]) doppio = true;
+            seen[p] = true;
+            items.push({ i: i, label: p });
+            last = p;
+          }
         }
-        if (items.length >= 7 || L === 7) return thinOut(subsample(items, 11), a, b);
+        if ((items.length >= 7 && !doppio) || L === MAX_PREFIX) return thinOut(subsample(items, 11), a, b);
       }
       return [];
     }
@@ -510,7 +521,7 @@
      Quando il campo entra tutto dentro una lettera il pannello scende di un
      livello da solo (dentro la r: ra re ri ro ru…), poi di un altro ancora.
      Il conto è AZ.breakdown, che lavora a colpi di lowerBound: 26 ricerche
-     binarie, mai una scansione delle 257.361 parole.
+     binarie, mai una scansione delle 267.251 parole.
   ───────────────────────────────────────────────────────────────────── */
   var Alfa = (function () {
     var elWrap = $('#alfa');
