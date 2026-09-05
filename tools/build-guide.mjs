@@ -33,13 +33,12 @@ const tiers = read('data/dizionario.txt')
   .filter(Boolean)
   .map((l) => Number(l.split('\t')[1]));
 const total = tiers.length;
-const conta = {
-  facile: tiers.filter((t) => t <= 0).length,
-  medio: tiers.filter((t) => t <= 1).length,
-  difficile: total,
-};
+// Una sola difficolta: le giocabili (tier <= 1) sono quelle da cui esce la
+// parola segreta, `total` e tutto cio che il gioco accetta come parola vera.
+const POOL_TIER = 1;
+const pool = tiers.filter((t) => t <= POOL_TIER).length;
 const it = new Intl.NumberFormat('it-IT', { useGrouping: 'always' });
-const optimal = Math.ceil(Math.log2(total + 1));
+const optimal = Math.ceil(Math.log2(pool + 1));
 
 /* --- la sezione, estratta da index.html ----------------------------------- */
 const html = read('index.html');
@@ -56,13 +55,11 @@ body = body
   .replace(/\s*<\/section>$/, '')
   .replace(/<div class="play-head">[\s\S]*?<\/div>\s*/, '')
   .replace(/<aside class="adslot"[\s\S]*?<\/aside>\s*/g, '')
-  .replace(/<b class="g-count">…<\/b>/g, `<b>${it.format(total - 2)}</b>`)
+  .replace(/<b class="g-count">…<\/b>/g, `<b>${it.format(pool)}</b>`)
   .replace(/<b class="g-total">…<\/b>/g, `<b>${it.format(total)}</b>`)
   .replace(/<b class="g-opt">…<\/b>/g, `<b>${optimal}</b>`)
-  .replace(/<b data-count="(facile|medio|difficile)">…<\/b>/g,
-           (_, lv) => `<b>${it.format(conta[lv])}</b>`)
   // La dimostrazione del dimezzamento la disegna app.js: qui la scrivo io.
-  .replace('<p class="halving" id="halving-demo"></p>', halving(total));
+  .replace('<p class="halving" id="halving-demo"></p>', halving(pool));
 
 function halving(n) {
   const parts = [];
@@ -90,7 +87,7 @@ const page = `<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Come si gioca ad Abaco Zuzzurellone — guida, regole e strategia</title>
-<meta name="description" content="Guida completa al gioco di parole Abaco Zuzzurellone: regole, le tre modalità, come leggere la barra dell'intervallo, i livelli, la strategia e perché bastano ${optimal} tentativi per ${it.format(total)} parole.">
+<meta name="description" content="Guida completa al gioco di parole Abaco Zuzzurellone: regole, le quattro modalità, come leggere la barra dell'intervallo, la strategia e perché bastano ${optimal} tentativi per ${it.format(pool)} parole.">
 <link rel="canonical" href="https://abacozuzzurellone.site/guida.html">
 <meta name="theme-color" content="#f2ede3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#100e0c" media="(prefers-color-scheme: dark)">

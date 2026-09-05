@@ -26,7 +26,7 @@ window.ABACO_ADS = {
      pubblicitaria → Display). Uno per posizione: servono separati per poter
      leggere nei report quale posizione rende. */
   slots: {
-    home: '',    // sotto il selettore di livello, in home
+    home: '',    // in fondo alla home, sotto le modalità
     end: '',     // schermata del risultato, fra le statistiche e i pulsanti
     guida: '',   // in fondo alla guida
   },

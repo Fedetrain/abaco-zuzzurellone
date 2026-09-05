@@ -74,9 +74,9 @@ out in full: one cell per letter, the Italian ones plus the foreign `j k w x y`
 * its **status against the current interval** — in play, half in (the letter
   that contains one of the bounds), or struck out because it falls before the
   left bound or after the right one;
-* **how many of its words are still alive** and how many it has in total at the
-  chosen difficulty — the `s` holds ten thousand, the `q` three hundred, and
-  that gap is half the fun;
+* **how many of its playable words are still alive** and how many it has in
+  total — the `s` holds thousands, the `q` a few hundred, and that gap is half
+  the fun;
 * a **proportional bar**: its length is the letter's weight in the vocabulary,
   the lit part is what is still in play.
 
@@ -104,9 +104,9 @@ the shape without the arithmetic.
 
 You think of the word and answer *prima* / *dopo* / *è questa*. The computer
 always plays the word that sits at the **median of the remaining candidates**
-and shows you the count collapsing: 257 361 → 128 681 → 64 340 → … → 1. It is
-the mode that makes the point: eighteen questions are enough for the entire
-Italian vocabulary.
+and shows you the count collapsing: 38 025 → 19 013 → 9 507 → … → 1. It is
+the mode that makes the point: sixteen questions are enough for every word in
+everyday Italian use.
 
 If your answers contradict each other the interval empties out, and the game
 says so plainly instead of pretending.
@@ -133,11 +133,11 @@ that survived it. The staircase of halving, drawn.
 
 ## Also in the box
 
-* **Three difficulty levels** — *facile* (5 465 common short words), *medio*
-  (37 999), *difficile* (all 257 361, rare words and inflections included). The level chooses the
-  universe the secret is drawn from and the one the counters talk about; your
-  guesses are always checked against the full vocabulary, so you are never told
-  a real Italian word does not exist.
+* **One difficulty, two word sets.** There is no level picker and nothing to
+  choose before playing. The secret is always drawn from the **38 025 words in
+  common use** — the set the counters talk about too — while your guesses are
+  checked against the **308 012 forms** of the full vocabulary, so you are
+  never told that a real Italian word does not exist.
 * **Dark mode** following `prefers-color-scheme`, with a manual toggle that
   overrides it in both directions and is remembered.
 * **Persistent stats** in `localStorage` — games, average attempts, best game,
@@ -179,15 +179,16 @@ pera  <  pero  <  però  <  persona
 ```
 
 The shipped word list is pre-sorted at build time with the same comparator, so
-the browser never has to re-sort 257 361 words, and there is a test that walks
+the browser never has to re-sort 308 012 words, and there is a test that walks
 the whole file to prove the order holds.
 
-### Why eighteen guesses are enough
+### Why sixteen guesses are enough
 
 Each *prima* / *dopo* answer is worth exactly one bit: it throws away half of
 the surviving candidates. After *k* guesses at most `n / 2ᵏ` remain, so
-`⌈log₂(n + 1)⌉` guesses always suffice — **18** for 257 361 words, **20** for a
-million. Doubling the dictionary costs one extra question.
+`⌈log₂(n + 1)⌉` guesses always suffice — **16** for the 38 025 words the secret
+can be, **19** for all 308 012, **20** for a million. Doubling the dictionary
+costs one extra question.
 
 The subtlety the game makes visible: the word "in the middle" is *not* the word
 in the middle of the alphabet. It is the word with half the vocabulary before
@@ -210,14 +211,14 @@ weight, not left-to-right, so the letters that own the most vocabulary survive.
 
 The alphabet panel wants, on every guess, twenty-six pairs of numbers: how many
 words each letter still has in play and how many it has in total. Walking the
-257 361 entries to find out would be the obvious way and the wrong one.
+308 012 entries to find out would be the obvious way and the wrong one.
 
-Instead `AZ.breakdown(lo, hi, livello)` asks `lowerBound` for the twenty-six
-boundaries `prefix+a`, `prefix+b`, … — twenty-six binary searches, seventeen
-comparisons each — and then reads every count off the difficulty prefix-sums
-already in `Dizionario`, which turns "how many words of this level sit in
-`[a, b)`" into one subtraction. A full rebuild of the panel costs about
-0.07 ms; a hundred of them do not register.
+Instead `AZ.breakdown(lo, hi)` asks `lowerBound` for the twenty-six boundaries
+`prefix+a`, `prefix+b`, … — twenty-six binary searches, eighteen comparisons
+each — and then reads every count off the prefix-sum array already in
+`Dizionario`, which turns "how many playable words sit in `[a, b)`" into one
+subtraction. A full rebuild of the panel costs about 0.07 ms; a hundred of them
+do not register.
 
 The descent falls out of the same call. The prefix it works at is simply the
 **longest common prefix of the two current bounds**, accent-folded, so it is
@@ -239,8 +240,8 @@ purely cosmetic — there is a real fallback stack, and the layout does not move
 if they never arrive.
 
 The list is front-coded before shipping: entries are sorted, so each one is
-stored as `<shared-prefix length><suffix><difficulty tier>`, which takes
-1.1 MB of plain text down to 465 KB with a nine-line decoder.
+stored as `<shared-prefix length><suffix><tier digit>`, which takes 3.9 MB of
+plain text down to 1.2 MB (410 KB over the wire) with a nine-line decoder.
 
 ---
 
@@ -259,11 +260,12 @@ Or simply **double-click `index.html`** — it works from the file system too.
 
 ### Tests
 
-Thirty tests cover Italian collation, the front-coding codec, `lowerBound`, the
-per-difficulty interval counts, the alphabet breakdown and its descent through
-prefixes, the median choice, `⌈log₂(n+1)⌉`, the full binary search
-(exhaustively on a small dictionary, on 200 random words of the real one), the
-detection of contradictory answers, and the timed-challenge scoring.
+Thirty-eight tests cover Italian collation, the front-coding codec,
+`lowerBound`, the playable-word interval counts, the alphabet breakdown and its
+descent through prefixes, the median choice, `⌈log₂(n+1)⌉`, the full binary
+search (exhaustively on a small dictionary, on 200 random words of the real
+one), the word of the day, the detection of contradictory answers, and the
+timed-challenge scoring.
 
 ```bash
 node tools/run-tests.mjs        # terminal
@@ -285,7 +287,7 @@ tests.html                 browser test runner
 assets/core.js             pure logic: collation, codec, dictionary, search
 assets/app.js              screens, the interval bar, modes, stats, sharing
 assets/style.css           design tokens, layout, animation
-data/dizionario.js         257 361 words, front-coded (this is what loads)
+data/dizionario.js         308 012 words, front-coded (this is what loads)
 data/dizionario.txt        the same list, human-readable
 data/SOURCE.md             provenance and licence of every data source
 data/LICENSE-DIZIONARIO.txt  GPL-3.0, applying to data/ only
@@ -303,7 +305,7 @@ docs/                      screenshots
 
 | What | Source | Licence |
 |---|---|---|
-| **Vocabulary** (257 361 forms) | [LibreOffice Hunspell `it_IT`](https://github.com/LibreOffice/dictionaries/tree/master/it_IT) v5.1.1 — © Gianluca Turconi, Davide Prina, Andrea Pescetti, LibreItalia / Marina Latini | **GPL-3.0** |
+| **Vocabulary** (308 012 forms) | [LibreOffice Hunspell `it_IT`](https://github.com/LibreOffice/dictionaries/tree/master/it_IT) v5.1.1 — © Gianluca Turconi, Davide Prina, Andrea Pescetti, LibreItalia / Marina Latini | **GPL-3.0** |
 | **Frequency list** (attestation + difficulty tiers) | [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), OpenSubtitles 2018 — © Hermit Dave | MIT |
 | **Profanity filter** (subtracted, never shipped) | [napolux/paroleitaliane](https://github.com/napolux/paroleitaliane) — © Francesco Napoletano | MIT |
 | **Game code, styles, tools** | this repository — © 2026 Federico Traina | MIT |

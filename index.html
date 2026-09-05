@@ -25,7 +25,7 @@
 <meta property="og:locale" content="it_IT">
 <meta property="og:url" content="https://abacozuzzurellone.site/">
 <meta property="og:title" content="Abaco Zuzzurellone — il gioco della ricerca binaria sul vocabolario">
-<meta property="og:description" content="Tutto il vocabolario italiano teso fra abaco e zuzzurellone. Indovina la parola segreta a colpi di prima/dopo. Tre modalità, tre livelli, niente registrazione.">
+<meta property="og:description" content="Tutto il vocabolario italiano teso fra abaco e zuzzurellone. Indovina la parola segreta a colpi di prima/dopo. Quattro modalità, niente registrazione.">
 <meta property="og:image" content="https://abacozuzzurellone.site/docs/home-dark.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Abaco Zuzzurellone">
@@ -91,7 +91,7 @@
       <span class="pole pole--a" style="--i:1"><span class="pole-word">Abaco</span></span>
       <span class="hero-thread" style="--i:2" aria-hidden="true">
         <svg viewBox="0 0 400 40" preserveAspectRatio="none"><path class="thread-line" d="M0 20h400"/></svg>
-        <span class="hero-thread-badge"><b id="hero-count">…</b><i>parole in mezzo</i></span>
+        <span class="hero-thread-badge"><b id="hero-count">…</b><i>parole in gioco</i></span>
       </span>
       <span class="pole pole--z" style="--i:3"><span class="pole-word">Zuzzurellone</span></span>
     </h1>
@@ -111,7 +111,7 @@
       </span>
       <span class="mode-body">
         <span class="mode-name">Parola del giorno <em class="mode-badge" id="daily-num"></em></span>
-        <span class="mode-desc">Tre parole al giorno, una per livello, uguali per tutti fino a mezzanotte. Un solo tentativo a testa.</span>
+        <span class="mode-desc">Una parola al giorno, uguale per tutti fino a mezzanotte. Un solo tentativo a testa.</span>
         <span class="daily-dots" id="daily-dots" aria-live="polite"></span>
       </span>
       <span class="mode-go" aria-hidden="true">→</span>
@@ -151,16 +151,12 @@
     </button>
   </div>
 
-  <div class="level-picker" style="--i:8">
-    <span class="level-label" id="level-label">Livello</span>
-    <div class="segmented" role="radiogroup" aria-labelledby="level-label">
-      <button type="button" role="radio" data-level="facile"    aria-checked="false"><b>Facile</b><i data-count="facile">…</i></button>
-      <button type="button" role="radio" data-level="medio"     aria-checked="true"><b>Medio</b><i data-count="medio">…</i></button>
-      <button type="button" role="radio" data-level="difficile" aria-checked="false"><b>Difficile</b><i data-count="difficile">…</i></button>
-      <span class="segmented-pill" aria-hidden="true"></span>
-    </div>
-    <p class="level-hint" id="level-hint"></p>
-  </div>
+  <p class="hero-foot" style="--i:8">
+    La parola segreta esce sempre dalle <b class="g-count">…</b> parole d'uso comune, e a una
+    ricerca perfetta ne bastano <b class="g-opt">…</b>. Proporre invece puoi proporre qualunque
+    parola delle <b class="g-total">…</b> del vocabolario: il gioco non ti dirà mai che una
+    parola italiana vera non esiste.
+  </p>
 
   <aside class="adslot" data-ad="home" aria-label="Pubblicità">
     <span class="adslot-tag">pubblicità</span>
@@ -175,7 +171,6 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
     </button>
     <h2 class="play-title" id="play-title">Indovina tu</h2>
-    <span class="play-chip" id="play-level">medio</span>
   </div>
 
   <!-- ─────────── il campo: la barra dell'intervallo ─────────── -->
@@ -385,7 +380,6 @@
       <a href="#g-alfabeto">L'alfabeto aperto</a>
       <a href="#g-giorno">La parola del giorno</a>
       <a href="#g-modalita">Le altre modalità</a>
-      <a href="#g-livelli">I livelli</a>
       <a href="#g-strategia">Strategia</a>
       <a href="#g-mate">Perché bastano poche mosse</a>
       <a href="#g-ordine">L'ordine alfabetico italiano</a>
@@ -400,7 +394,11 @@
       alfabetico. Ogni risposta restringe il campo. Vince chi indovina.</p>
       <p>Il nome viene dagli estremi di partenza: <em>abaco</em> è tradizionalmente la
       prima voce del vocabolario italiano e <em>zuzzurellone</em> l'ultima. Si parte
-      da lì — <b class="g-count">…</b> parole in mezzo — e si stringe.</p>
+      da lì e si stringe.</p>
+      <p><b>Una sola difficoltà.</b> La parola segreta esce sempre dalle
+      <b class="g-count">…</b> parole di uso comune; le proposte invece sono accettate
+      su tutto il vocabolario, <b class="g-total">…</b> forme. Chi gioca non deve
+      scegliere niente prima di cominciare.</p>
     </section>
 
     <section class="doc-block" id="g-turno" style="--i:1">
@@ -441,8 +439,9 @@
         spetta per numero di parole, ed è per questo che la <b>s</b> è larghissima
         e la <b>q</b> quasi non si vede.</dd>
         <dt>Il numero al centro</dt>
-        <dd>Quante parole del livello scelto sono ancora possibili. È il numero che
-        conta: dimezzarlo a ogni mossa è l'intero gioco.</dd>
+        <dd>Quante parole <b>giocabili</b> sono ancora possibili — le comuni, quelle da
+        cui la segreta può davvero uscire. È il numero che conta: dimezzarlo a ogni
+        mossa è l'intero gioco.</dd>
         <dt>Il badge <span class="doc-chip">zoom ×N</span></dt>
         <dd>Compare quando il campo diventa troppo stretto per vedersi su tutto il
         vocabolario: la barra inquadra allora solo la porzione utile, e la scala
@@ -462,17 +461,14 @@
 
     <section class="doc-block" id="g-giorno" style="--i:4">
       <h3>La parola del giorno</h3>
-      <p>Ogni giorno ci sono <b>tre parole</b>, una per livello, <b>uguali per tutti</b>
-      nel mondo fino a mezzanotte (ora italiana). Non c'è nessun server: la data è il
-      seme da cui il gioco ricava le tre parole, quindi chiunque apra la pagina lo
-      stesso giorno trova le stesse.</p>
+      <p>Ogni giorno c'è <b>una parola</b>, <b>uguale per tutti</b> nel mondo fino a
+      mezzanotte (ora italiana). Non c'è nessun server: la data è il seme da cui il
+      gioco la ricava, quindi chiunque apra la pagina lo stesso giorno trova la stessa.</p>
       <ul class="doc-bullets">
         <li><b>Un solo tentativo a testa.</b> Ricaricare la pagina non azzera la
         partita: riprende da dove l'avevi lasciata.</li>
-        <li><b>I tre pallini</b> sulla scheda in home dicono a colpo d'occhio quali
-        livelli hai già risolto oggi.</li>
-        <li><b>La streak</b> 🔥 conta i giorni di fila in cui hai risolto almeno una
-        delle tre. Salta un giorno e riparte da capo.</li>
+        <li><b>La streak</b> 🔥 conta i giorni di fila in cui l'hai risolta. Salta un
+        giorno e riparte da capo.</li>
         <li><b>Condividi</b> produce un risultato senza spoiler: solo le frecce e il
         numero di tentativi, mai la parola.</li>
       </ul>
@@ -498,23 +494,6 @@
         i doppioni non contano né in positivo né in negativo. È la versione da tavolo
         del 1995.</dd>
       </dl>
-    </section>
-
-    <section class="doc-block" id="g-livelli" style="--i:5">
-      <h3>I livelli</h3>
-      <p>Il livello decide <b>da quale insieme viene pescata la parola segreta</b> e su
-      quale insieme è calcolato il conteggio delle parole rimaste.</p>
-      <dl class="doc-list">
-        <dt>Facile — <b data-count="facile">…</b> parole</dt>
-        <dd>Solo parole comuni e corte: quelle che si usano parlando.</dd>
-        <dt>Medio — <b data-count="medio">…</b> parole</dt>
-        <dd>Il vocabolario di uso normale, flessioni comprese.</dd>
-        <dt>Difficile — <b data-count="difficile">…</b> parole</dt>
-        <dd>Tutto il vocabolario, comprese le voci che si incontrano una volta nella vita.</dd>
-      </dl>
-      <p class="doc-note"><b>I tentativi non sono mai limitati dal livello.</b> Puoi
-      sempre proporre qualsiasi parola del vocabolario completo, anche giocando a
-      facile: il gioco non ti dirà mai che una parola italiana vera non esiste.</p>
     </section>
 
     <section class="doc-block" id="g-strategia" style="--i:6">
@@ -564,8 +543,9 @@
       <dl class="doc-list">
         <dt>Ho scritto una parola vera e mi dice che non c'è.</dt>
         <dd>Il vocabolario contiene <b class="g-total">…</b> parole: le voci del
-        dizionario Hunspell <b>it_IT</b> più tutte le forme flesse attestate in un
-        corpus reale. Restano fuori i nomi propri, le sigle, le parole straniere non
+        dizionario Hunspell <b>it_IT</b>, tutte le forme flesse attestate in un corpus
+        reale e le forme che completano un paradigma già attestato (se il corpus ha
+        <code>bellissima</code>, il gioco accetta anche <code>bellissime</code>). Restano fuori i nomi propri, le sigle, le parole straniere non
         italianizzate e le parolacce. Se manca una parola italiana d'uso comune è un
         bug: segnalalo su GitHub.</dd>
         <dt>Il gioco funziona senza connessione?</dt>
@@ -577,9 +557,12 @@
         <dt>Posso giocare in due sullo stesso telefono?</dt>
         <dd>È il modo migliore. Uno pensa la parola, l'altro usa «Indovina il computer»
         al contrario — oppure giocate a voce e usate la barra solo per tenere il conto.</dd>
-        <dt>Perché la parola segreta a volte è stranissima?</dt>
-        <dd>Perché sei a livello <b>difficile</b>. A <b>facile</b> la parola segreta è
-        sempre una delle <b data-count="facile">…</b> parole comuni.</dd>
+        <dt>Perché posso proporre parole che la segreta non sarà mai?</dt>
+        <dd>Sono due insiemi diversi, di proposito. La segreta esce dalle
+        <b class="g-count">…</b> parole di uso comune, così è sempre una parola che
+        qualcuno potrebbe pensare davvero; le proposte valgono su tutte le
+        <b class="g-total">…</b> forme del vocabolario, così nessuna parola italiana
+        vera ti viene mai rifiutata.</dd>
       </dl>
     </section>
 

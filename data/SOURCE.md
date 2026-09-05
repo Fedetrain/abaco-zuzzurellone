@@ -47,9 +47,10 @@ away the theoretical monsters the rules also produce
 | **Licence** | **MIT** |
 
 This list does two jobs. It **attests** the inflected forms (a form the affix
-rules generate is shipped only if it appears here at least once), and its raw
-occurrence counts decide whether a word lands in the *facile*, *medio* or
-*difficile* pool. No word text is taken from it: every word shipped is a form
+rules generate is shipped only if it appears here at least once, or completes a
+gender/number quartet one of whose forms does), and its raw occurrence counts
+decide whether a word is **playable** — the set the secret is drawn from — or
+merely accepted. No word text is taken from it: every word shipped is a form
 the Hunspell dictionary generates.
 
 ## 3. Profanity list — used only as a negative filter
@@ -121,17 +122,36 @@ Filters applied by `tools/build-dictionary.mjs`:
 * the survivors are sorted with `Intl.Collator('it')` — Italian collation, not
   code-point order, so `pera < pero < però < persona`.
 
+Two things the expansion has to work around, both found by playing:
+
+* **Paradigm closure.** Corpus attestation is per *form*, so the intersection
+  accepted `bellissima` and rejected `bellissime` — and the game told the
+  player a perfectly ordinary word did not exist. When one form of a
+  gender/number quartet is attested the lemma is demonstrably in use, so the
+  other three are let in as well, *provided the affix rules generate them*.
+  That proviso is what keeps invented endings out. It adds ~50 600 forms.
+* **The dangling `È` flag.** The it_IT 5.1.0 `.aff` marks four stems with the
+  flag `È` and then never defines an `È` table: `sedere`, `possedere`,
+  `risedere` and `soprassedere` came out of the expansion with no conjugation
+  at all. `tools/unmunch.mjs` aliases `È` to `B`, the regular *-ere* paradigm
+  the file does define; the stressed diphthong forms (`siedo`, `possiede`…)
+  are listed by hand in `tools/extra-words.txt`.
+
 ### Result
 
 | | |
 |---|---|
-| Words shipped | **257 361** |
+| Words shipped (the vocabulary the game accepts) | **308 012** |
 | First / last entry | `abaco` / `zuzzurellone` |
-| *facile* pool | 5 465 (≥ 2 000 occurrences in the corpus, ≤ 9 letters) |
-| *medio* pool | 37 999 (≥ 100 occurrences) |
-| *difficile* pool | 257 361 (everything) |
-| `dizionario.txt` | 3.2 MB — `word<TAB>tier`, one per line, human-readable |
-| `dizionario.js` | 1.0 MB — the same data front-coded (352 KB gzipped over the wire) |
+| Playable words (tier ≤ 1 — the secret comes from here) | **38 025** (≥ 100 occurrences in the corpus) |
+| of which tier 0 | 5 471 (≥ 2 000 occurrences, ≤ 9 letters) |
+| `dizionario.txt` | 3.9 MB — `word<TAB>tier`, one per line, human-readable |
+| `dizionario.js` | 1.2 MB — the same data front-coded (357 KB gzipped over the wire) |
+
+The tier byte still has three values, because the build separates "very
+common" from "common", but the game reads only one threshold: tier ≤ 1 is
+playable, everything else is accepted-but-never-secret. There is no difficulty
+setting.
 
 `dizionario.js` is loaded with a `<script>` tag rather than `fetch()` so that
 the game also runs when `index.html` is opened straight from disk over the

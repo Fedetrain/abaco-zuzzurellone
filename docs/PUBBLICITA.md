@@ -11,7 +11,7 @@ non mette nessun cookie.
 
 | # | Posizione | Dove | Quando si vede | Perché rende |
 |---|---|---|---|---|
-| **A** | `data-ad="home"` | Home, sotto il selettore di livello | All'arrivo, prima di scegliere la modalità | Prima impressione di ogni sessione. Alta *viewability* perché la home è corta e l'utente ci sosta a scegliere il livello. |
+| **A** | `data-ad="home"` |  Home, in fondo, sotto le modalità | All'arrivo, prima di scegliere la modalità | Prima impressione di ogni sessione. Alta *viewability*: la home è corta e ci si sosta a scegliere la modalità. |
 | **B** | `data-ad="end"` | Schermata del risultato, fra le statistiche e i pulsanti | A fine partita | **È il riquadro che vale di più.** L'utente si è appena fermato, sta leggendo il suo punteggio, e la posizione è naturale — non interrompe niente. Una partita dura 1–3 minuti: questo slot si ricarica spesso. |
 | **C** | `data-ad="guida"` | In fondo alla Guida | Quando si legge come si gioca | È l'unica pagina con testo lungo. Gli annunci accanto a contenuto editoriale prendono offerte più alte di quelli accanto a un gioco, e la Guida è anche la pagina che porta traffico da Google. |
 

@@ -95,34 +95,34 @@
   /* ---------------------------------------------------------------------
      3. Dictionary
      ---------------------------------------------------------------------
-     Holds the sorted vocabulary plus, for each difficulty, the list of
-     indices that make up that difficulty's *universe* -- the set of words the
-     secret is drawn from and the set the "words left" counter talks about.
-     Guesses are always validated against the full vocabulary, so a player is
-     never told a real Italian word does not exist.
+     Two sets of words, and the distinction is the whole design:
+
+       il vocabolario  every word the game accepts as real -- 308 000 forms,
+                       so a player is never told a real Italian word does not
+                       exist. This is what `has()` answers.
+       le giocabili    the common subset the secret is drawn from, and the
+                       set the "words left" counter talks about. This is what
+                       `countRange()` answers.
+
+     A word is playable when its tier is <= POOL_TIER; the tier byte comes
+     straight from tools/build-dictionary.mjs.
   --------------------------------------------------------------------- */
-  var LIVELLI = {
-    facile: { label: 'Facile', maxTier: 0 },
-    medio: { label: 'Medio', maxTier: 1 },
-    difficile: { label: 'Difficile', maxTier: 2 },
-  };
+  var POOL_TIER = 1;
 
   function Dizionario(words, tiers) {
     this.words = words;
     this.tiers = tiers;
     this.size = words.length;
 
-    // Cumulative counts so that "how many level-L words are in [lo, hi)" is an
-    // O(1) subtraction instead of an O(n) scan. cum[t][i] = number of words
-    // with tier <= t among the first i entries.
-    this.cum = [];
-    for (var t = 0; t < 3; t++) {
-      var arr = new Int32Array(words.length + 1);
-      for (var j = 0; j < words.length; j++) {
-        arr[j + 1] = arr[j] + (tiers[j] <= t ? 1 : 0);
-      }
-      this.cum.push(arr);
+    // Cumulative count of playable words, so "how many are in [lo, hi)" is an
+    // O(1) subtraction instead of a scan. cum[i] = playable words among the
+    // first i entries.
+    var cum = new Int32Array(words.length + 1);
+    for (var j = 0; j < words.length; j++) {
+      cum[j + 1] = cum[j] + (tiers[j] <= POOL_TIER ? 1 : 0);
     }
+    this.cum = cum;
+    this.poolSize = cum[words.length];
   }
 
   /** Position of an exact word, or -1. */
@@ -151,21 +151,19 @@
     return lo;
   };
 
-  /** Number of words of the given difficulty in the half-open range [lo, hi). */
-  Dizionario.prototype.countRange = function (lo, hi, livello) {
-    var t = LIVELLI[livello].maxTier;
+  /** Number of playable words in the half-open range [lo, hi). */
+  Dizionario.prototype.countRange = function (lo, hi) {
     if (hi <= lo) return 0;
-    var c = this.cum[t];
-    return c[Math.min(hi, this.size)] - c[Math.max(lo, 0)];
+    return this.cum[Math.min(hi, this.size)] - this.cum[Math.max(lo, 0)];
   };
 
-  /** The n-th word of the given difficulty inside [lo, hi), or -1. */
-  Dizionario.prototype.nthOfLevel = function (lo, hi, livello, n) {
-    var c = this.cum[LIVELLI[livello].maxTier];
-    var target = c[Math.max(lo, 0)] + n + 1;   // cum[i+1] first reaches this at i
+  /** The n-th playable word inside [lo, hi), or -1. */
+  Dizionario.prototype.nthInRange = function (lo, hi, n) {
+    var c = this.cum;
     var a = Math.max(lo, 0);
     var b = Math.min(hi, this.size);
-    if (n < 0 || target > c[b]) return -1;
+    var target = c[a] + n + 1;   // cum[i+1] first reaches this at i
+    if (n < 0 || b <= a || target > c[b]) return -1;
     while (a < b) {
       var mid = (a + b) >> 1;
       if (c[mid + 1] < target) a = mid + 1;
@@ -174,23 +172,22 @@
     return a < Math.min(hi, this.size) ? a : -1;
   };
 
-  /** A random word index of the given difficulty inside [lo, hi). */
-  Dizionario.prototype.randomIndex = function (lo, hi, livello, rnd) {
-    var total = this.countRange(lo, hi, livello);
+  /** A random playable word index inside [lo, hi). */
+  Dizionario.prototype.randomIndex = function (lo, hi, rnd) {
+    var total = this.countRange(lo, hi);
     if (total <= 0) return -1;
-    var pick = Math.floor((rnd || Math.random)() * total);
-    return this.nthOfLevel(lo, hi, livello, pick);
+    return this.nthInRange(lo, hi, Math.floor((rnd || Math.random)() * total));
   };
 
   /**
-   * The middle word of the given difficulty inside [lo, hi): the move a
-   * perfect binary search plays. Splitting on *word count* rather than on
-   * alphabet position is what makes each answer worth a full bit.
+   * The middle playable word inside [lo, hi): the move a perfect binary
+   * search plays. Splitting on *word count* rather than on alphabet position
+   * is what makes each answer worth a full bit.
    */
-  Dizionario.prototype.medianIndex = function (lo, hi, livello) {
-    var total = this.countRange(lo, hi, livello);
+  Dizionario.prototype.medianIndex = function (lo, hi) {
+    var total = this.countRange(lo, hi);
     if (total <= 0) return -1;
-    return this.nthOfLevel(lo, hi, livello, total >> 1);
+    return this.nthInRange(lo, hi, total >> 1);
   };
 
   /* ---------------------------------------------------------------------
@@ -267,10 +264,10 @@
    *                vive, stato, straniera }
    *   esatta       la voce che e' esattamente il prefisso ("re" dentro "re"),
    *                oppure null
-   *   vive/totale  parole in gioco e parole dell'ambito, al livello scelto
+   *   vive/totale  parole giocabili in campo e parole giocabili dell'ambito
    *   max          il totale piu' alto fra le voci, per scalare le barre
    */
-  Dizionario.prototype.breakdown = function (lo, hi, livello) {
+  Dizionario.prototype.breakdown = function (lo, hi) {
     lo = Math.max(0, Math.min(lo, this.size));
     hi = Math.max(lo, Math.min(hi, this.size));
 
@@ -296,11 +293,11 @@
     for (i = 0; i < ALFABETO.length; i++) {
       var s = bordi[i];
       var e = bordi[i + 1];
-      // In cima si mostrano tutte e 26 le lettere, anche quelle che il
-      // livello facile non usa: il vuoto e' un'informazione. Piu' in basso
-      // si tengono solo le combinazioni che esistono davvero.
-      if (prefisso.length && this.countRange(s, e, 'difficile') === 0) continue;
-      var totale = this.countRange(s, e, livello);
+      // In cima si mostrano tutte e 26 le lettere, anche quelle senza parole
+      // giocabili: il vuoto e' un'informazione. Piu' in basso si tengono solo
+      // le combinazioni che nel vocabolario esistono davvero.
+      if (prefisso.length && e - s === 0) continue;
+      var totale = this.countRange(s, e);
       if (totale > max) max = totale;
       voci.push({
         lettera: ALFABETO[i],
@@ -308,7 +305,7 @@
         lo: s,
         hi: e,
         totale: totale,
-        vive: this.countRange(Math.max(s, lo), Math.min(e, hi), livello),
+        vive: this.countRange(Math.max(s, lo), Math.min(e, hi)),
         stato: statoDi(s, e, lo, hi),
         straniera: LETTERE_ITALIANE.indexOf(ALFABETO[i]) < 0,
       });
@@ -322,8 +319,8 @@
         parola: this.words[ambito.lo],
         lo: ambito.lo,
         hi: bordi[0],
-        totale: this.countRange(ambito.lo, bordi[0], livello),
-        vive: this.countRange(Math.max(ambito.lo, lo), Math.min(bordi[0], hi), livello),
+        totale: this.countRange(ambito.lo, bordi[0]),
+        vive: this.countRange(Math.max(ambito.lo, lo), Math.min(bordi[0], hi)),
         stato: statoDi(ambito.lo, bordi[0], lo, hi),
         straniera: false,
       };
@@ -336,8 +333,8 @@
       ambito: ambito,
       voci: voci,
       esatta: esatta,
-      vive: this.countRange(lo, hi, livello),
-      totale: this.countRange(ambito.lo, ambito.hi, livello),
+      vive: this.countRange(lo, hi),
+      totale: this.countRange(ambito.lo, ambito.hi),
       max: max,
     };
   };
@@ -418,10 +415,10 @@
   /* ---------------------------------------------------------------------
      5-bis. La parola del giorno
      ---------------------------------------------------------------------
-     Tre parole al giorno, una per livello, uguali per tutti e senza server:
-     la data e' il seme. Il giorno e' quello italiano (Europe/Rome) e non
-     quello del fuso di chi gioca, altrimenti chi sta a Tokyo e chi sta a
-     Lisbona condividerebbero due parole diverse con lo stesso numero.
+     Una parola al giorno, uguale per tutti e senza server: la data e' il
+     seme. Il giorno e' quello italiano (Europe/Rome) e non quello del fuso
+     di chi gioca, altrimenti chi sta a Tokyo e chi sta a Lisbona
+     condividerebbero due parole diverse con lo stesso numero.
   --------------------------------------------------------------------- */
   var GIORNO_ZERO = '2026-09-04';   // il primo enigma
   var romeDay = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Rome' });
@@ -448,11 +445,11 @@
     return h >>> 0;
   }
 
-  /** Indice della parola del giorno per quel livello, o -1. */
-  function dailyIndex(dict, key, livello) {
-    var total = dict.countRange(0, dict.size, livello);
+  /** Indice della parola del giorno, o -1. */
+  function dailyIndex(dict, key) {
+    var total = dict.poolSize;
     if (total <= 0) return -1;
-    return dict.nthOfLevel(0, dict.size, livello, hash32(key + '|' + livello) % total);
+    return dict.nthInRange(0, dict.size, hash32(key) % total);
   }
 
   /** Millisecondi che mancano alla mezzanotte italiana. */
@@ -490,7 +487,6 @@
     pack: pack,
     unpack: unpack,
     Dizionario: Dizionario,
-    LIVELLI: LIVELLI,
     optimalGuesses: optimalGuesses,
     applyGuess: applyGuess,
     applyAnswer: applyAnswer,

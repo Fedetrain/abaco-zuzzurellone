@@ -206,7 +206,10 @@
       for (var i = 0; i < N; i++) {
         // "élite" appartiene alla e: le iniziali accentate si accorpano alla
         // lettera base, altrimenti la scala mostrerebbe una "é" fra e ed f.
-        var c = dict.words[i][0].normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        // Il normalize costa, e su 300.000 parole serve solo per le poche
+        // iniziali accentate: le altre sono già la loro lettera base.
+        var c = dict.words[i][0];
+        if (c > 'z') c = c.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         if (!seen[c]) { seen[c] = true; letterTicks.push({ i: i, label: c }); }
       }
     }
@@ -216,7 +219,8 @@
        mano che si entra dentro una parola. */
     function computeTicks(a, b) {
       var n = b - a;
-      if (n >= N * 0.85) return thinOut(letterTicks, a, b);
+      // Finché si vede tanto vocabolario le etichette sono le iniziali; più
+      // in basso diventano prefissi sempre più lunghi.
       if (n > 40000) return thinOut(letterTicks, a, b);
       for (var L = 1; L <= 7; L++) {
         var items = [];
@@ -564,7 +568,7 @@
       var aria = (extra === 'alfa-cell--esatta'
           ? 'la parola «' + v.parola + '» stessa'
           : 'lettera ' + v.lettera) +
-        ': ' + (vuota ? 'nessuna parola in questo livello'
+        ': ' + (vuota ? 'nessuna parola giocabile'
                       : num(v.vive) + ' in gioco su ' + num(v.totale)) +
         ', ' + stato.aria + '.';
 
@@ -581,7 +585,7 @@
 
     function render() {
       if (!game.dict) return;
-      var b = game.dict.breakdown(lo, hi, game.level);
+      var b = game.dict.breakdown(lo, hi);
       var inCampo = b.voci.filter(function (v) { return v.vive > 0; }).length +
                     (b.esatta && b.esatta.vive > 0 ? 1 : 0);
 
@@ -634,23 +638,23 @@
       if (open) render();
     }
 
-    elToggle.addEventListener('click', function () {
+    /** Apre o chiude e ricorda la scelta, modalità per modalità. */
+    function toggle() {
       sfx.click();
       setOpen(!open);
       prefs.alfa = prefs.alfa || {};
       if (game.mode) prefs.alfa[game.mode] = open;
       savePrefs();
-    });
+    }
+
+    elToggle.addEventListener('click', toggle);
     elClose.addEventListener('click', function () { setOpen(false); });
     elScrim.addEventListener('click', function () { setOpen(false); });
 
     // La barra è il posto naturale dove cercare di "aprire" l'alfabeto:
-    // cliccarla fa la stessa cosa del pulsante, che resta il comando
-    // raggiungibile da tastiera.
-    $('#field-track').addEventListener('click', function () {
-      sfx.click();
-      setOpen(!open);
-    });
+    // cliccarla fa esattamente la stessa cosa del pulsante — preferenza
+    // ricordata compresa — che resta il comando raggiungibile da tastiera.
+    $('#field-track').addEventListener('click', toggle);
 
     elCounts.addEventListener('change', function () {
       elWrap.classList.toggle('is-nocount', !elCounts.checked);
@@ -668,7 +672,7 @@
         lo = nextLo; hi = nextHi;
         if (open) render();
         else if (game.dict) {
-          var b = game.dict.breakdown(lo, hi, game.level);
+          var b = game.dict.breakdown(lo, hi);
           elHint.textContent = b.profondita === 0
             ? '26 lettere · ' +
               (b.voci.filter(function (v) { return v.vive > 0; }).length) + ' in campo'
@@ -696,7 +700,6 @@
   ───────────────────────────────────────────────────────────────────── */
   var game = {
     dict: null,
-    level: prefs.level || 'medio',
     mode: null,
     lo: 0, hi: 0,
     // Etichette degli estremi mostrati sopra la barra: sono le *parole dette*
@@ -710,46 +713,14 @@
     result: null,
   };
 
-  function poolSize() { return game.dict.countRange(0, game.dict.size, game.level); }
+  /** Le parole da cui esce la parola segreta e su cui si conta il campo. */
+  function poolSize() { return game.dict.poolSize; }
 
   /** «Restano 12 parole» / «Resta 1 parola»: l'accordo lo fa il numero. */
   function restano(n, grassetto) {
     var v = grassetto ? '<b>' + num(n) + '</b>' : num(n);
     return (n === 1 ? 'Resta ' : 'Restano ') + v + (n === 1 ? ' parola' : ' parole');
   }
-
-  /* ─────────────────────────────────────────────────────────────────────
-     Selettore di livello
-  ───────────────────────────────────────────────────────────────────── */
-  var segButtons = $$('.segmented button');
-  var segPill = $('.segmented-pill');
-
-  function movePill() {
-    var active = segButtons.filter(function (b) { return b.getAttribute('aria-checked') === 'true'; })[0];
-    if (!active) return;
-    segPill.style.left = active.offsetLeft + 'px';
-    segPill.style.width = active.offsetWidth + 'px';
-  }
-  function setLevel(level) {
-    game.level = level;
-    prefs.level = level;
-    savePrefs();
-    segButtons.forEach(function (b) {
-      b.setAttribute('aria-checked', String(b.dataset.level === level));
-    });
-    movePill();
-    if (game.dict) {
-      var n = poolSize();
-      $('#level-hint').textContent =
-        num(n) + ' parole in gioco — a una ricerca perfetta bastano ' +
-        AZ.optimalGuesses(n) + ' tentativi.';
-      Alfa.refresh();
-    }
-  }
-  segButtons.forEach(function (b) {
-    b.addEventListener('click', function () { setLevel(b.dataset.level); sfx.click(); });
-  });
-  window.addEventListener('resize', movePill);
 
   /* ─────────────────────────────────────────────────────────────────────
      Feedback
@@ -791,9 +762,6 @@
       mode === 'indovina' ? 'Indovina tu' :
       mode === 'computer' ? 'Indovina il computer' :
       mode === 'giorno' ? 'Parola del giorno #' + AZ.dayNumber(Daily.today()) : 'Sfida a tempo';
-    // Nella sfida a tempo conta tutto il vocabolario: il livello non si applica.
-    $('#play-level').hidden = mode === 'tempo';
-    $('#play-level').textContent = AZ.LIVELLI[game.level].label;
 
     // La parola del giorno riusa per intero il pannello di «Indovina tu»:
     // stesso campo, stessa cronologia, stesse regole. Cambia solo da dove
@@ -819,16 +787,15 @@
   });
 
   /* ═══════════════════ LA PAROLA DEL GIORNO ═════════════════════════
-     Tre parole al giorno, una per livello, uguali per tutti: il seme è la
-     data italiana, quindi non serve nessun server e non c'è niente da
-     sincronizzare. Un solo tentativo a testa — che vuol dire che la partita
-     va ripresa dov'era se qualcuno ricarica la pagina, altrimenti bastava
-     un F5 per ricominciare da capo e il punteggio condiviso non varrebbe
-     niente. Salviamo solo le parole proposte: lo stato si ricostruisce
-     rigiocandole, che è più corto da salvare e impossibile da desincronizzare.
+     Una parola al giorno, uguale per tutti: il seme è la data italiana,
+     quindi non serve nessun server e non c'è niente da sincronizzare. Un
+     solo tentativo a testa — che vuol dire che la partita va ripresa dov'era
+     se qualcuno ricarica la pagina, altrimenti bastava un F5 per
+     ricominciare da capo e il punteggio condiviso non varrebbe niente.
+     Salviamo solo le parole proposte: lo stato si ricostruisce rigiocandole,
+     che è più corto da salvare e impossibile da desincronizzare.
   ═══════════════════════════════════════════════════════════════════ */
   var Daily = (function () {
-    var LIVELLI = ['facile', 'medio', 'difficile'];
     var elDots = $('#daily-dots');
     var elNum = $('#daily-num');
     var elNext = $('#end-next');
@@ -836,24 +803,25 @@
 
     function today() { return AZ.dayKey(); }
 
-    /** Lo stato salvato del giorno corrente, ripulito da quelli vecchi. */
+    /** Lo stato salvato del giorno corrente, ripulito da quelli vecchi.
+        `partita` assente distingue anche i salvataggi della vecchia versione
+        a tre livelli, che vanno buttati invece che letti male. */
     function state() {
       var key = today();
-      if (!prefs.daily || prefs.daily.key !== key) {
-        prefs.daily = { key: key, facile: null, medio: null, difficile: null };
+      if (!prefs.daily || prefs.daily.key !== key || !('partita' in prefs.daily)) {
+        prefs.daily = { key: key, partita: null };
         savePrefs();
       }
       return prefs.daily;
     }
 
-    function save(level, entry) {
-      var s = state();
-      s[level] = entry;
+    function save(entry) {
+      state().partita = entry;
       savePrefs();
     }
 
     /**
-     * Streak: giorni di fila in cui almeno una delle tre è stata risolta.
+     * Streak: giorni di fila in cui la parola è stata risolta.
      * Si aggiorna solo alla prima vittoria del giorno.
      */
     function bumpStreak() {
@@ -878,21 +846,20 @@
       return st.last === key || st.last === ieri ? st.n : 0;
     }
 
-    /** I tre pallini sotto il titolo: fatto / in corso / da fare. */
+    /** Lo stato della parola di oggi, sotto il titolo in home. */
     function render() {
       if (!game.dict) return;
       elNum.textContent = '#' + AZ.dayNumber(today());
-      var s = state();
-      var out = LIVELLI.map(function (lv) {
-        var e = s[lv];
-        var cls = !e ? 'todo' : e.done ? (e.vinta ? 'win' : 'lost') : 'doing';
-        var label = AZ.LIVELLI[lv].label;
-        var stato = !e ? 'da giocare' : e.done ? (e.vinta ? 'risolta in ' + e.parole.length : 'lasciata') : 'in corso';
-        return '<i class="dot dot--' + cls + '" title="' + label + ': ' + stato + '">' +
-               '<b>' + label[0] + '</b></i>';
-      }).join('');
+      var e = state().partita;
+      var cls = !e ? 'todo' : e.done ? 'win' : 'doing';
+      var testo = !e
+        ? 'da giocare'
+        : e.done
+          ? 'risolta in ' + e.parole.length + (e.parole.length === 1 ? ' tentativo' : ' tentativi')
+          : 'ripresa: ' + e.parole.length + (e.parole.length === 1 ? ' tentativo' : ' tentativi');
       var st = streakNow();
-      elDots.innerHTML = out +
+      elDots.innerHTML =
+        '<span class="dot dot--' + cls + '">' + testo + '</span>' +
         (st ? '<span class="daily-streak">🔥 ' + st + (st === 1 ? ' giorno' : ' giorni') + '</span>' : '');
     }
 
@@ -906,10 +873,10 @@
       elNext.hidden = false;
       var tick = function () {
         var ms = AZ.msToNextDay();
-        if (ms <= 1000) { stopCountdown(); elNext.textContent = 'Le nuove parole sono pronte.'; return; }
+        if (ms <= 1000) { stopCountdown(); elNext.textContent = 'La nuova parola è pronta.'; return; }
         var s = Math.floor(ms / 1000);
         var pad = function (n) { return ('0' + n).slice(-2); };
-        elNext.textContent = 'Le prossime tre fra ' + Math.floor(s / 3600) + ':' +
+        elNext.textContent = 'La prossima fra ' + Math.floor(s / 3600) + ':' +
           pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60) + '.';
       };
       tick();
@@ -936,7 +903,7 @@
 
   function startIndovina() {
     var d = game.dict;
-    game.secret = d.randomIndex(0, d.size, game.level);
+    game.secret = d.randomIndex(0, d.size);
     histIndovina.innerHTML = '';
     inputIndovina.value = '';
     inputIndovina.disabled = false;
@@ -944,7 +911,11 @@
     $('#try-optimal').textContent = AZ.optimalGuesses(poolSize());
     Field.reset(d.words[0], d.words[d.size - 1], ['parole nel campo', 'parola nel campo']);
     Field.setCount(poolSize());
-    setTimeout(function () { if (!('ontouchstart' in window)) inputIndovina.focus(); }, 350);
+    setTimeout(function () {
+      if ('ontouchstart' in window) return;              // niente tastiera a schermo
+      if (current !== 'play' || inputIndovina.disabled) return;
+      inputIndovina.focus();
+    }, 350);
     say('Ho pensato una parola fra ' + num(poolSize()) + '. Tocca a te.');
   }
 
@@ -956,17 +927,16 @@
   function startGiorno() {
     var d = game.dict;
     startIndovina();
-    game.secret = AZ.dailyIndex(d, Daily.today(), game.level);
+    game.secret = AZ.dailyIndex(d, Daily.today());
 
-    var entry = Daily.state()[game.level];
+    var entry = Daily.state().partita;
     if (entry && entry.done) { showGiornoResult(entry); return; }
 
     var parole = entry ? entry.parole : [];
     say(parole.length
       ? 'Ripresa: avevi già provato ' + parole.length +
         (parole.length === 1 ? ' parola.' : ' parole.')
-      : 'La parola di oggi, livello ' + AZ.LIVELLI[game.level].label.toLowerCase() +
-        '. Uguale per tutti fino a mezzanotte.');
+      : 'La parola di oggi. Uguale per tutti fino a mezzanotte.');
     parole.forEach(function (w) { playGuess(w, true); });
     Field.settle();
   }
@@ -974,15 +944,15 @@
   /** Rimette in scena una partita del giorno già conclusa. */
   function showGiornoResult(entry) {
     game.history = [];
-    game.result = {
-      mode: 'giorno', word: game.dict.words[game.secret], n: entry.parole.length,
-      opt: AZ.optimalGuesses(poolSize()), delta: entry.parole.length - AZ.optimalGuesses(poolSize()),
-      pool: poolSize(), vinta: entry.vinta, parole: entry.parole, giorno: AZ.dayNumber(Daily.today()),
-    };
     entry.parole.forEach(function (w) { playGuess(w, true); });
     Field.settle();
-    game.result.n = game.history.length;
-    game.result.delta = game.result.n - game.result.opt;
+    var opt = AZ.optimalGuesses(poolSize());
+    var n = game.history.length;
+    game.result = {
+      mode: 'giorno', word: game.dict.words[game.secret], n: n, opt: opt,
+      delta: n - opt, pool: poolSize(), parole: entry.parole,
+      giorno: AZ.dayNumber(Daily.today()),
+    };
     renderResult();
     show('end');
   }
@@ -1032,7 +1002,7 @@
     var res = AZ.applyGuess({ lo: game.lo, hi: game.hi }, idx, game.secret);
     game.lo = res.lo; game.hi = res.hi;
 
-    var left = d.countRange(game.lo, game.hi, game.level);
+    var left = d.countRange(game.lo, game.hi);
     game.history.push({ word: w, idx: idx, esito: res.esito, lo: game.lo, hi: game.hi, left: left });
 
     var n = game.history.length;
@@ -1070,10 +1040,9 @@
 
   /** Salva la partita del giorno dopo ogni mossa: un F5 non la azzera. */
   function saveGiorno(vinta) {
-    Daily.save(game.level, {
+    Daily.save({
       parole: game.history.map(function (h) { return h.word; }),
       done: !!vinta,
-      vinta: !!vinta,
     });
     if (vinta) Daily.bumpStreak();
   }
@@ -1148,7 +1117,7 @@
     setCpuWord('—');
     cpuReason.innerHTML =
       'Pensa una parola italiana fra le <b>' + num(poolSize()) +
-      '</b> del livello ' + AZ.LIVELLI[game.level].label.toLowerCase() + ' e tienila a mente.';
+      '</b> parole giocabili e tienila a mente.';
     Field.reset(d.words[0], d.words[d.size - 1], ['parole possibili', 'parola possibile']);
     Field.setCount(poolSize());
     say('');
@@ -1177,8 +1146,8 @@
 
   function cpuThink() {
     var d = game.dict;
-    var left = d.countRange(game.lo, game.hi, game.level);
-    var idx = d.medianIndex(game.lo, game.hi, game.level);
+    var left = d.countRange(game.lo, game.hi);
+    var idx = d.medianIndex(game.lo, game.hi);
 
     if (idx < 0) { finishComputer('contraddizione'); return; }
 
@@ -1228,7 +1197,7 @@
       }
 
       game.lo = next.lo; game.hi = next.hi;
-      var left = d.countRange(game.lo, game.hi, game.level);
+      var left = d.countRange(game.lo, game.hi);
       game.history.push({ word: word, idx: cpuCurrent, esito: answer, lo: game.lo, hi: game.hi, left: left });
       addHistoryRow(histComputer, n, word, answer, left);
       $('#cpu-count').textContent = n; tick($('#cpu-count'));
@@ -1278,11 +1247,10 @@
     // sembra largo e invece non contiene nulla che a qualcuno venga in mente.
     // Con questo, in mezzo ci sono sempre COMUNI_MIN..COMUNI_MAX parole d'uso.
     var COMUNI_MIN = 70, COMUNI_MAX = 220;
-    var totComuni = d.countRange(0, d.size, 'medio');
     var quante = COMUNI_MIN + Math.floor(Math.random() * (COMUNI_MAX - COMUNI_MIN));
-    var rank = Math.floor(Math.random() * Math.max(1, totComuni - quante - 1));
-    var a = d.nthOfLevel(0, d.size, 'medio', rank);
-    var b = d.nthOfLevel(0, d.size, 'medio', rank + quante + 1);
+    var rank = Math.floor(Math.random() * Math.max(1, d.poolSize - quante - 1));
+    var a = d.nthInRange(0, d.size, rank);
+    var b = d.nthInRange(0, d.size, rank + quante + 1);
     if (a < 0 || b < 0 || b <= a) { a = 0; b = Math.min(d.size - 1, 2000); }
 
     tempo = { score: 0, ok: 0, ko: 0, left: DURATA, bounds: { da: d.words[a], a: d.words[b] },
@@ -1302,7 +1270,9 @@
 
     Field.reset(d.words[0], d.words[d.size - 1], ['parole in mezzo', 'parola in mezzo']);
     setTimeout(function () {
-      Field.set(a, b + 1, d.countRange(a + 1, b, 'difficile'), d.words[a], d.words[b]);
+      // Qui vale tutto il vocabolario, non solo le giocabili: in mezzo ci si
+      // può infilare qualunque parola che il gioco riconosca.
+      Field.set(a, b + 1, Math.max(0, b - a - 1), d.words[a], d.words[b]);
     }, 60);
     say('Quante parole sai infilare fra «' + d.words[a] + '» e «' + d.words[b] + '»?');
   }
@@ -1397,93 +1367,108 @@
            '<b>' + value + '</b><i>' + label + '</i></div>';
   }
 
-  function renderResult() {
-    var r = game.result;
-    if (!r) return;
-    var kicker = $('#end-kicker'), title = $('#end-title'), word = $('#end-word');
-    var sub = $('#end-sub'), stats = $('#end-stats'), path = $('#end-path');
-    var caption = $('#end-path-caption');
-    $('#sharebox').hidden = true;
-    path.innerHTML = '';
-    caption.textContent = '';
+  /* Una vista per modalità. Prima era una catena di `if` con un `else`
+     appeso a uno solo di loro: il conto alla rovescia del giorno restava
+     acceso, o si spegneva, a seconda di quale ramo capitava per ultimo. */
+  var VISTE = {
 
-    if (r.mode === 'indovina') {
-      kicker.textContent = AZ.LIVELLI[game.level].label + ' · ' + num(r.pool) + ' parole';
-      title.textContent = r.delta <= 0 ? 'Perfetto.' : r.delta <= 2 ? 'Trovata!' : 'Trovata.';
-      word.textContent = r.word;
-      sub.innerHTML = r.delta < 0
-        ? 'Hai fatto <b>' + Math.abs(r.delta) + '</b> ' + (Math.abs(r.delta) === 1 ? 'tentativo' : 'tentativi') +
+    indovina: function (r, ui) {
+      ui.kicker.textContent = 'Indovina tu · ' + num(r.pool) + ' parole in gioco';
+      ui.title.textContent = r.delta <= 0 ? 'Perfetto.' : r.delta <= 2 ? 'Trovata!' : 'Trovata.';
+      ui.word.textContent = r.word;
+      ui.sub.innerHTML = r.delta < 0
+        ? 'Hai fatto <b>' + Math.abs(r.delta) + '</b> ' + tentativi(Math.abs(r.delta)) +
           ' meno della ricerca binaria perfetta. Fortuna o fiuto?'
         : r.delta === 0
           ? 'Esattamente quanti ne servivano nel caso peggiore. Chirurgico.'
-          : '<b>' + r.delta + '</b> ' + (r.delta === 1 ? 'tentativo' : 'tentativi') +
+          : '<b>' + r.delta + '</b> ' + tentativi(r.delta) +
             ' oltre l\'ottimale. Prova a puntare sempre a metà del campo rimasto.';
-      stats.innerHTML =
+      ui.stats.innerHTML =
         rstat(r.n, 'tentativi', r.delta <= 0 ? 'win' : '', 0) +
         rstat(r.opt, 'ottimale', '', 1) +
         rstat((r.delta > 0 ? '+' : '') + r.delta, 'scarto', r.delta <= 0 ? 'win' : 'lose', 2);
-      renderPath(path);
-      caption.textContent = 'Il campo dopo ogni tentativo — dall\'intero vocabolario a una parola sola.';
+      renderPath(ui.path);
+      ui.caption.textContent =
+        'Il campo dopo ogni tentativo — dall\'intero vocabolario a una parola sola.';
       if (r.delta <= 0) burst();
-    }
+    },
 
-    if (r.mode === 'giorno') {
-      kicker.textContent = 'Parola del giorno #' + r.giorno + ' · ' +
-                           AZ.LIVELLI[game.level].label.toLowerCase();
-      title.textContent = r.delta <= 0 ? 'Perfetto.' : r.delta <= 2 ? 'Presa!' : 'Presa.';
-      word.textContent = r.word;
+    giorno: function (r, ui) {
       var st = Daily.streakNow();
-      sub.innerHTML =
-        '<b>' + r.n + '</b> ' + (r.n === 1 ? 'tentativo' : 'tentativi') +
-        (r.delta <= 0 ? ', meno della ricerca perfetta.' :
+      ui.kicker.textContent = 'Parola del giorno #' + r.giorno;
+      ui.title.textContent = r.delta <= 0 ? 'Perfetto.' : r.delta <= 2 ? 'Presa!' : 'Presa.';
+      ui.word.textContent = r.word;
+      ui.sub.innerHTML =
+        '<b>' + r.n + '</b> ' + tentativi(r.n) +
+        (r.delta < 0 ? ', meno della ricerca perfetta.' :
          r.delta === 0 ? ', esattamente quanti ne servivano.' :
          ' — l\'ottimale era <b>' + r.opt + '</b>.') +
         (st ? ' Sei al <b>' + st + '°</b> giorno di fila.' : '');
-      stats.innerHTML =
+      ui.stats.innerHTML =
         rstat(r.n, 'tentativi', r.delta <= 0 ? 'win' : '', 0) +
         rstat(r.opt, 'ottimale', '', 1) +
         rstat(st, st === 1 ? 'giorno di fila' : 'giorni di fila', st > 1 ? 'win' : '', 2);
-      renderPath(path);
-      caption.textContent = 'Il campo dopo ogni tentativo.';
+      renderPath(ui.path);
+      ui.caption.textContent = 'Il campo dopo ogni tentativo.';
       Daily.showCountdown();
-      $('#end-again').textContent = 'Gioca un\'altra parola';
       if (r.delta <= 0) burst();
-    } else {
-      Daily.hideCountdown();
-      $('#end-again').textContent = 'Ancora';
-    }
+    },
 
-    if (r.mode === 'computer') {
-      kicker.textContent = AZ.LIVELLI[game.level].label + ' · ' + num(poolSize()) + ' parole';
+    computer: function (r, ui) {
+      ui.kicker.textContent = 'Indovina il computer · ' + num(poolSize()) + ' parole in gioco';
       if (r.esito === 'trovata') {
-        title.textContent = 'Presa.';
-        word.textContent = r.word || '';
-        sub.innerHTML = 'Mi sono bastate <b>' + r.n + '</b> mosse su un massimo di <b>' + r.opt +
-                        '</b>. Ogni tua risposta ha buttato via metà del vocabolario.';
-        stats.innerHTML = rstat(r.n, 'mosse', 'win', 0) + rstat(r.opt, 'al massimo', '', 1) +
-                          rstat(Math.round(100 - 100 / Math.pow(2, r.n)) + '%', 'campo escluso', '', 2);
+        ui.title.textContent = 'Presa.';
+        ui.word.textContent = r.word || '';
+        ui.sub.innerHTML = 'Mi sono bastate <b>' + r.n + '</b> mosse su un massimo di <b>' +
+                           r.opt + '</b>. Ogni tua risposta ha buttato via metà del campo.';
+        ui.stats.innerHTML = rstat(r.n, 'mosse', 'win', 0) + rstat(r.opt, 'al massimo', '', 1) +
+          rstat(Math.round(100 - 100 / Math.pow(2, r.n)) + '%', 'campo escluso', '', 2);
         burst();
       } else {
-        title.textContent = 'Qui non torna.';
-        word.textContent = '';
-        sub.innerHTML = 'Le risposte si contraddicono: non resta nessuna parola che le soddisfi tutte. ' +
-                        'Capita — l\'ordine alfabetico è più scivoloso di quanto sembri.';
-        stats.innerHTML = rstat(r.n, 'mosse', '', 0) + rstat(0, 'candidate', 'lose', 1);
+        ui.title.textContent = 'Qui non torna.';
+        ui.word.textContent = '';
+        ui.sub.innerHTML = 'Le risposte si contraddicono: non resta nessuna parola che le ' +
+          'soddisfi tutte. Capita — l\'ordine alfabetico è più scivoloso di quanto sembri.';
+        ui.stats.innerHTML = rstat(r.n, 'mosse', '', 0) + rstat(0, 'candidate', 'lose', 1);
       }
-      renderPath(path);
-      caption.textContent = 'Il dimezzamento, mossa per mossa.';
-    }
+      renderPath(ui.path);
+      ui.caption.textContent = 'Il dimezzamento, mossa per mossa.';
+    },
 
-    if (r.mode === 'tempo') {
-      kicker.textContent = 'Sfida a tempo · 3 minuti';
-      title.textContent = r.score > 0 ? 'Tempo!' : 'Tempo scaduto.';
-      word.textContent = r.bounds.da + ' → ' + r.bounds.a;
-      sub.innerHTML = '<b>' + r.ok + '</b> ' + (r.ok === 1 ? 'parola valida' : 'parole valide') +
-                      (r.ko ? ', ' + r.ko + ' ' + (r.ko === 1 ? 'errore' : 'errori') : ', nessun errore') + '.';
-      stats.innerHTML = rstat(r.score, 'punti', r.score > 0 ? 'win' : 'lose', 0) +
-                        rstat(r.ok, 'valide', '', 1) + rstat(r.ko, 'errori', r.ko ? 'lose' : '', 2);
+    tempo: function (r, ui) {
+      ui.kicker.textContent = 'Sfida a tempo · 3 minuti';
+      ui.title.textContent = r.score > 0 ? 'Tempo!' : 'Tempo scaduto.';
+      ui.word.textContent = r.bounds.da + ' → ' + r.bounds.a;
+      ui.sub.innerHTML = '<b>' + r.ok + '</b> ' + (r.ok === 1 ? 'parola valida' : 'parole valide') +
+        (r.ko ? ', ' + r.ko + ' ' + (r.ko === 1 ? 'errore' : 'errori') : ', nessun errore') + '.';
+      ui.stats.innerHTML = rstat(r.score, 'punti', r.score > 0 ? 'win' : 'lose', 0) +
+        rstat(r.ok, 'valide', '', 1) + rstat(r.ko, 'errori', r.ko ? 'lose' : '', 2);
       if (r.ok >= 10) burst();
-    }
+    },
+  };
+
+  function tentativi(n) { return n === 1 ? 'tentativo' : 'tentativi'; }
+
+  function renderResult() {
+    var r = game.result;
+    if (!r || !VISTE[r.mode]) return;
+
+    var ui = {
+      kicker: $('#end-kicker'), title: $('#end-title'), word: $('#end-word'),
+      sub: $('#end-sub'), stats: $('#end-stats'), path: $('#end-path'),
+      caption: $('#end-path-caption'),
+    };
+    $('#sharebox').hidden = true;
+    ui.path.innerHTML = '';
+    ui.caption.textContent = '';
+
+    // Stato che vale per tutte le modalità, deciso una volta sola: la vista
+    // che lo vuole diverso lo cambia, e nessuna può lasciarlo acceso per
+    // sbaglio a quella dopo.
+    Daily.hideCountdown();
+    $('#end-again').textContent = r.mode === 'giorno' ? 'Gioca un\'altra parola' : 'Ancora';
+
+    VISTE[r.mode](r, ui);
   }
 
   /** Il percorso: un mattoncino per tentativo, largo quanto l'intervallo. */
@@ -1550,15 +1535,14 @@
     if (r.mode === 'giorno') {
       var st = Daily.streakNow();
       lines[0] = 'Abaco Zuzzurellone #' + r.giorno + ' 🧮';
-      lines.push(AZ.LIVELLI[game.level].label + ' · ' + r.n + '/' + r.opt +
+      lines.push(r.n + '/' + r.opt +
                  (r.delta <= 0 ? ' 🎯' : '') + (st > 1 ? ' · 🔥' + st : ''));
       lines.push(game.history.map(function (h) {
         return h.esito === 'trovata' ? '🎯' : h.esito === 'prima' ? '⬅️' : '➡️';
       }).join(''));
       lines.push(narrowingBar());
     } else if (r.mode === 'indovina') {
-      lines.push('Indovina tu · ' + AZ.LIVELLI[game.level].label.toLowerCase() +
-                 ' (' + num(r.pool) + ' parole)');
+      lines.push('Indovina tu · ' + num(r.pool) + ' parole');
       lines.push('🎯 ' + r.n + ' tentativi — ottimale ' + r.opt +
                  (r.delta < 0 ? ' · ' + Math.abs(r.delta) + ' sotto!' :
                   r.delta === 0 ? ' · in pari' : ' · +' + r.delta));
@@ -1567,7 +1551,7 @@
       }).join(''));
       lines.push(narrowingBar());
     } else if (r.mode === 'computer') {
-      lines.push('Indovina il computer · ' + AZ.LIVELLI[game.level].label.toLowerCase());
+      lines.push('Indovina il computer');
       lines.push(r.esito === 'trovata'
         ? '🤖 mi ha beccato in ' + r.n + ' mosse (max ' + r.opt + ')'
         : '🤖 ' + r.n + ' mosse e poi il vuoto: risposte incoerenti');
@@ -1736,7 +1720,25 @@
            '<div class="bars">' + rows + '</div>';
   }
 
-  $('#stats-reset').addEventListener('click', function () {
+  // Azzerare è irreversibile e il pulsante sta a un dito dal tasto indietro:
+  // il primo clic chiede conferma, e la richiesta scade da sola.
+  var resetBtn = $('#stats-reset');
+  var resetArmed = null;
+  resetBtn.addEventListener('click', function () {
+    if (!resetArmed) {
+      resetBtn.textContent = 'sicuro?';
+      resetBtn.classList.add('is-armed');
+      resetArmed = setTimeout(function () {
+        resetArmed = null;
+        resetBtn.textContent = 'azzera';
+        resetBtn.classList.remove('is-armed');
+      }, 4000);
+      return;
+    }
+    clearTimeout(resetArmed);
+    resetArmed = null;
+    resetBtn.textContent = 'azzera';
+    resetBtn.classList.remove('is-armed');
     prefs.stats = {};
     savePrefs();
     renderStats();
@@ -1779,24 +1781,19 @@
 
       // I numeri nel testo vengono dal vocabolario, non da una costante: cambiare
       // dizionario non deve lasciare in giro un "17 mosse per 130.000 parole" falso.
-      var inMezzo = game.dict.size - 2;
-      $('#hero-count').textContent = num(inMezzo);
-      $$('.g-count').forEach(function (el) { el.textContent = num(inMezzo); });
+      // .g-count = le parole giocabili, .g-total = tutto ciò che il gioco accetta.
+      var pool = poolSize();
+      $('#hero-count').textContent = num(pool);
+      $$('.g-count').forEach(function (el) { el.textContent = num(pool); });
       $$('.g-total').forEach(function (el) { el.textContent = num(game.dict.size); });
-      $$('.g-opt').forEach(function (el) { el.textContent = AZ.optimalGuesses(game.dict.size); });
-      $$('[data-count]').forEach(function (el) {
-        var lv = el.dataset.count;
-        el.textContent = num(game.dict.countRange(0, game.dict.size, lv));
-      });
-      setLevel(game.level);
+      $$('.g-opt').forEach(function (el) { el.textContent = AZ.optimalGuesses(pool); });
       Daily.render();
-      renderHalving(game.dict.size);
+      renderHalving(pool);
 
       progress(100, 'pronto');
       setTimeout(function () {
         document.body.removeAttribute('data-loading');
         $('#screen-home').classList.add('is-entering');
-        movePill();
         // Onboarding leggero: la prima volta il pulsante delle regole ammicca.
         if (!prefs.visto) {
           prefs.visto = true; savePrefs();

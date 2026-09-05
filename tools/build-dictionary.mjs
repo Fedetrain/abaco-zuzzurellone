@@ -87,6 +87,22 @@ const stems = parseStems(read('it_IT.dic'));
 
 const vocab = new Set();
 for (const w of forms) if (freq.has(w)) vocab.add(w);
+
+// Paradigm closure. Corpus attestation is per-form, so it used to accept
+// "bellissima" and reject "bellissime", and the player got told a perfectly
+// ordinary word does not exist. When one form of a gender/number quartet is
+// attested the lemma is demonstrably in use, so the other three are let in --
+// but only if the affix rules generate them, which is what keeps invented
+// endings out.
+for (const w of [...vocab]) {
+  if (!/[aeio]$/.test(w)) continue;
+  const stem = w.slice(0, -1);
+  for (const v of ['a', 'e', 'i', 'o']) {
+    const f = stem + v;
+    if (forms.has(f)) vocab.add(f);
+  }
+}
+
 for (const w of stems) vocab.add(w);
 
 for (const w of [...vocab]) {

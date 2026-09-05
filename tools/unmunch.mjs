@@ -61,6 +61,14 @@ function apply(word, entry, isSuffix) {
  */
 export function unmunch(affText, dicText, accept) {
   const { SFX, PFX } = parseAff(affText);
+
+  // The it_IT 5.1.0 .aff has four stems flagged È without ever defining an
+  // È table: sedere, possedere, risedere, soprassedere came out of the
+  // expansion with no conjugation at all ("sedete" and "possiede" did not
+  // exist). È stands for the regular -ere paradigm, which the file does
+  // define as B; the diphthong forms (siedo, possiede...) are listed by hand
+  // in tools/extra-words.txt.
+  const ALIAS = { 'È': 'B' };
   const forms = new Set();
   const add = (w) => {
     if (accept.test(w)) forms.add(w);
@@ -77,7 +85,8 @@ export function unmunch(affText, dicText, accept) {
 
     const crossable = [];
     const prefixFlags = [];
-    for (const f of flags) {
+    for (const f0 of flags) {
+      const f = ALIAS[f0] || f0;
       const sfx = SFX.get(f);
       if (sfx) {
         for (const w of apply(stem, sfx, true)) {

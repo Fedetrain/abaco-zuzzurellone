@@ -2,5 +2,57 @@
 # Hand-checked against the Treccani / De Mauro dictionaries.
 # Format: word<TAB>tier  (0 = easy, 1 = medium, 2 = hard)
 # This file is original work, MIT-licensed like the rest of the source code.
+
 zuzzurellone	2
 zuzzurellona	2
+
+# sedere / possedere / soprassedere: the .aff file flags them È and then never
+# defines an È table. tools/unmunch.mjs aliases È to the regular -ere paradigm
+# (B), which covers everything except the e -> ie diphthong of the stressed
+# present forms. Those are here.
+# sedere
+siedo	0
+siedi	0
+siede	0
+siedono	0
+sieda	0
+siedano	0
+# possedere
+possiedo	1
+possiedi	1
+possiede	1
+possiedono	1
+possieda	1
+possiedano	1
+# risedere
+risiedo	2
+risiedi	2
+risiedono	2
+risiedano	2
+# soprassedere
+soprassiedo	2
+soprassiedi	2
+soprassiede	2
+soprassiedono	2
+soprassieda	2
+soprassiedano	2
+
+# Everyday Italian the 2020 stem list predates or simply misses.
+altronde	1
+iddio	2
+fratellone	2
+sorellona	2
+zietta	2
+nonnetto	2
+sciocchina	2
+teppistello	2
+limonare	2
+cazzeggio	2
+cazzeggiare	2
+chattare	2
+bruschetta	1
+cercapersone	2
+ossicodone	2
+ketamina	2
+droide	2
+droidi	2
