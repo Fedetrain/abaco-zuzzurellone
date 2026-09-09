@@ -165,10 +165,28 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
       In particolare: la chiusa della home (`.hero-foot`, che ha preso il posto
       del selettore di livello) e la pastiglia della parola del giorno.
 
-### 1. AdSense (bloccato sull'approvazione)
-- [ ] **Aggiungere il sito** in AdSense → *Siti → Aggiungi sito*:
-      `abacozuzzurellone.site`, senza `https://` e senza `www`.
-- [ ] Aspettare l'approvazione (da pochi giorni a due settimane).
+### 1. AdSense (in verifica)
+> **La trappola in cui siamo caduti, 9 settembre.** In AdSense non esisteva la
+> voce *Siti*, e nemmeno *Annunci*: solo Home, Report, Pagamenti, Account.
+> Motivo, letto in *Account → Impostazioni → Dati dell'account*:
+> **Prodotti attivi: AdMob**. Il publisher id `pub-9010134003844365`
+> (sull'account `federico.traina10@gmail.com`, non su `bugscanneraiteam`) era
+> nato da un'iscrizione ad **AdMob**, che è per app native — AdSense su quello
+> stesso id non era mai stato attivato. Si sblocca iscrivendosi ad AdSense da
+> [adsense.google.com/start](https://adsense.google.com/start) con lo stesso
+> account Google: riusa l'id esistente, quindi `ads.txt` e `ads.js` restano
+> validi. Se un giorno ti ritrovi con un id **diverso**, vanno aggiornati
+> entrambi i file o gli annunci non caricano.
+
+- [x] Iscrizione ad AdSense fatta con `abacozuzzurellone.site`.
+- [x] **Snippet di verifica statico** nel `<head>` di `index.html`,
+      `guida.html`, `privacy.html` e del generatore `tools/build-guide.mjs`.
+      Prima lo iniettava `assets/ads.js` a runtime: il verificatore di AdSense
+      legge l'HTML e non aspetta il JS, quindi l'iniezione è stata tolta.
+      **Il tag deve essere in produzione prima di premere "Ho inserito il
+      codice"**: la verifica guarda il sito live, non il repo.
+- [ ] Aspettare l'approvazione (da pochi giorni a due settimane). Serve
+      traffico: fai prima la Search Console del punto 2.
 - [ ] Creare **tre unità Display responsive** chiamate `home`, `end`, `guida` e
       incollare i tre numeri in `slots` dentro `assets/ads.js`.
       Finché sono vuote i riquadri restano chiusi: nessun buco grigio in pagina.

@@ -112,6 +112,11 @@ const page = `<!DOCTYPE html>
 <script type="application/ld+json">
 ${JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq }, null, 1)}
 </script>
+
+<!-- Verifica del sito + caricamento AdSense. Statico e non iniettato da
+     assets/ads.js: il verificatore di AdSense legge l'HTML, non aspetta il JS. -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9010134003844365"
+     crossorigin="anonymous"></script>
 </head>
 <body>
 

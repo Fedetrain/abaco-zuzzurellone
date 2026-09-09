@@ -43,15 +43,8 @@ window.ABACO_ADS = {
   var configurati = Object.keys(cfg.slots).some(function (k) { return cfg.slots[k]; });
   if (configurati) document.documentElement.classList.add('has-ads');
 
-  // Lo script si carica anche senza slot: e' il modo in cui AdSense verifica
-  // la proprieta' del sito, e prima della verifica gli slot non esistono.
-  var script = document.createElement('script');
-  script.async = true;
-  script.crossOrigin = 'anonymous';
-  script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' +
-               encodeURIComponent(cfg.client);
-  document.head.appendChild(script);
-
+  // adsbygoogle.js e' un tag statico nel <head> di ogni pagina: il
+  // verificatore di AdSense legge l'HTML e non aspetta questo file.
   if (!slots.length) return;   // es. privacy.html: solo la verifica del sito
 
   function fill(box) {
