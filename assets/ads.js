@@ -26,9 +26,9 @@ window.ABACO_ADS = {
      pubblicitaria → Display). Uno per posizione: servono separati per poter
      leggere nei report quale posizione rende. */
   slots: {
-    home: '',    // in fondo alla home, sotto le modalità
-    end: '',     // schermata del risultato, fra le statistiche e i pulsanti
-    guida: '',   // in fondo alla guida
+    home: '7449632607',    // in fondo alla home, sotto le modalità
+    end: '5597107844',     // schermata del risultato, fra le statistiche e i pulsanti
+    guida: '1246799293',   // in fondo alla guida
   },
 };
 
@@ -58,8 +58,13 @@ window.ABACO_ADS = {
     ins.style.display = 'block';
     ins.setAttribute('data-ad-client', cfg.client);
     ins.setAttribute('data-ad-slot', slot);
-    ins.setAttribute('data-ad-format', box.dataset.adFormat || 'auto');
-    ins.setAttribute('data-full-width-responsive', 'true');
+    var format = box.dataset.adFormat || 'auto';
+    ins.setAttribute('data-ad-format', format);
+    // "fluid" (in-article) vuole il suo layout; "autorelaxed" (multiplex) si
+    // dimensiona da solo. Il responsive a tutta larghezza vale solo per il
+    // display normale.
+    if (box.dataset.adLayout) ins.setAttribute('data-ad-layout', box.dataset.adLayout);
+    if (format === 'auto') ins.setAttribute('data-full-width-responsive', 'true');
     box.appendChild(ins);
 
     try {

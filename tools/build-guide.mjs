@@ -157,7 +157,7 @@ ${body}
 
   <p class="guide-cta"><a class="btn btn--big" href="./">Gioca ad Abaco Zuzzurellone</a></p>
 
-  <aside class="adslot" data-ad="guida" aria-label="Pubblicità">
+  <aside class="adslot" data-ad="guida" data-ad-format="fluid" data-ad-layout="in-article" aria-label="Pubblicità">
     <span class="adslot-tag">pubblicità</span>
   </aside>
 </section>
