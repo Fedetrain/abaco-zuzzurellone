@@ -233,13 +233,57 @@ for (const w of [...vocab]) {
 
 const words = [...vocab].sort(collator.compare);
 
+/* ---------------------------------------------------------------------------
+   I verbi con i pronomi attaccati restano nel vocabolario, non nel pool.
+
+   Il corpus e' OpenSubtitles, cioe' parlato: `dartelo`, `tienitelo`,
+   `consolarmi`, `toglierle` ci sono piu' spesso di mezzo dizionario, e la
+   frequenza da sola li spediva nel pool. Come parole da indovinare non
+   reggono -- nessuno «pensa» dartelo -- ma restano parole italiane vere, e
+   quindi devono continuare a valere come proposta. Tier 2: accettate,
+   mai estratte.
+
+   Si riconoscono solo i casi non ambigui, e sono tre:
+     infinito + clitico   toglier|le   -> `togliere` e' nel vocabolario
+     gerundio + clitico   basando|si
+     qualunque base + un clitico DOPPIO   tieni|telo, dar|tele
+
+   ⚠️ Il quarto caso, imperativo + un clitico singolo, NON si riconosce ed e'
+   giusto cosi': la stessa regola cancellerebbe `parola` (paro|la), `miele`,
+   `campanile`, `bombola`, `pugnali`. Provato, misurato, buttato. Per lo
+   stesso motivo il clitico doppio pretende una base vera: senza quel
+   controllo `clientela` finisce fra le vittime (clien|tela).
+--------------------------------------------------------------------------- */
+const CLITICI = ['mi', 'ti', 'si', 'ci', 'vi', 'lo', 'la', 'li', 'le', 'ne', 'gli'];
+const CLITICI_DOPPI = [];
+for (const a of ['me', 'te', 'se', 'ce', 've', 'glie']) {
+  for (const b of ['lo', 'la', 'li', 'le', 'ne']) CLITICI_DOPPI.push(a + b);
+}
+/** Una base verbale riconoscibile: infinito senza la -e finale, o gerundio. */
+const baseVerbale = (r) => (/(ar|er|ir)$/.test(r) && vocab.has(r + 'e')) || (/ndo$/.test(r) && vocab.has(r));
+
+function conClitico(w) {
+  for (const c of CLITICI_DOPPI) {
+    if (!w.endsWith(c) || w.length - c.length < 3) continue;
+    const r = w.slice(0, -c.length);
+    if (baseVerbale(r) || vocab.has(r)) return true;
+  }
+  for (const c of CLITICI) {
+    if (!w.endsWith(c) || w.length - c.length < 3) continue;
+    if (baseVerbale(w.slice(0, -c.length))) return true;
+  }
+  return false;
+}
+
 const counts = [0, 0, 0];
+let declassate = 0;
 const tiers = words.map((w) => {
   const f = freq.get(w) ?? 0;
   let tier = 2;
   if (f >= EASY_MIN_FREQ && w.length <= EASY_MAX_LEN) tier = 0;
   else if (f >= MEDIUM_MIN_FREQ) tier = 1;
-  if (forcedTier.has(w)) tier = forcedTier.get(w);
+  if (tier < 2 && conClitico(w)) { tier = 2; declassate += 1; }
+  if (forcedTier.has(w)) tier = forcedTier.get(w);   // extra-words.txt ha sempre l'ultima parola
   counts[tier] += 1;
   return tier;
 });
@@ -282,6 +326,7 @@ fs.writeFileSync(
 const kb = (f) => (fs.statSync(f).size / 1024).toFixed(0);
 console.log(`dizionario.txt written: ${words.length} words, ${kb(OUT)} KB`);
 console.log(`dizionario.js  written: ${kb(JS_OUT)} KB (front-coded)`);
+console.log(`  verbi con pronomi attaccati spinti a tier 2: ${declassate}`);
 console.log(`  tier 0 (facile):    ${counts[0]}`);
 console.log(`  tier 1 (medio):     ${counts[1]}  -> pool medio = ${counts[0] + counts[1]}`);
 console.log(`  tier 2 (difficile): ${counts[2]}  -> pool difficile = ${words.length}`);

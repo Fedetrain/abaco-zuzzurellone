@@ -1,0 +1,56 @@
+# Ogni notte scrive nell'archivio la parola del giorno appena finita.
+#
+# Perche': AdSense ha respinto il sito per «contenuti di scarso valore», e una
+# delle tre richieste e' la «manutenzione strutturale costante». Un archivio
+# aggiornato a mano si ferma, e un archivio fermo e' il difetto di partenza.
+#
+# ⚠️ Questo workflow NON pubblica il sito: committa e basta. Le pagine le
+# costruisce la pubblicazione legacy di Pages, che reagisce al push su main.
+# Non aggiungere qui nessuno step di deploy e non aprire Settings -> Pages:
+# e' li' che `build_type` passa da `legacy` a `workflow` e i push smettono di
+# pubblicare in silenzio (la diagnosi e il rimedio stanno in STATO.md).
+
+name: Archivio delle parole del giorno
+
+on:
+  schedule:
+    # 02:20 UTC = le 3 o le 4 del mattino italiano a seconda dell'ora legale.
+    # In tutti e due i casi il giorno italiano precedente e' finito da un pezzo,
+    # che e' l'unica cosa che conta: l'archivio scrive solo i giorni conclusi.
+    - cron: '20 2 * * *'
+  workflow_dispatch:
+
+# Un solo giro alla volta: due push contemporanei sullo stesso file si pestano.
+concurrency:
+  group: archivio
+  cancel-in-progress: false
+
+jobs:
+  aggiorna:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Genera le pagine mancanti
+        run: node tools/build-archive.mjs
+
+      - name: Committa, se c'e' qualcosa di nuovo
+        run: |
+          # --porcelain e non `git diff`: le pagine nuove non sono tracciate,
+          # e `git diff` da solo non le vedrebbe.
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Nessun giorno nuovo: l'archivio e' gia' aggiornato."
+            exit 0
+          fi
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A
+          nuove=$(git diff --cached --name-only --diff-filter=A -- archivio | wc -l)
+          git commit -m "Archivio aggiornato: $nuove pagine nuove"
+          git push

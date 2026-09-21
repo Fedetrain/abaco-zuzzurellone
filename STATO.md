@@ -1,6 +1,6 @@
 # Stato del progetto
 
-Aggiornato al **6 settembre 2026**. Questo file è il punto di ripresa:
+Aggiornato al **21 settembre 2026**. Questo file è il punto di ripresa:
 cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
 
 **Sito live:** <https://abacozuzzurellone.site> · **Repo:** `Fedetrain/abaco-zuzzurellone`
@@ -9,6 +9,38 @@ cosa è fatto, cosa manca, e cosa serve sapere prima di rimetterci le mani.
 
 ## ✅ Fatto
 
+### AdSense respinge, nasce l'archivio (21 settembre)
+
+- [x] **Il rifiuto: «contenuti di scarso valore».** Non e' un problema di codice.
+      Online c'erano **tre pagine indicizzabili** ferme dal primo giorno. Google
+      chiede tre cose distinte: contenuti autentici (il gioco lo e'),
+      **manutenzione strutturale costante** e **interesse reale degli utenti**.
+      Le ultime due mancavano. Riproporre il sito senza traffico brucia solo
+      un giro di revisione.
+- [x] **`tools/build-archive.mjs`.** Carica `dizionario.js` e `core.js` in un
+      contesto `vm` -- lo stesso trucco di `run-tests.mjs`, cosi' la logica resta
+      in un posto solo -- e per ogni giorno concluso rigioca la ricerca binaria.
+      Scrive `archivio/enigma-N.html`, `archivio.html` e `sitemap.xml`.
+      **Da 3 URL a 21.** Il footer delle quattro pagine esistenti linka
+      l'archivio: senza link interni un ramo del sito lo trattano come scarto.
+- [x] **`archivio/parole.json`, il registro.** `dailyIndex` pesca l'ennesima
+      parola del pool: se il pool cambia, cambiano anche i giorni gia' giocati e
+      l'archivio racconta una storia mai successa. Misurato: **spostare una sola
+      parola di tier cambia tutti e 17 i giorni**. Il registro li congela, e una
+      spia in fondo al build avvisa quando il dizionario si e' mosso sotto.
+      ⚠️ `parole.json` e' un **dato**, non un generato: va committato.
+- [x] **`.github/workflows/archivio.yml`**, ogni notte alle 02:20 UTC.
+      Committa e basta: la pubblicazione la fa Pages legacy reagendo al push.
+- [x] **I verbi con i pronomi attaccati fuori dal pool** (`build-dictionary.mjs`).
+      Il corpus e' OpenSubtitles, cioe' parlato: `dartelo`, `tienitelo`,
+      `consolarmi` battevano in frequenza mezzo dizionario e finivano fra le
+      parole del giorno. Restano **nel vocabolario** (accettate come proposta),
+      fuori dal **pool** (mai estratte). **2.927 parole a tier 2, pool 38.061 →
+      35.134.** Si riconoscono solo i tre casi non ambigui: infinito+clitico,
+      gerundio+clitico, qualunque base + clitico doppio.
+      ⚠️ **Il quarto caso, imperativo + clitico singolo, non si riconosce ed e'
+      giusto cosi'**: la stessa regola cancella `parola` (paro|la), `miele`,
+      `campanile`, `bombola`, `pugnali`. Provato, misurato, buttato.
 ### Una sola difficoltà (6 settembre)
 - [x] **Via i tre livelli.** Niente selettore in home, niente `prefs.level`,
       niente chip nel titolo della partita. Restano **due insiemi**, ed è la

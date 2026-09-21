@@ -59,16 +59,40 @@ function partitaOttimale(target) {
   return mosse;
 }
 
+/* --- il registro: un giorno passato non cambia piu' -----------------------
+   `dailyIndex` pesca l'ennesima parola del pool, quindi se il pool cambia --
+   e cambia ogni volta che si tocca il dizionario -- cambiano anche le parole
+   dei giorni gia' giocati, e l'archivio racconta una storia che non e'
+   successa. Il registro le congela: un giorno che c'e' gia' si rilegge, non
+   si ricalcola. Solo i giorni nuovi vengono estratti dal gioco.
+
+   ⚠️ `archivio/parole.json` e' un dato, non un file generato: va committato,
+   e non si riscrive a mano. Se sparisce, l'archivio si reinventa il passato.
+--------------------------------------------------------------------------- */
+const LEDGER = path.join(OUTDIR, 'parole.json');
+fs.mkdirSync(OUTDIR, { recursive: true });
+const registro = fs.existsSync(LEDGER) ? JSON.parse(fs.readFileSync(LEDGER, 'utf8')) : {};
+
 /* --- i giorni gia' passati ------------------------------------------------ */
 const oggi = AZ.dayKey(new Date());
 const giorni = [];
+let nuovi = 0;
+const deriva = [];
 for (let d = new Date(Date.UTC(2026, 8, 4)); AZ.dayKey(d) < oggi; d.setUTCDate(d.getUTCDate() + 1)) {
   const key = AZ.dayKey(d);
   const i = AZ.dailyIndex(dict, key);
-  if (i < 0) continue;
-  const parola = dict.words[i];
+  let parola = registro[key];
+  if (!parola) {
+    if (i < 0) continue;
+    parola = registro[key] = dict.words[i];
+    nuovi += 1;
+  } else if (i >= 0 && dict.words[i] !== parola) {
+    // La spia: il registro vince, ma sapere che il pool si e' mosso conta.
+    deriva.push(`${key}: in archivio «${parola}», il dizionario di oggi direbbe «${dict.words[i]}»`);
+  }
   giorni.push({ key, n: AZ.dayNumber(key), parola, mosse: partitaOttimale(parola) });
 }
+fs.writeFileSync(LEDGER, JSON.stringify(registro, null, 1) + String.fromCharCode(10));
 giorni.reverse();   // il piu' recente in cima
 
 /* --- HTML ----------------------------------------------------------------- */
@@ -242,4 +266,12 @@ ${url(SITE + '/privacy.html', 'yearly', '0.3')}
 </urlset>
 `);
 
-console.log(`${giorni.length} enigmi in archivio/, archivio.html e sitemap.xml riscritti.`);
+if (deriva.length) {
+  console.warn(`
+⚠  ${deriva.length} giorni su ${giorni.length} non uscirebbero piu' cosi' dal dizionario attuale.`);
+  console.warn('   Il registro vince, perche i giorni passati sono gia stati giocati. Ma il pool e cambiato:');
+  for (const r of deriva.slice(0, 5)) console.warn('     ' + r);
+  if (deriva.length > 5) console.warn(`     ... e altri ${deriva.length - 5}.`);
+  console.warn('');
+}
+console.log(`${giorni.length} enigmi in archivio/ (${nuovi} nuovi nel registro), archivio.html e sitemap.xml riscritti.`);
