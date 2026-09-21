@@ -1466,3 +1466,29 @@ a.btn, a.btn:visited { color: inherit; }
    delle quattro modalità — e in griglia a tre colonne una quarta scheda
    lascerebbe comunque un buco. */
 @media (min-width: 48rem) { .mode--daily { grid-column: 1 / -1; } }
+
+/* --- archivio delle parole del giorno (tools/build-archive.mjs) ----------- */
+.doc-block h2 {
+  font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
+  letter-spacing: -.02em; color: var(--ink); margin: 0 0 .5rem;
+  font-variation-settings: 'SOFT' 30, 'opsz' 24;
+}
+.doc-table {
+  width: 100%; border-collapse: collapse; font-size: .88rem;
+  color: var(--ink-soft); margin-top: .2rem;
+}
+.doc-table th {
+  text-align: left; font-weight: 600; font-size: .74rem; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-faint); padding: 0 .6rem .4rem 0;
+}
+.doc-table td { padding: .32rem .6rem .32rem 0; border-top: 1px solid var(--hairline, rgba(128,110,80,.18)); }
+.doc-table td:first-child, .doc-table td:nth-child(3) { font-family: var(--font-mono); font-size: .82rem; }
+.doc-table b { color: var(--ink); }
+.doc-list--archivio { list-style: none; padding: 0; gap: .4rem; }
+.doc-list--archivio a {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .1rem .6rem;
+  padding: .45rem .2rem; text-decoration: none; border-radius: .4rem;
+}
+.doc-list--archivio a:hover { background: var(--gold-soft); }
+.doc-list--archivio b { font-family: var(--font-display); font-size: 1rem; color: var(--ink); }
+.doc-list--archivio span { font-size: .8rem; color: var(--ink-faint); }

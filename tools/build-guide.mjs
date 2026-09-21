@@ -165,6 +165,7 @@ ${body}
 
 <footer class="sitefoot">
   <span>Parole dal dizionario Hunspell <b>it_IT</b> di LibreItalia (GPL-3.0).</span>
+  <a href="archivio.html">Archivio delle parole</a>
   <a href="privacy.html">Privacy e cookie</a>
   <a href="https://github.com/Fedetrain/abaco-zuzzurellone" rel="noopener">codice su GitHub</a>
 </footer>

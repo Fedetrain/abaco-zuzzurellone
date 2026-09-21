@@ -1,6 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://abacozuzzurellone.site/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://abacozuzzurellone.site/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
   <url><loc>https://abacozuzzurellone.site/guida.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-17.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-16.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-15.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-14.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-13.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-12.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-11.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-10.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-9.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-8.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-7.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-6.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-5.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-4.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-3.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-2.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://abacozuzzurellone.site/archivio/enigma-1.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://abacozuzzurellone.site/privacy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>
